@@ -1,0 +1,23 @@
+{
+  "name": "PetsBird - Aviary Manager",
+  "short_name": "PetsBird",
+  "description": "Professional Aviary and Bird Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcfcf9",
+  "theme_color": "#10B981",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/bird-icon-192/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/bird-icon-512/512/512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
