@@ -234,10 +234,24 @@ export default function App() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
+    // Handle initial routing based on pathname
+    if (window.location.pathname === '/auth' || window.location.pathname === '/app') {
+      if (!user) {
+        setShowAuthPage(true);
+      } else {
+        setShowApp(true);
+      }
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [user]);
+
+  const handleLaunchApp = () => {
+    const url = window.location.origin + (user ? '/app' : '/auth');
+    window.open(url, '_blank');
+  };
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
@@ -1108,7 +1122,7 @@ export default function App() {
               Install
             </button>
             <button 
-              onClick={() => user ? setShowApp(true) : setShowAuthPage(true)}
+              onClick={handleLaunchApp}
               className="bg-primary text-white px-8 py-3 rounded-2xl font-bold text-sm shadow-xl shadow-primary/20 hover:scale-105 transition-all"
             >
               {user ? "Dashboard" : "Launch App"}
@@ -1136,7 +1150,7 @@ export default function App() {
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                   <button 
-                    onClick={() => user ? setShowApp(true) : setShowAuthPage(true)}
+                    onClick={handleLaunchApp}
                     className="w-full sm:w-auto px-10 py-5 bg-slate-900 text-white rounded-[24px] font-bold text-lg shadow-2xl hover:bg-primary transition-all flex items-center justify-center gap-3 group"
                   >
                     {user ? "Go to Dashboard" : "Start Managing Now"}
