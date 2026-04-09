@@ -63,19 +63,20 @@ service cloud.firestore {
     // Rules
     // ===============================================================
 
-    match /birds/{birdId} {
-      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
-      allow write: if isAuthenticated() && (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
-    match /couples/{coupleId} {
-      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
-      allow write: if isAuthenticated() && (request.resource == null || request.resource.data.userId == request.auth.uid);
-    }
-
-    match /eggs/{eggId} {
-      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
-      allow write: if isAuthenticated() && (request.resource == null || request.resource.data.userId == request.auth.uid);
+    match /users_data/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      match /birds/{birdId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /couples/{coupleId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /eggs/{eggId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     match /users/{userId} {

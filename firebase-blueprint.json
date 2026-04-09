@@ -62,17 +62,17 @@
     }
   },
   "firestore": {
-    "/birds/{birdId}": {
+    "/users_data/{userId}/birds/{birdId}": {
       "schema": "Bird",
-      "description": "Collection of birds"
+      "description": "User's collection of birds"
     },
-    "/couples/{coupleId}": {
+    "/users_data/{userId}/couples/{coupleId}": {
       "schema": "Couple",
-      "description": "Collection of breeding pairs"
+      "description": "User's collection of breeding pairs"
     },
-    "/eggs/{eggId}": {
+    "/users_data/{userId}/eggs/{eggId}": {
       "schema": "Egg",
-      "description": "Collection of eggs"
+      "description": "User's collection of eggs"
     },
     "/users/{userId}": {
       "schema": "UserProfile",

@@ -464,20 +464,20 @@ export default function App() {
       return;
     }
 
-    const birdsQuery = query(collection(db, "birds"), where("userId", "==", user.uid));
-    const unsubscribeBirds = onSnapshot(birdsQuery, (snapshot) => {
+    const birdsRef = collection(db, "users_data", user.uid, "birds");
+    const unsubscribeBirds = onSnapshot(birdsRef, (snapshot) => {
       const birdsList = snapshot.docs.map(doc => doc.data() as BirdData);
       setBirds(birdsList);
     }, (error) => console.error("Birds sync error:", error));
 
-    const couplesQuery = query(collection(db, "couples"), where("userId", "==", user.uid));
-    const unsubscribeCouples = onSnapshot(couplesQuery, (snapshot) => {
+    const couplesRef = collection(db, "users_data", user.uid, "couples");
+    const unsubscribeCouples = onSnapshot(couplesRef, (snapshot) => {
       const couplesList = snapshot.docs.map(doc => doc.data() as CoupleData);
       setCouples(couplesList);
     }, (error) => console.error("Couples sync error:", error));
 
-    const eggsQuery = query(collection(db, "eggs"), where("userId", "==", user.uid));
-    const unsubscribeEggs = onSnapshot(eggsQuery, (snapshot) => {
+    const eggsRef = collection(db, "users_data", user.uid, "eggs");
+    const unsubscribeEggs = onSnapshot(eggsRef, (snapshot) => {
       const eggsList = snapshot.docs.map(doc => doc.data() as EggData);
       setEggs(eggsList);
     }, (error) => console.error("Eggs sync error:", error));
@@ -509,7 +509,7 @@ export default function App() {
     const id = Date.now().toString();
     const birdData = { ...newBird, id, userId: user.uid };
     try {
-      await setDoc(doc(db, "birds", id), birdData);
+      await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
       setIsModalOpen(false);
       setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
     } catch (error) {
@@ -521,7 +521,7 @@ export default function App() {
     e.preventDefault();
     if (!editingBirdId || !user) return;
     try {
-      await updateDoc(doc(db, "birds", editingBirdId), { ...newBird });
+      await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird });
       setIsModalOpen(false);
       setEditingBirdId(null);
       setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
@@ -538,7 +538,7 @@ export default function App() {
       message: "هل أنت متأكد من حذف هذا الطائر؟ سيتم حذف جميع البيانات المرتبطة به.",
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, "birds", id));
+          await deleteDoc(doc(db, "users_data", user.uid, "birds", id));
           // Also delete related couples and eggs
           const relatedCouples = couples.filter(c => c.maleId === id || c.femaleId === id);
           for (const couple of relatedCouples) {
@@ -632,7 +632,7 @@ export default function App() {
     };
 
     try {
-      await setDoc(doc(db, "couples", id), newCouple);
+      await setDoc(doc(db, "users_data", user.uid, "couples", id), newCouple);
       setIsCoupleModalOpen(false);
       setSelectedBirds([]);
       setActiveTab("Couples");
@@ -676,7 +676,7 @@ export default function App() {
     };
 
     try {
-      await setDoc(doc(db, "couples", id), newCouple);
+      await setDoc(doc(db, "users_data", user.uid, "couples", id), newCouple);
       setIsCoupleModalOpen(false);
       setSelectedMaleId("");
       setSelectedFemaleId("");
@@ -691,7 +691,7 @@ export default function App() {
     if (!editingCoupleId || !selectedMaleId || !selectedFemaleId || !user) return;
 
     try {
-      await updateDoc(doc(db, "couples", editingCoupleId), {
+      await updateDoc(doc(db, "users_data", user.uid, "couples", editingCoupleId), {
         maleId: selectedMaleId,
         femaleId: selectedFemaleId
       });
@@ -709,11 +709,11 @@ export default function App() {
     
     const performDelete = async () => {
       try {
-        await deleteDoc(doc(db, "couples", id));
+        await deleteDoc(doc(db, "users_data", user.uid, "couples", id));
         // Delete related eggs
         const relatedEggs = eggs.filter(e => e.coupleId === id);
         for (const egg of relatedEggs) {
-          await deleteDoc(doc(db, "eggs", egg.id));
+          await deleteDoc(doc(db, "users_data", user.uid, "eggs", egg.id));
         }
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       } catch (error) {
@@ -873,7 +873,7 @@ export default function App() {
     const hatchDate = newEgg.hatchDate || calculateHatchDate(newEgg.laidDate, selectedCoupleId);
 
     try {
-      await updateDoc(doc(db, "eggs", editingEggId), {
+      await updateDoc(doc(db, "users_data", user.uid, "eggs", editingEggId), {
         ...newEgg,
         hatchDate,
         coupleId: selectedCoupleId
@@ -895,7 +895,7 @@ export default function App() {
       message: "هل أنت متأكد من حذف هذه البيضة؟",
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, "eggs", id));
+          await deleteDoc(doc(db, "users_data", user.uid, "eggs", id));
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
           console.error("Error deleting egg:", error);
@@ -939,7 +939,7 @@ export default function App() {
     };
     
     try {
-      await setDoc(doc(db, "eggs", id), newEggData);
+      await setDoc(doc(db, "users_data", user.uid, "eggs", id), newEggData);
       setIsEggModalOpen(false);
       setSelectedCoupleId("");
       setNewEgg({ laidDate: new Date().toLocaleDateString(), hatchDate: "", status: "Intact" });
