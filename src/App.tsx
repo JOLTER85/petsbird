@@ -270,11 +270,29 @@ export default function App() {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setAuthLoading(false);
       if (currentUser) {
-        if (currentUser.emailVerified || currentUser.providerData.some(p => p.providerId === 'google.com')) {
+        const isGoogleUser = currentUser.providerData.some(p => p.providerId === 'google.com');
+        if (currentUser.emailVerified || isGoogleUser) {
+          // Check if user profile exists, if not create it
+          const userDocRef = doc(db, "users", currentUser.uid);
+          try {
+            const userDoc = await getDoc(userDocRef);
+            if (!userDoc.exists()) {
+              await setDoc(userDocRef, {
+                userId: currentUser.uid,
+                name: currentUser.displayName || "مربي جديد",
+                email: currentUser.email || "",
+                location: "",
+                avatar: currentUser.photoURL || (currentUser.displayName ? currentUser.displayName.substring(0, 2).toUpperCase() : "??")
+              });
+            }
+          } catch (error) {
+            console.error("Error checking/creating user profile:", error);
+          }
+          
           setShowApp(true);
           setShowAuthPage(false);
         } else {

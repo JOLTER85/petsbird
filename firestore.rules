@@ -64,30 +64,22 @@ service cloud.firestore {
     // ===============================================================
 
     match /birds/{birdId} {
-      allow read: if isDocOwner();
-      allow create: if isAuthenticated() && isValidBird(request.resource.data);
-      allow update: if isDocOwner() && isValidBird(request.resource.data);
-      allow delete: if isDocOwner();
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
 
     match /couples/{coupleId} {
-      allow read: if isDocOwner();
-      allow create: if isAuthenticated() && isValidCouple(request.resource.data);
-      allow update: if isDocOwner() && isValidCouple(request.resource.data);
-      allow delete: if isDocOwner();
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
 
     match /eggs/{eggId} {
-      allow read: if isDocOwner();
-      allow create: if isAuthenticated() && isValidEgg(request.resource.data);
-      allow update: if isDocOwner() && isValidEgg(request.resource.data);
-      allow delete: if isDocOwner();
+      allow read: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && (request.resource == null || request.resource.data.userId == request.auth.uid);
     }
 
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow read, write: if isOwner(userId);
     }
   }
 }
