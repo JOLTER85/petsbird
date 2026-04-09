@@ -39,7 +39,7 @@ service cloud.firestore {
     function isValidBird(data) {
       return data.keys().hasAll(['id', 'ring', 'species', 'gender', 'userId']) &&
              data.id is string && data.ring is string && data.species is string &&
-             data.gender in ['Male', 'Female'] && data.userId == request.auth.uid;
+             data.gender in ['Male', 'Female', 'Unknown'] && data.userId == request.auth.uid;
     }
 
     function isValidCouple(data) {

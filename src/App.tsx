@@ -6,7 +6,16 @@
 import { useState, useEffect, FormEvent, MouseEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI, Type } from "@google/genai";
-import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, db } from './firebase';
+import { 
+  auth, 
+  googleProvider, 
+  signInWithPopup, 
+  signOut, 
+  onAuthStateChanged, 
+  db,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from './firebase';
 import { User } from 'firebase/auth';
 import { 
   collection, 
@@ -209,6 +218,11 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showAuthPage, setShowAuthPage] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
@@ -250,10 +264,30 @@ export default function App() {
   }, []);
 
   const handleGoogleSignIn = async () => {
+    setAuthError("");
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error signing in with Google:", error);
+      setAuthError(error.message || "Failed to sign in with Google");
+    }
+  };
+
+  const handleEmailAuth = async (e: FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setIsAuthProcessing(true);
+    try {
+      if (authMode === "register") {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      setAuthError(error.message || "Authentication failed");
+    } finally {
+      setIsAuthProcessing(false);
     }
   };
 
@@ -902,8 +936,12 @@ export default function App() {
             >
               <Bird className="text-white w-8 h-8" />
             </div>
-            <h2 className="text-3xl font-black font-display text-slate-900 mb-2">Welcome Back</h2>
-            <p className="text-slate-500 font-medium">Sign in to manage your aviary</p>
+            <h2 className="text-3xl font-black font-display text-slate-900 mb-2">
+              {authMode === "login" ? "Welcome Back" : "Create Account"}
+            </h2>
+            <p className="text-slate-500 font-medium">
+              {authMode === "login" ? "Sign in to manage your aviary" : "Join the global community of breeders"}
+            </p>
           </div>
 
           <div className="glass p-10 rounded-[40px] border-white/20 shadow-2xl">
@@ -912,32 +950,65 @@ export default function App() {
               className="w-full py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 flex items-center justify-center gap-3 hover:bg-slate-50 transition-all shadow-sm mb-6"
             >
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              Sign in with Google
+              Continue with Google
             </button>
 
             <div className="relative flex items-center gap-4 mb-6">
               <div className="flex-1 h-px bg-slate-100" />
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Or continue with</span>
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Or use email</span>
               <div className="flex-1 h-px bg-slate-100" />
             </div>
 
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            {authError && (
+              <div className="mb-6 p-4 bg-red-50 text-red-500 text-xs font-bold rounded-2xl border border-red-100">
+                {authError}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleEmailAuth}>
               <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Email Address</label>
                 <input 
                   type="email" 
-                  disabled
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-medium text-slate-400 cursor-not-allowed"
+                  className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-medium focus:border-primary transition-all"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Password</label>
+                <input 
+                  type="password" 
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-medium focus:border-primary transition-all"
                 />
               </div>
               <button 
-                disabled
-                className="w-full py-4 bg-slate-100 text-slate-400 rounded-2xl font-bold cursor-not-allowed"
+                type="submit"
+                disabled={isAuthProcessing}
+                className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all disabled:opacity-50"
               >
-                Sign in with Email
+                {isAuthProcessing ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : (
+                  authMode === "login" ? "Sign In" : "Create Account"
+                )}
               </button>
             </form>
+
+            <div className="mt-6 text-center">
+              <button 
+                onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
+                className="text-xs font-bold text-primary uppercase tracking-widest hover:underline"
+              >
+                {authMode === "login" ? "Need an account? Register" : "Already have an account? Login"}
+              </button>
+            </div>
 
             <p className="mt-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
               By continuing, you agree to PetsBird's <br />
