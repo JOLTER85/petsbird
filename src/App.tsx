@@ -62,7 +62,9 @@ import {
   Mail,
   Activity,
   LogIn,
-  Download
+  Download,
+  ArrowLeft,
+  ArrowRight
 } from "lucide-react";
 
 interface BirdData {
@@ -248,6 +250,33 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
 export default function App() {
   const [showApp, setShowApp] = useState(false);
   const [landingTab, setLandingTab] = useState("Home");
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      const validTabs = ["Home", "Features", "Genetics", "Resources", "About"];
+      if (validTabs.includes(hash)) {
+        setLandingTab(hash);
+        window.scrollTo(0, 0);
+      } else if (!hash) {
+        setLandingTab("Home");
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // Initial check
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigateToTab = (tab: string, newTab = false) => {
+    if (newTab) {
+      window.open(window.location.origin + (tab === "Home" ? "" : "#" + tab), '_blank');
+    } else {
+      window.location.hash = tab === "Home" ? "" : tab;
+    }
+  };
+
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [user, setUser] = useState<User | null>(null);
@@ -1257,7 +1286,7 @@ export default function App() {
         {/* Navigation */}
         <nav className="fixed top-0 w-full z-[100] px-8 py-6 flex items-center justify-between backdrop-blur-md bg-white/30">
           <div 
-            onClick={() => setLandingTab("Home")}
+            onClick={() => navigateToTab("Home")}
             className="flex items-center gap-3 cursor-pointer group"
           >
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform">
@@ -1269,7 +1298,7 @@ export default function App() {
             {["Features", "Genetics", "Resources", "About"].map((item) => (
               <button 
                 key={item} 
-                onClick={() => setLandingTab(item)}
+                onClick={() => navigateToTab(item, true)}
                 className={`text-sm font-bold transition-colors uppercase tracking-widest ${landingTab === item ? 'text-primary' : 'text-slate-500 hover:text-primary'}`}
               >
                 {item}
@@ -1390,16 +1419,20 @@ export default function App() {
                     </h2>
                     <div className="space-y-8">
                       {[
-                        { title: "AI Genetics Predictor", desc: "Use advanced neural networks to predict offspring mutations with 99% accuracy.", icon: BrainCircuit, color: "text-primary bg-primary/10" },
-                        { title: "Real-time Egg Tracking", desc: "Monitor every nest, track incubation periods, and get hatching alerts.", icon: EggIcon, color: "text-accent-orange bg-accent-orange/10" },
-                        { title: "Global Marketplace", desc: "Connect with verified breeders worldwide to buy and sell rare mutations.", icon: ShoppingBag, color: "text-accent-gold bg-accent-gold/10" }
+                        { title: "AI Genetics Predictor", desc: "Use advanced neural networks to predict offspring mutations with 99% accuracy.", icon: BrainCircuit, color: "text-primary bg-primary/10", tab: "Genetics" },
+                        { title: "Real-time Egg Tracking", desc: "Monitor every nest, track incubation periods, and get hatching alerts.", icon: EggIcon, color: "text-accent-orange bg-accent-orange/10", tab: "Features" },
+                        { title: "Global Marketplace", desc: "Connect with verified breeders worldwide to buy and sell rare mutations.", icon: ShoppingBag, color: "text-accent-gold bg-accent-gold/10", tab: "Resources" }
                       ].map((feature, i) => (
-                        <div key={i} className="flex gap-6 group">
+                        <div 
+                          key={i} 
+                          className="flex gap-6 group cursor-pointer"
+                          onClick={() => navigateToTab(feature.tab, true)}
+                        >
                           <div className={`w-16 h-16 shrink-0 rounded-3xl flex items-center justify-center ${feature.color} group-hover:scale-110 transition-transform`}>
                             <feature.icon className="w-8 h-8" />
                           </div>
                           <div>
-                            <h4 className="text-xl font-bold text-slate-800 mb-2">{feature.title}</h4>
+                            <h4 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors">{feature.title}</h4>
                             <p className="text-slate-500 leading-relaxed">{feature.desc}</p>
                           </div>
                         </div>
@@ -1447,6 +1480,15 @@ export default function App() {
                 </div>
               ))}
             </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
+            </div>
           </section>
         )}
 
@@ -1488,6 +1530,15 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-12">
+                  <button 
+                    onClick={() => navigateToTab("Home")}
+                    className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Back to Home
+                  </button>
+                </div>
               </div>
             </div>
           </section>
@@ -1521,6 +1572,15 @@ export default function App() {
                 </div>
               ))}
             </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
+            </div>
           </section>
         )}
 
@@ -1544,6 +1604,15 @@ export default function App() {
                   <p className="text-slate-500 leading-relaxed">{v.desc}</p>
                 </div>
               ))}
+            </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
             </div>
           </section>
         )}
@@ -1577,7 +1646,7 @@ export default function App() {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-center gap-12">
               <div 
-                onClick={() => setLandingTab("Home")}
+                onClick={() => navigateToTab("Home")}
                 className="flex items-center gap-3 cursor-pointer"
               >
                 <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
@@ -1592,15 +1661,15 @@ export default function App() {
                 <div className="space-y-4">
                   <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Product</h5>
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
-                    <li onClick={() => setLandingTab("Features")} className="hover:text-primary cursor-pointer">Features</li>
-                    <li onClick={() => setLandingTab("Genetics")} className="hover:text-primary cursor-pointer">AI Genetics</li>
-                    <li onClick={() => setLandingTab("Resources")} className="hover:text-primary cursor-pointer">Marketplace</li>
+                    <li onClick={() => navigateToTab("Features", true)} className="hover:text-primary cursor-pointer">Features</li>
+                    <li onClick={() => navigateToTab("Genetics", true)} className="hover:text-primary cursor-pointer">AI Genetics</li>
+                    <li onClick={() => navigateToTab("Resources", true)} className="hover:text-primary cursor-pointer">Marketplace</li>
                   </ul>
                 </div>
                 <div className="space-y-4">
                   <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Company</h5>
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
-                    <li onClick={() => setLandingTab("About")} className="hover:text-primary cursor-pointer">About Us</li>
+                    <li onClick={() => navigateToTab("About", true)} className="hover:text-primary cursor-pointer">About Us</li>
                     <li className="hover:text-primary cursor-pointer">Contact</li>
                     <li className="hover:text-primary cursor-pointer">Privacy</li>
                   </ul>

@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /dashboard/settings
-Disallow: /dashboard/medical
-
-Sitemap: https://petsbird.com/sitemap.xml
