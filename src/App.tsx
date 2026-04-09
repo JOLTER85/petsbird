@@ -28,7 +28,8 @@ import {
   onSnapshot, 
   query, 
   where,
-  getDoc
+  getDoc,
+  getDocFromServer
 } from 'firebase/firestore';
 import { 
   Bird, 
@@ -443,6 +444,41 @@ export default function App() {
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
 
+  enum OperationType {
+    CREATE = 'create',
+    UPDATE = 'update',
+    DELETE = 'delete',
+    LIST = 'list',
+    GET = 'get',
+    WRITE = 'write',
+  }
+
+  interface FirestoreErrorInfo {
+    error: string;
+    operationType: OperationType;
+    path: string | null;
+    authInfo: {
+      userId: string | undefined;
+      email: string | null | undefined;
+      emailVerified: boolean | undefined;
+    }
+  }
+
+  const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
+    const errInfo: FirestoreErrorInfo = {
+      error: error instanceof Error ? error.message : String(error),
+      authInfo: {
+        userId: user?.uid,
+        email: user?.email,
+        emailVerified: user?.emailVerified,
+      },
+      operationType,
+      path
+    };
+    console.error('Firestore Error: ', JSON.stringify(errInfo));
+    alert(`خطأ في قاعدة البيانات: ${errInfo.error}\nيرجى التأكد من إعدادات Firebase وقواعد الحماية.`);
+  };
+
   const [newBird, setNewBird] = useState({
     name: "",
     ring: "",
@@ -468,21 +504,34 @@ export default function App() {
     const unsubscribeBirds = onSnapshot(birdsRef, (snapshot) => {
       const birdsList = snapshot.docs.map(doc => doc.data() as BirdData);
       setBirds(birdsList);
-    }, (error) => console.error("Birds sync error:", error));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, `users_data/${user.uid}/birds`));
 
     const couplesRef = collection(db, "users_data", user.uid, "couples");
     const unsubscribeCouples = onSnapshot(couplesRef, (snapshot) => {
       const couplesList = snapshot.docs.map(doc => doc.data() as CoupleData);
       setCouples(couplesList);
-    }, (error) => console.error("Couples sync error:", error));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, `users_data/${user.uid}/couples`));
 
     const eggsRef = collection(db, "users_data", user.uid, "eggs");
     const unsubscribeEggs = onSnapshot(eggsRef, (snapshot) => {
       const eggsList = snapshot.docs.map(doc => doc.data() as EggData);
       setEggs(eggsList);
-    }, (error) => console.error("Eggs sync error:", error));
+    }, (error) => handleFirestoreError(error, OperationType.LIST, `users_data/${user.uid}/eggs`));
 
     const userDocRef = doc(db, "users", user.uid);
+    
+    // Test connection
+    const testConnection = async () => {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if(error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration.");
+        }
+      }
+    };
+    testConnection();
+
     const unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
@@ -493,7 +542,7 @@ export default function App() {
           avatar: data.avatar || (data.name ? data.name.substring(0, 2).toUpperCase() : "??")
         });
       }
-    }, (error) => console.error("User profile sync error:", error));
+    }, (error) => handleFirestoreError(error, OperationType.GET, `users/${user.uid}`));
 
     return () => {
       unsubscribeBirds();
@@ -508,30 +557,33 @@ export default function App() {
     if (!user) return;
     const id = Date.now().toString();
     const birdData = { ...newBird, id, userId: user.uid };
+    const path = `users_data/${user.uid}/birds/${id}`;
     try {
       await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
       setIsModalOpen(false);
       setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
     } catch (error) {
-      console.error("Error adding bird:", error);
+      handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
 
   const handleUpdateBird = async (e: FormEvent) => {
     e.preventDefault();
     if (!editingBirdId || !user) return;
+    const path = `users_data/${user.uid}/birds/${editingBirdId}`;
     try {
       await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird });
       setIsModalOpen(false);
       setEditingBirdId(null);
       setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
     } catch (error) {
-      console.error("Error updating bird:", error);
+      handleFirestoreError(error, OperationType.UPDATE, path);
     }
   };
 
   const handleDeleteBird = async (id: string) => {
     if (!user) return;
+    const path = `users_data/${user.uid}/birds/${id}`;
     setConfirmModal({
       isOpen: true,
       title: "حذف طائر",
@@ -546,7 +598,7 @@ export default function App() {
           }
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
-          console.error("Error deleting bird:", error);
+          handleFirestoreError(error, OperationType.DELETE, path);
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         }
       }
@@ -631,6 +683,7 @@ export default function App() {
       userId: user.uid
     };
 
+    const path = `users_data/${user.uid}/couples/${id}`;
     try {
       await setDoc(doc(db, "users_data", user.uid, "couples", id), newCouple);
       setIsCoupleModalOpen(false);
@@ -639,7 +692,7 @@ export default function App() {
       setSelectedMaleId("");
       setSelectedFemaleId("");
     } catch (error) {
-      console.error("Error creating couple:", error);
+      handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
 
@@ -675,6 +728,7 @@ export default function App() {
       userId: user.uid
     };
 
+    const path = `users_data/${user.uid}/couples/${id}`;
     try {
       await setDoc(doc(db, "users_data", user.uid, "couples", id), newCouple);
       setIsCoupleModalOpen(false);
@@ -682,7 +736,7 @@ export default function App() {
       setSelectedFemaleId("");
       setActiveTab("Couples");
     } catch (error) {
-      console.error("Error creating couple from modal:", error);
+      handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
 
@@ -690,6 +744,7 @@ export default function App() {
     e.preventDefault();
     if (!editingCoupleId || !selectedMaleId || !selectedFemaleId || !user) return;
 
+    const path = `users_data/${user.uid}/couples/${editingCoupleId}`;
     try {
       await updateDoc(doc(db, "users_data", user.uid, "couples", editingCoupleId), {
         maleId: selectedMaleId,
@@ -700,13 +755,14 @@ export default function App() {
       setSelectedMaleId("");
       setSelectedFemaleId("");
     } catch (error) {
-      console.error("Error updating couple:", error);
+      handleFirestoreError(error, OperationType.UPDATE, path);
     }
   };
 
   const handleDeleteCouple = async (id: string, skipConfirm = false) => {
     if (!user) return;
     
+    const path = `users_data/${user.uid}/couples/${id}`;
     const performDelete = async () => {
       try {
         await deleteDoc(doc(db, "users_data", user.uid, "couples", id));
@@ -717,7 +773,7 @@ export default function App() {
         }
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       } catch (error) {
-        console.error("Error deleting couple:", error);
+        handleFirestoreError(error, OperationType.DELETE, path);
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
     };
@@ -889,6 +945,7 @@ export default function App() {
 
   const handleDeleteEgg = async (id: string) => {
     if (!user) return;
+    const path = `users_data/${user.uid}/eggs/${id}`;
     setConfirmModal({
       isOpen: true,
       title: "حذف بيضة",
@@ -898,7 +955,7 @@ export default function App() {
           await deleteDoc(doc(db, "users_data", user.uid, "eggs", id));
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
-          console.error("Error deleting egg:", error);
+          handleFirestoreError(error, OperationType.DELETE, path);
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         }
       }
@@ -938,6 +995,7 @@ export default function App() {
       userId: user.uid
     };
     
+    const path = `users_data/${user.uid}/eggs/${id}`;
     try {
       await setDoc(doc(db, "users_data", user.uid, "eggs", id), newEggData);
       setIsEggModalOpen(false);
@@ -955,7 +1013,7 @@ export default function App() {
         ...notifications
       ]);
     } catch (error) {
-      console.error("Error adding egg:", error);
+      handleFirestoreError(error, OperationType.WRITE, path);
     }
   };
 
