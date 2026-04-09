@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0672818089",
-  "appId": "1:591606950423:web:afbdd166d79cef4c754a52",
+  "projectId": "petsbird-29b25",
+  "appId": "1:944051614858:web:afbdd166d79cef4c754a52",
   "apiKey": "AIzaSyAhrEtC5mqZ7ErUG2gcJy0RmYQ9zuHCd3M",
-  "authDomain": "gen-lang-client-0672818089.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-a1c475e7-3d57-4020-a7c4-3945180b4184",
-  "storageBucket": "gen-lang-client-0672818089.firebasestorage.app",
-  "messagingSenderId": "591606950423",
+  "authDomain": "petsbird-29b25.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "petsbird-29b25.firebasestorage.app",
+  "messagingSenderId": "944051614858",
   "measurementId": ""
 }
