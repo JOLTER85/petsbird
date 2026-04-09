@@ -6,8 +6,19 @@
 import { useState, useEffect, FormEvent, MouseEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI, Type } from "@google/genai";
-import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged } from './firebase';
+import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, db } from './firebase';
 import { User } from 'firebase/auth';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot, 
+  query, 
+  where,
+  getDoc
+} from 'firebase/firestore';
 import { 
   Bird, 
   LayoutDashboard, 
@@ -44,10 +55,12 @@ import {
 
 interface BirdData {
   id: string;
+  name: string;
   ring: string;
   species: string;
-  gender: 'Male' | 'Female';
+  gender: 'Male' | 'Female' | 'Unknown';
   age: number;
+  birthYear: string;
   date: string;
   cage: string;
   mutation?: string;
@@ -112,7 +125,7 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, ring, species, gender, age, date, cage, onSelect, isSelected, onEdit }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void }) => (
+const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, onSelect, isSelected, onEdit, onDelete }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void }) => (
   <motion.div
     whileHover={{ y: -8, scale: 1.02 }}
     onClick={onSelect}
@@ -133,10 +146,21 @@ const BirdCard = ({ id, ring, species, gender, age, date, cage, onSelect, isSele
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
       <Bird className="w-16 h-16 text-primary/20 group-hover:scale-110 transition-transform duration-500" />
       <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-        gender === 'Female' ? 'bg-female text-female-text' : 'bg-male text-male-text'
+        gender === 'Female' ? 'bg-female text-female-text' : 
+        gender === 'Male' ? 'bg-male text-male-text' : 
+        'bg-slate-100 text-slate-500'
       }`}>
         {gender}
       </div>
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete?.(id);
+        }}
+        className="absolute bottom-4 right-4 p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:text-red-500 hover:bg-white z-10 shadow-sm"
+      >
+        <X className="w-4 h-4" />
+      </button>
       {isSelected && (
         <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
           <div className="bg-primary text-white p-2 rounded-full">
@@ -149,8 +173,8 @@ const BirdCard = ({ id, ring, species, gender, age, date, cage, onSelect, isSele
     <div className="space-y-4">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-bold text-primary/40 font-display">#{id}</span>
-          <h3 className="text-xl font-bold font-display text-slate-800">{ring}</h3>
+          <h3 className="text-xl font-bold font-display text-slate-800">{name}</h3>
+          <span className="text-xs font-bold text-primary/40 font-display">({ring})</span>
         </div>
         <p className="text-sm text-slate-500 font-medium">{species}</p>
       </div>
@@ -166,7 +190,7 @@ const BirdCard = ({ id, ring, species, gender, age, date, cage, onSelect, isSele
         </div>
         <div className="flex items-center gap-2 text-slate-400">
           <Calendar className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-medium">{date}</span>
+          <span className="text-[11px] font-medium">Age: {new Date().getFullYear() - parseInt(birthYear)} years</span>
         </div>
         <div className="flex items-center gap-2 text-slate-400">
           <MapPin className="w-3.5 h-3.5" />
@@ -248,6 +272,17 @@ export default function App() {
   const [isEggModalOpen, setIsEggModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {}
+  });
   const [editingBirdId, setEditingBirdId] = useState<string | null>(null);
   const [editingCoupleId, setEditingCoupleId] = useState<string | null>(null);
   const [editingEggId, setEditingEggId] = useState<string | null>(null);
@@ -268,76 +303,143 @@ export default function App() {
     { id: 2, title: "Egg Update", message: "Couple #001 laid a new egg!", time: "2 hours ago", read: false }
   ]);
   
-  const [birds, setBirds] = useState<BirdData[]>([
-    {
-      id: "001",
-      ring: "656",
-      species: "Perzikkopagapornis",
-      gender: "Female",
-      age: 120,
-      date: "1/1/2026",
-      cage: "1"
-    },
-    {
-      id: "002",
-      ring: "789",
-      species: "Perzikkopagapornis",
-      gender: "Male",
-      age: 150,
-      date: "12/15/2025",
-      cage: "1"
-    }
-  ]);
-
+  const [birds, setBirds] = useState<BirdData[]>([]);
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
 
   const [newBird, setNewBird] = useState({
+    name: "",
     ring: "",
     species: SPECIES_LIST[0].name,
     gender: "Male" as "Male" | "Female",
     age: 0,
+    birthYear: new Date().getFullYear().toString(),
     date: new Date().toLocaleDateString(),
     cage: "1",
     mutation: ""
   });
 
-  const handleAddBird = (e: FormEvent) => {
+  // Firestore Real-time Sync
+  useEffect(() => {
+    if (!user) {
+      setBirds([]);
+      setCouples([]);
+      setEggs([]);
+      return;
+    }
+
+    const birdsQuery = query(collection(db, "birds"), where("userId", "==", user.uid));
+    const unsubscribeBirds = onSnapshot(birdsQuery, (snapshot) => {
+      const birdsList = snapshot.docs.map(doc => doc.data() as BirdData);
+      setBirds(birdsList);
+    }, (error) => console.error("Birds sync error:", error));
+
+    const couplesQuery = query(collection(db, "couples"), where("userId", "==", user.uid));
+    const unsubscribeCouples = onSnapshot(couplesQuery, (snapshot) => {
+      const couplesList = snapshot.docs.map(doc => doc.data() as CoupleData);
+      setCouples(couplesList);
+    }, (error) => console.error("Couples sync error:", error));
+
+    const eggsQuery = query(collection(db, "eggs"), where("userId", "==", user.uid));
+    const unsubscribeEggs = onSnapshot(eggsQuery, (snapshot) => {
+      const eggsList = snapshot.docs.map(doc => doc.data() as EggData);
+      setEggs(eggsList);
+    }, (error) => console.error("Eggs sync error:", error));
+
+    const userDocRef = doc(db, "users", user.uid);
+    const unsubscribeUser = onSnapshot(userDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserProfile({
+          name: data.name || "",
+          location: data.location || "",
+          email: data.email || "",
+          avatar: data.avatar || (data.name ? data.name.substring(0, 2).toUpperCase() : "??")
+        });
+      }
+    }, (error) => console.error("User profile sync error:", error));
+
+    return () => {
+      unsubscribeBirds();
+      unsubscribeCouples();
+      unsubscribeEggs();
+      unsubscribeUser();
+    };
+  }, [user]);
+
+  const handleAddBird = async (e: FormEvent) => {
     e.preventDefault();
-    const id = (birds.length + 1).toString().padStart(3, '0');
-    setBirds([...birds, { ...newBird, id }]);
-    setIsModalOpen(false);
-    setNewBird({ ring: "", species: "", gender: "Male", age: 0, date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
+    if (!user) return;
+    const id = Date.now().toString();
+    const birdData = { ...newBird, id, userId: user.uid };
+    try {
+      await setDoc(doc(db, "birds", id), birdData);
+      setIsModalOpen(false);
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
+    } catch (error) {
+      console.error("Error adding bird:", error);
+    }
   };
 
-  const handleUpdateBird = (e: FormEvent) => {
+  const handleUpdateBird = async (e: FormEvent) => {
     e.preventDefault();
-    if (!editingBirdId) return;
-    setBirds(birds.map(b => b.id === editingBirdId ? { ...newBird, id: b.id } : b));
-    setIsModalOpen(false);
-    setEditingBirdId(null);
-    setNewBird({ ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
+    if (!editingBirdId || !user) return;
+    try {
+      await updateDoc(doc(db, "birds", editingBirdId), { ...newBird });
+      setIsModalOpen(false);
+      setEditingBirdId(null);
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
+    } catch (error) {
+      console.error("Error updating bird:", error);
+    }
+  };
+
+  const handleDeleteBird = async (id: string) => {
+    if (!user) return;
+    setConfirmModal({
+      isOpen: true,
+      title: "حذف طائر",
+      message: "هل أنت متأكد من حذف هذا الطائر؟ سيتم حذف جميع البيانات المرتبطة به.",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "birds", id));
+          // Also delete related couples and eggs
+          const relatedCouples = couples.filter(c => c.maleId === id || c.femaleId === id);
+          for (const couple of relatedCouples) {
+            await handleDeleteCouple(couple.id, true);
+          }
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error("Error deleting bird:", error);
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   const openBirdModal = (bird?: BirdData) => {
     if (bird) {
       setEditingBirdId(bird.id);
       setNewBird({
-        ring: bird.ring,
-        species: bird.species,
-        gender: bird.gender,
-        age: bird.age,
-        date: bird.date,
-        cage: bird.cage,
+        name: bird.name || "",
+        ring: bird.ring || "",
+        species: bird.species || SPECIES_LIST[0].name,
+        gender: bird.gender || "Male",
+        age: bird.age || 0,
+        birthYear: bird.birthYear || new Date().getFullYear().toString(),
+        date: bird.date || new Date().toLocaleDateString(),
+        cage: bird.cage || "1",
         mutation: bird.mutation || ""
       });
     } else {
       setEditingBirdId(null);
       setNewBird({
+        name: "",
         ring: "",
         species: SPECIES_LIST[0].name,
         gender: "Male",
         age: 0,
+        birthYear: new Date().getFullYear().toString(),
         date: new Date().toLocaleDateString(),
         cage: "1",
         mutation: ""
@@ -356,8 +458,8 @@ export default function App() {
     }
   };
 
-  const handleCreateCouple = () => {
-    if (selectedBirds.length !== 2) return;
+  const handleCreateCouple = async () => {
+    if (selectedBirds.length !== 2 || !user) return;
     const bird1 = birds.find(b => b.id === selectedBirds[0]);
     const bird2 = birds.find(b => b.id === selectedBirds[1]);
     
@@ -383,25 +485,31 @@ export default function App() {
     const male = bird1.gender === 'Male' ? bird1 : bird2;
     const female = bird1.gender === 'Female' ? bird1 : bird2;
 
-    const newCouple: CoupleData = {
-      id: (couples.length + 1).toString().padStart(3, '0'),
+    const id = Date.now().toString();
+    const newCouple: CoupleData & { userId: string } = {
+      id,
       maleId: male.id,
       femaleId: female.id,
       startDate: new Date().toLocaleDateString(),
-      status: 'Active'
+      status: 'Active',
+      userId: user.uid
     };
 
-    setCouples([...couples, newCouple]);
-    setSelectedBirds([]);
-    setActiveTab("Couples");
-    setIsCoupleModalOpen(false);
-    setSelectedMaleId("");
-    setSelectedFemaleId("");
+    try {
+      await setDoc(doc(db, "couples", id), newCouple);
+      setSelectedBirds([]);
+      setActiveTab("Couples");
+      setIsCoupleModalOpen(false);
+      setSelectedMaleId("");
+      setSelectedFemaleId("");
+    } catch (error) {
+      console.error("Error creating couple:", error);
+    }
   };
 
-  const handleCreateCoupleFromModal = (e: FormEvent) => {
+  const handleCreateCoupleFromModal = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selectedMaleId || !selectedFemaleId) return;
+    if (!selectedMaleId || !selectedFemaleId || !user) return;
 
     const male = birds.find(b => b.id === selectedMaleId);
     const female = birds.find(b => b.id === selectedFemaleId);
@@ -421,35 +529,73 @@ export default function App() {
       return;
     }
     
-    const newCouple: CoupleData = {
-      id: (couples.length + 1).toString().padStart(3, '0'),
+    const id = Date.now().toString();
+    const newCouple: CoupleData & { userId: string } = {
+      id,
       maleId: selectedMaleId,
       femaleId: selectedFemaleId,
       startDate: new Date().toLocaleDateString(),
-      status: 'Active'
+      status: 'Active',
+      userId: user.uid
     };
 
-    setCouples([...couples, newCouple]);
-    setIsCoupleModalOpen(false);
-    setSelectedMaleId("");
-    setSelectedFemaleId("");
-    setActiveTab("Couples");
+    try {
+      await setDoc(doc(db, "couples", id), newCouple);
+      setIsCoupleModalOpen(false);
+      setSelectedMaleId("");
+      setSelectedFemaleId("");
+      setActiveTab("Couples");
+    } catch (error) {
+      console.error("Error creating couple from modal:", error);
+    }
   };
 
-  const handleUpdateCouple = (e: FormEvent) => {
+  const handleUpdateCouple = async (e: FormEvent) => {
     e.preventDefault();
-    if (!editingCoupleId || !selectedMaleId || !selectedFemaleId) return;
+    if (!editingCoupleId || !selectedMaleId || !selectedFemaleId || !user) return;
 
-    setCouples(couples.map(c => c.id === editingCoupleId ? {
-      ...c,
-      maleId: selectedMaleId,
-      femaleId: selectedFemaleId
-    } : c));
+    try {
+      await updateDoc(doc(db, "couples", editingCoupleId), {
+        maleId: selectedMaleId,
+        femaleId: selectedFemaleId
+      });
+      setIsCoupleModalOpen(false);
+      setEditingCoupleId(null);
+      setSelectedMaleId("");
+      setSelectedFemaleId("");
+    } catch (error) {
+      console.error("Error updating couple:", error);
+    }
+  };
 
-    setIsCoupleModalOpen(false);
-    setEditingCoupleId(null);
-    setSelectedMaleId("");
-    setSelectedFemaleId("");
+  const handleDeleteCouple = async (id: string, skipConfirm = false) => {
+    if (!user) return;
+    
+    const performDelete = async () => {
+      try {
+        await deleteDoc(doc(db, "couples", id));
+        // Delete related eggs
+        const relatedEggs = eggs.filter(e => e.coupleId === id);
+        for (const egg of relatedEggs) {
+          await deleteDoc(doc(db, "eggs", egg.id));
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      } catch (error) {
+        console.error("Error deleting couple:", error);
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    };
+
+    if (skipConfirm) {
+      await performDelete();
+    } else {
+      setConfirmModal({
+        isOpen: true,
+        title: "حذف كوبل",
+        message: "هل أنت متأكد من حذف هذا الكوبل؟",
+        onConfirm: performDelete
+      });
+    }
   };
 
   const openCoupleModal = (couple?: CoupleData) => {
@@ -560,32 +706,67 @@ export default function App() {
     const incubation = speciesInfo ? speciesInfo.incubation : 18;
     
     try {
-      const date = new Date(laidDate);
+      // Handle both YYYY-MM-DD and DD/MM/YYYY formats
+      let date: Date;
+      if (laidDate.includes('-')) {
+        date = new Date(laidDate);
+      } else if (laidDate.includes('/')) {
+        const [d, m, y] = laidDate.split('/').map(Number);
+        date = new Date(y, m - 1, d);
+      } else {
+        date = new Date(laidDate);
+      }
+
       if (isNaN(date.getTime())) return "";
       date.setDate(date.getDate() + incubation);
-      return date.toLocaleDateString();
+      
+      // Return in DD/MM/YYYY format for consistency
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     } catch (e) {
       return "";
     }
   };
 
-  const handleUpdateEgg = (e: FormEvent) => {
+  const handleUpdateEgg = async (e: FormEvent) => {
     e.preventDefault();
-    if (!editingEggId || !selectedCoupleId) return;
+    if (!editingEggId || !selectedCoupleId || !user) return;
 
     const hatchDate = newEgg.hatchDate || calculateHatchDate(newEgg.laidDate, selectedCoupleId);
 
-    setEggs(eggs.map(egg => egg.id === editingEggId ? {
-      ...egg,
-      ...newEgg,
-      hatchDate,
-      coupleId: selectedCoupleId
-    } : egg));
+    try {
+      await updateDoc(doc(db, "eggs", editingEggId), {
+        ...newEgg,
+        hatchDate,
+        coupleId: selectedCoupleId
+      });
+      setIsEggModalOpen(false);
+      setEditingEggId(null);
+      setSelectedCoupleId("");
+      setNewEgg({ laidDate: new Date().toLocaleDateString(), hatchDate: "", status: "Intact" });
+    } catch (error) {
+      console.error("Error updating egg:", error);
+    }
+  };
 
-    setIsEggModalOpen(false);
-    setEditingEggId(null);
-    setSelectedCoupleId("");
-    setNewEgg({ laidDate: new Date().toLocaleDateString(), hatchDate: "", status: "Intact" });
+  const handleDeleteEgg = async (id: string) => {
+    if (!user) return;
+    setConfirmModal({
+      isOpen: true,
+      title: "حذف بيضة",
+      message: "هل أنت متأكد من حذف هذه البيضة؟",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, "eggs", id));
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error("Error deleting egg:", error);
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   const openEggModal = (coupleId?: string, egg?: EggData) => {
@@ -593,9 +774,9 @@ export default function App() {
       setEditingEggId(egg.id);
       setSelectedCoupleId(egg.coupleId);
       setNewEgg({
-        laidDate: egg.laidDate,
+        laidDate: egg.laidDate || new Date().toLocaleDateString(),
         hatchDate: egg.hatchDate || "",
-        status: egg.status
+        status: egg.status || "Intact"
       });
     } else {
       setEditingEggId(null);
@@ -609,39 +790,52 @@ export default function App() {
     setIsEggModalOpen(true);
   };
 
-  const handleAddEgg = (coupleId: string) => {
-    if (!coupleId) return;
+  const handleAddEgg = async (coupleId: string) => {
+    if (!coupleId || !user) return;
     const hatchDate = newEgg.hatchDate || calculateHatchDate(newEgg.laidDate, coupleId);
-    const newEggData: EggData = {
-      id: (eggs.length + 1).toString().padStart(3, '0'),
+    const id = Math.floor(1000 + Math.random() * 9000).toString();
+    const newEggData: EggData & { userId: string } = {
+      id,
       coupleId,
       ...newEgg,
-      hatchDate
+      hatchDate,
+      userId: user.uid
     };
-    setEggs([...eggs, newEggData]);
-    setIsEggModalOpen(false);
-    setSelectedCoupleId("");
-    setNewEgg({ laidDate: new Date().toLocaleDateString(), hatchDate: "", status: "Intact" });
     
-    setNotifications([
-      { 
-        id: Date.now(), 
-        title: "New Egg!", 
-        message: `A new egg was added for Couple #${coupleId}. Est. hatch: ${hatchDate}`, 
-        time: "Just now", 
-        read: false 
-      },
-      ...notifications
-    ]);
+    try {
+      await setDoc(doc(db, "eggs", id), newEggData);
+      setIsEggModalOpen(false);
+      setSelectedCoupleId("");
+      setNewEgg({ laidDate: new Date().toLocaleDateString(), hatchDate: "", status: "Intact" });
+      
+      setNotifications([
+        { 
+          id: Date.now(), 
+          title: "New Egg!", 
+          message: `A new egg was added for Couple #${coupleId}. Est. hatch: ${hatchDate}`, 
+          time: "Just now", 
+          read: false 
+        },
+        ...notifications
+      ]);
+    } catch (error) {
+      console.error("Error adding egg:", error);
+    }
   };
 
-  const handleUpdateProfile = (e: FormEvent) => {
+  const handleUpdateProfile = async (e: FormEvent) => {
     e.preventDefault();
-    setIsProfileModalOpen(false);
-    setNotifications([
-      { id: Date.now(), title: "Profile Updated", message: "Your profile information has been updated.", time: "Just now", read: false },
-      ...notifications
-    ]);
+    if (!user) return;
+    try {
+      await setDoc(doc(db, "users", user.uid), { ...userProfile, userId: user.uid });
+      setIsProfileModalOpen(false);
+      setNotifications([
+        { id: Date.now(), title: "Profile Updated", message: "Your profile information has been updated.", time: "Just now", read: false },
+        ...notifications
+      ]);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
   const renderHeaderButton = () => {
@@ -1427,6 +1621,7 @@ export default function App() {
                   onSelect={() => handleToggleBirdSelection(bird.id)}
                   isSelected={selectedBirds.includes(bird.id)}
                   onEdit={() => openBirdModal(bird)}
+                  onDelete={handleDeleteBird}
                 />
               ))}
               <motion.div 
@@ -1468,34 +1663,69 @@ export default function App() {
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
+                    <button 
+                      onClick={() => handleDeleteCouple(couple.id)}
+                      className="absolute top-8 right-8 p-2 bg-slate-50 text-slate-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:text-red-500 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
                         <div className="flex -space-x-4">
-                          <div className="w-12 h-12 rounded-full bg-male flex items-center justify-center border-4 border-white shadow-sm">
-                            <Bird className="w-6 h-6 text-male-text" />
+                          <div className="w-14 h-14 rounded-2xl bg-male flex items-center justify-center border-4 border-white shadow-md rotate-[-6deg] hover:rotate-0 transition-transform">
+                            <Bird className="w-7 h-7 text-male-text" />
                           </div>
-                          <div className="w-12 h-12 rounded-full bg-female flex items-center justify-center border-4 border-white shadow-sm">
-                            <Bird className="w-6 h-6 text-female-text" />
+                          <div className="w-14 h-14 rounded-2xl bg-female flex items-center justify-center border-4 border-white shadow-md rotate-[6deg] hover:rotate-0 transition-transform">
+                            <Bird className="w-7 h-7 text-female-text" />
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-bold font-display text-lg">Couple #{couple.id}</h4>
-                          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Started {couple.startDate}</p>
+                          <h4 className="font-bold font-display text-xl text-slate-800">
+                            {male ? `${male.name}` : 'N/A'} 
+                            <span className="text-slate-300 mx-2">×</span> 
+                            {female ? `${female.name}` : 'N/A'}
+                          </h4>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Started {couple.startDate}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase tracking-widest">
+                      <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                        couple.status === 'Active' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-slate-50 text-slate-500 border border-slate-100'
+                      }`}>
                         {couple.status}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 mb-8">
-                      <div className="p-4 rounded-2xl bg-slate-50">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Male</span>
-                        <span className="font-bold text-slate-800">{male?.ring}</span>
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/male">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Male (الذكر)</span>
+                          <Bird className="w-3 h-3 text-male-text opacity-30" />
+                        </div>
+                        <div className="space-y-2">
+                          <span className="font-bold text-slate-800 block text-sm">{male?.name} <span className="text-slate-400 font-medium">#{male?.ring}</span></span>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.birthYear}</span>
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.mutation || 'Normal'}</span>
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.species}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="p-4 rounded-2xl bg-slate-50">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Female</span>
-                        <span className="font-bold text-slate-800">{female?.ring}</span>
+                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/female">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Female (الأنثى)</span>
+                          <Bird className="w-3 h-3 text-female-text opacity-30" />
+                        </div>
+                        <div className="space-y-2">
+                          <span className="font-bold text-slate-800 block text-sm">{female?.name} <span className="text-slate-400 font-medium">#{female?.ring}</span></span>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.birthYear}</span>
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.mutation || 'Normal'}</span>
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.species}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -1541,16 +1771,20 @@ export default function App() {
                 const male = birds.find(b => b.id === couple?.maleId);
                 const female = birds.find(b => b.id === couple?.femaleId);
                 
-                const isNearHatching = (() => {
-                  if (!egg.hatchDate || egg.status !== 'Intact') return false;
+                const daysToHatch = (() => {
+                  if (!egg.hatchDate || egg.status !== 'Intact') return null;
                   try {
                     const [day, month, year] = egg.hatchDate.split('/').map(Number);
                     const hatch = new Date(year, month - 1, day).getTime();
-                    const now = new Date().getTime();
-                    const diffDays = (hatch - now) / (1000 * 60 * 60 * 24);
-                    return diffDays <= 2 && diffDays >= 0;
-                  } catch (e) { return false; }
+                    const now = new Date();
+                    now.setHours(0, 0, 0, 0);
+                    const diffTime = hatch - now.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays;
+                  } catch (e) { return null; }
                 })();
+
+                const isNearHatching = daysToHatch !== null && daysToHatch <= 2 && daysToHatch >= 0;
 
                 return (
                   <motion.div
@@ -1560,6 +1794,24 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     className="relative flex flex-col items-center group"
                   >
+                    {/* Edit/Delete Buttons - Moved outside overflow-hidden container */}
+                    <div className="absolute -top-2 -right-2 flex flex-col gap-2 z-40">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); openEggModal(undefined, egg); }}
+                        className="p-2.5 bg-white shadow-xl text-slate-400 rounded-xl hover:text-primary hover:scale-110 transition-all border border-slate-100"
+                        title="تعديل"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDeleteEgg(egg.id); }}
+                        className="p-2.5 bg-white shadow-xl text-slate-400 rounded-xl hover:text-red-500 hover:scale-110 transition-all border border-slate-100"
+                        title="حذف"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
                     {/* Egg Shape Container - Enhanced Professional Design */}
                     <div className={`relative w-full aspect-[4/5] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-t border-white/40 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center overflow-hidden
                       ${isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-amber-200 animate-pulse' : 'bg-gradient-to-b from-white to-slate-50 border-slate-100'}
@@ -1588,24 +1840,25 @@ export default function App() {
                         {egg.status}
                       </div>
 
-                      {/* Edit Button */}
-                      <button 
-                        onClick={() => openEggModal(undefined, egg)}
-                        className="absolute top-6 right-6 p-2 bg-white/80 backdrop-blur-md text-slate-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:text-accent-orange shadow-sm border border-slate-100 z-20"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-
                       {/* Egg Content */}
                       <div className="space-y-4 relative z-10 w-full">
-                        <div className="w-12 h-12 rounded-2xl bg-white shadow-inner flex items-center justify-center mx-auto mb-4 border border-slate-50">
-                          <EggIcon className="w-6 h-6 text-accent-orange" />
+                        <div className="relative w-16 h-16 mx-auto mb-4">
+                          <div className="w-16 h-16 rounded-2xl bg-white shadow-inner flex items-center justify-center border border-slate-50">
+                            <EggIcon className="w-8 h-8 text-accent-orange" />
+                          </div>
+                          {daysToHatch !== null && daysToHatch > 0 && (
+                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent-orange text-white rounded-full flex items-center justify-center text-[10px] font-black border-4 border-white shadow-lg animate-bounce">
+                              {daysToHatch}
+                            </div>
+                          )}
                         </div>
                         
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Couple</p>
                           <p className="text-sm font-bold text-slate-800 truncate px-2">
-                            {male ? male.ring : 'N/A'} <span className="text-slate-300 mx-1">×</span> {female ? female.ring : 'N/A'}
+                            {male ? `${male.name} (${male.ring})` : 'N/A'} 
+                            <span className="text-slate-300 mx-1">×</span> 
+                            {female ? `${female.name} (${female.ring})` : 'N/A'}
                           </p>
                         </div>
 
@@ -1958,7 +2211,18 @@ export default function App() {
               <form onSubmit={editingBirdId ? handleUpdateBird : handleAddBird} className="p-8 space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ring Number</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Bird Name (اسم الطائر)</label>
+                    <input 
+                      required
+                      type="text" 
+                      value={newBird.name}
+                      onChange={(e) => setNewBird({...newBird, name: e.target.value})}
+                      placeholder="e.g. Sky"
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ring Number (رقم الخاتم)</label>
                     <input 
                       required
                       type="text" 
@@ -1968,8 +2232,10 @@ export default function App() {
                       className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary focus:ring-4 focus:ring-primary/5 outline-none transition-all font-medium"
                     />
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Species</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Species (النوع)</label>
                     <select 
                       required
                       value={newBird.species}
@@ -1981,10 +2247,8 @@ export default function App() {
                       ))}
                     </select>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gender</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Gender (الجنس)</label>
                     <select 
                       value={newBird.gender}
                       onChange={(e) => setNewBird({...newBird, gender: e.target.value as any})}
@@ -1992,10 +2256,23 @@ export default function App() {
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
+                      <option value="Unknown">Unknown (لا أعلم)</option>
                     </select>
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cage Number</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Birth Year (سنة الميلاد)</label>
+                    <input 
+                      type="text" 
+                      value={newBird.birthYear}
+                      onChange={(e) => setNewBird({...newBird, birthYear: e.target.value})}
+                      placeholder="e.g. 2024"
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cage Number (رقم القفص)</label>
                     <input 
                       type="text" 
                       value={newBird.cage}
@@ -2006,15 +2283,6 @@ export default function App() {
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Age (days)</label>
-                    <input 
-                      type="number" 
-                      value={newBird.age}
-                      onChange={(e) => setNewBird({...newBird, age: parseInt(e.target.value) || 0})}
-                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
-                    />
-                  </div>
-                  <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mutation (الطفرة)</label>
                     <input 
                       type="text" 
@@ -2024,8 +2292,6 @@ export default function App() {
                       className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
                     />
                   </div>
-                </div>
-                <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Date Added</label>
                     <input 
@@ -2156,7 +2422,7 @@ export default function App() {
                     ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Laid Date</label>
                     <input 
@@ -2165,19 +2431,7 @@ export default function App() {
                       onChange={(e) => setNewEgg({...newEgg, laidDate: e.target.value})}
                       className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Hatch Date (Est.)</label>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        value={newEgg.hatchDate || (selectedCoupleId ? calculateHatchDate(newEgg.laidDate, selectedCoupleId) : "")}
-                        onChange={(e) => setNewEgg({...newEgg, hatchDate: e.target.value})}
-                        placeholder="Calculated automatically"
-                        className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
-                      />
-                      <Clock className="absolute right-4 top-4 w-5 h-5 text-slate-300" />
-                    </div>
+                    <p className="text-[10px] text-slate-400 font-medium">Hatch date will be calculated automatically based on species.</p>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -2362,6 +2616,48 @@ export default function App() {
                 >
                   Got it!
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {confirmModal.isOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+              className="absolute inset-0 bg-sidebar/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <X className="w-10 h-10" />
+                </div>
+                <h3 className="text-2xl font-bold font-display text-slate-800 mb-2">{confirmModal.title}</h3>
+                <p className="text-slate-500 font-medium mb-8">{confirmModal.message}</p>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                  >
+                    إلغاء
+                  </button>
+                  <button 
+                    onClick={confirmModal.onConfirm}
+                    className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all"
+                  >
+                    تأكيد الحذف
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

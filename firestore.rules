@@ -1,20 +1,93 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: birds
+    // Fields: id, ring, species, gender, age, date, cage, mutation, userId
+    //
+    // Collection: couples
+    // Fields: id, maleId, femaleId, startDate, status, userId
+    //
+    // Collection: eggs
+    // Fields: id, coupleId, laidDate, hatchDate, status, userId
+    //
+    // Collection: users
+    // Fields: name, location, email, avatar, userId
+    //
+    // ===============================================================
+
+    // ===============================================================
     // Helper Functions
+    // ===============================================================
+    
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // User Profiles
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isValidBird(data) {
+      return data.keys().hasAll(['id', 'ring', 'species', 'gender', 'userId']) &&
+             data.id is string && data.ring is string && data.species is string &&
+             data.gender in ['Male', 'Female'] && data.userId == request.auth.uid;
+    }
+
+    function isValidCouple(data) {
+      return data.keys().hasAll(['id', 'maleId', 'femaleId', 'userId']) &&
+             data.id is string && data.maleId is string && data.femaleId is string &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidEgg(data) {
+      return data.keys().hasAll(['id', 'coupleId', 'laidDate', 'userId']) &&
+             data.id is string && data.coupleId is string && data.laidDate is string &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['userId']) &&
+             data.userId == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /birds/{birdId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidBird(request.resource.data);
+      allow update: if isDocOwner() && isValidBird(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /couples/{coupleId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidCouple(request.resource.data);
+      allow update: if isDocOwner() && isValidCouple(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /eggs/{eggId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated() && isValidEgg(request.resource.data);
+      allow update: if isDocOwner() && isValidEgg(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
     }
   }
 }

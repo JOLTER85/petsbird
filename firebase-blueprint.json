@@ -1,23 +1,82 @@
 {
   "entities": {
-    "users": {
-      "title": "User",
-      "description": "Application user profile",
+    "Bird": {
+      "title": "Bird",
+      "description": "A bird in the aviary",
       "type": "object",
       "properties": {
-        "uid": { "type": "string" },
-        "email": { "type": "string" },
-        "displayName": { "type": "string" },
-        "photoURL": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ring": { "type": "string" },
+        "species": { "type": "string" },
+        "gender": { "type": "string", "enum": ["Male", "Female"] },
+        "age": { "type": "number" },
+        "birthYear": { "type": "string" },
+        "date": { "type": "string" },
+        "cage": { "type": "string" },
+        "mutation": { "type": "string" },
+        "userId": { "type": "string" }
       },
-      "required": ["uid", "email"]
+      "required": ["id", "name", "ring", "species", "gender", "userId"]
+    },
+    "Couple": {
+      "title": "Couple",
+      "description": "A breeding pair of birds",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "maleId": { "type": "string" },
+        "femaleId": { "type": "string" },
+        "startDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "maleId", "femaleId", "userId"]
+    },
+    "Egg": {
+      "title": "Egg",
+      "description": "An egg laid by a couple",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "coupleId": { "type": "string" },
+        "laidDate": { "type": "string" },
+        "hatchDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["Intact", "Hatched", "Broken"] },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "coupleId", "laidDate", "userId"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "email": { "type": "string" },
+        "avatar": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["userId"]
     }
   },
   "firestore": {
+    "/birds/{birdId}": {
+      "schema": "Bird",
+      "description": "Collection of birds"
+    },
+    "/couples/{coupleId}": {
+      "schema": "Couple",
+      "description": "Collection of breeding pairs"
+    },
+    "/eggs/{eggId}": {
+      "schema": "Egg",
+      "description": "Collection of eggs"
+    },
     "/users/{userId}": {
-      "schema": "users",
-      "description": "User profile documents"
+      "schema": "UserProfile",
+      "description": "User profile data"
     }
   }
 }
