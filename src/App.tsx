@@ -253,21 +253,31 @@ export default function App() {
   const [landingTab, setLandingTab] = useState("Home");
 
   useEffect(() => {
-    const handleHashChange = () => {
+    const handleNavigation = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ["Home", "Features", "Genetics", "Advice", "About", "News", "Terms"];
+      const path = window.location.pathname.replace('/', '');
+      const validTabs = ["Home", "Features", "Genetics", "Advice", "About", "News", "Terms", "Privacy", "Contact", "Marketplace"];
+      
+      // Priority: Hash > Path
       if (validTabs.includes(hash)) {
         setLandingTab(hash);
         window.scrollTo(0, 0);
-      } else if (!hash) {
+      } else if (validTabs.includes(path)) {
+        setLandingTab(path);
+        window.scrollTo(0, 0);
+      } else if (!hash && !path) {
         setLandingTab("Home");
       }
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Initial check
+    window.addEventListener('hashchange', handleNavigation);
+    window.addEventListener('popstate', handleNavigation);
+    handleNavigation(); // Initial check
 
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleNavigation);
+      window.removeEventListener('popstate', handleNavigation);
+    };
   }, []);
 
   const navigateToTab = (tab: string, newTab = false) => {
@@ -1713,6 +1723,110 @@ export default function App() {
           </section>
         )}
 
+        {landingTab === "Marketplace" && (
+          <section className="pt-40 pb-20 px-8 max-w-7xl mx-auto min-h-screen">
+            <div className="text-center mb-20">
+              <h2 className="text-6xl font-black font-display text-slate-900 mb-6">Marketplace</h2>
+              <p className="text-xl text-slate-500 max-w-2xl mx-auto">Connect with verified breeders and find the perfect addition to your aviary.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { title: "Rare Mutation Canaries", price: "$150", img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600" },
+                { title: "Show Quality Budgies", price: "$80", img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600" },
+                { title: "Breeding Pairs", price: "$250", img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600" }
+              ].map((item, i) => (
+                <div key={i} className="glass p-6 rounded-[40px] border-white/20 group cursor-pointer">
+                  <div className="aspect-square rounded-3xl overflow-hidden mb-6">
+                    <img src={item.img} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" referrerPolicy="no-referrer" />
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-800 mb-2">{item.title}</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-primary font-black">{item.price}</span>
+                    <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-colors">View Details</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
+            </div>
+          </section>
+        )}
+
+        {landingTab === "Privacy" && (
+          <section className="pt-40 pb-20 px-8 max-w-4xl mx-auto min-h-screen">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-black font-display text-slate-900 mb-6">Privacy Policy</h2>
+              <p className="text-slate-500">Last updated: April 9, 2026</p>
+            </div>
+            <div className="prose prose-slate max-w-none glass p-12 rounded-[40px] border-white/20">
+              <h3 className="text-2xl font-bold mb-4">1. Information We Collect</h3>
+              <p className="text-slate-600 mb-8">We collect information you provide directly to us, such as when you create an account, update your profile, or use our breeding tools.</p>
+              
+              <h3 className="text-2xl font-bold mb-4">2. How We Use Your Information</h3>
+              <p className="text-slate-600 mb-8">We use the information we collect to provide, maintain, and improve our services, and to develop new features for our breeders.</p>
+              
+              <h3 className="text-2xl font-bold mb-4">3. Data Security</h3>
+              <p className="text-slate-600 mb-8">We take reasonable measures to help protect information about you from loss, theft, misuse, and unauthorized access.</p>
+            </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
+            </div>
+          </section>
+        )}
+
+        {landingTab === "Contact" && (
+          <section className="pt-40 pb-20 px-8 max-w-4xl mx-auto min-h-screen">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-black font-display text-slate-900 mb-6">Contact Us</h2>
+              <p className="text-slate-500">We're here to help you with any questions or feedback.</p>
+            </div>
+            <div className="glass p-12 rounded-[40px] border-white/20">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+                <div>
+                  <h4 className="text-xl font-bold text-slate-800 mb-4">Email Us</h4>
+                  <p className="text-slate-500 mb-2">Support: support@petsbird.com</p>
+                  <p className="text-slate-500">Partnerships: hello@petsbird.com</p>
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-slate-800 mb-4">Follow Us</h4>
+                  <p className="text-slate-500 mb-2">Twitter: @PetsBirdApp</p>
+                  <p className="text-slate-500">Instagram: @petsbird_official</p>
+                </div>
+              </div>
+              <form className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <input type="text" placeholder="Name" className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-primary transition-all" />
+                  <input type="email" placeholder="Email" className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-primary transition-all" />
+                </div>
+                <textarea placeholder="Your Message" className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-primary transition-all h-40"></textarea>
+                <button className="w-full py-5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">Send Message</button>
+              </form>
+            </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* Stats Section */}
         <section className="py-32 px-8 bg-slate-900 text-white overflow-hidden relative">
           <div className="max-w-7xl mx-auto relative z-10">
@@ -1760,6 +1874,7 @@ export default function App() {
                     <li onClick={() => navigateToTab("Features", true)} className="hover:text-primary cursor-pointer">Features</li>
                     <li onClick={() => navigateToTab("Genetics", true)} className="hover:text-primary cursor-pointer">AI Genetics</li>
                     <li onClick={() => navigateToTab("Advice", true)} className="hover:text-primary cursor-pointer">Advice</li>
+                    <li onClick={() => navigateToTab("Marketplace", true)} className="hover:text-primary cursor-pointer">Marketplace</li>
                   </ul>
                 </div>
                 <div className="space-y-4">
@@ -1767,8 +1882,8 @@ export default function App() {
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
                     <li onClick={() => navigateToTab("About", true)} className="hover:text-primary cursor-pointer">About Us</li>
                     <li onClick={() => navigateToTab("Terms", true)} className="hover:text-primary cursor-pointer">Terms & Conditions</li>
-                    <li onClick={() => navigateToTab("About", true)} className="hover:text-primary cursor-pointer">Contact</li>
-                    <li onClick={() => navigateToTab("Terms", true)} className="hover:text-primary cursor-pointer">Privacy</li>
+                    <li onClick={() => navigateToTab("Contact", true)} className="hover:text-primary cursor-pointer">Contact</li>
+                    <li onClick={() => navigateToTab("Privacy", true)} className="hover:text-primary cursor-pointer">Privacy</li>
                   </ul>
                 </div>
               </div>
