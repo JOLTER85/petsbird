@@ -235,7 +235,8 @@ export default function App() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // Handle initial routing based on pathname
-    if (window.location.pathname === '/auth' || window.location.pathname === '/app') {
+    const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
+    if (path === '/auth' || path === '/app') {
       if (!user) {
         setShowAuthPage(true);
       } else {
