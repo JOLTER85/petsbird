@@ -93,6 +93,7 @@ interface EggData {
   coupleId: string;
   laidDate: string;
   hatchDate?: string;
+  fertilityCheckDate?: string;
   status: 'Intact' | 'Hatched' | 'Broken';
 }
 
@@ -114,7 +115,7 @@ const SPECIES_LIST = [
   },
   { 
     name: "Cockatiel (كوكتيل)", 
-    incubation: 20,
+    incubation: 19, // Average of 18-21
     mutations: ["Normal", "Lutino", "Pearl", "Pied", "Cinnamon", "Whiteface", "Albino", "Emerald"]
   },
   { 
@@ -919,15 +920,14 @@ export default function App() {
 
   const calculateHatchDate = (laidDate: string, coupleId: string) => {
     const couple = couples.find(c => c.id === coupleId);
-    if (!couple) return "";
+    if (!couple) return { hatch: "", fertility: "" };
     const female = birds.find(b => b.id === couple.femaleId);
-    if (!female) return "";
+    if (!female) return { hatch: "", fertility: "" };
     
     const speciesInfo = SPECIES_LIST.find(s => s.name === female.species);
     const incubation = speciesInfo ? speciesInfo.incubation : 18;
     
     try {
-      // Handle both YYYY-MM-DD and DD/MM/YYYY formats
       let date: Date;
       if (laidDate.includes('-')) {
         date = new Date(laidDate);
@@ -938,16 +938,29 @@ export default function App() {
         date = new Date(laidDate);
       }
 
-      if (isNaN(date.getTime())) return "";
-      date.setDate(date.getDate() + incubation);
+      if (isNaN(date.getTime())) return { hatch: "", fertility: "" };
+
+      // Calculate Fertility Check (7 days)
+      const fertilityDate = new Date(date);
+      fertilityDate.setDate(fertilityDate.getDate() + 7);
       
-      // Return in DD/MM/YYYY format for consistency
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
+      // Calculate Hatch Date
+      const hatchDate = new Date(date);
+      hatchDate.setDate(hatchDate.getDate() + incubation);
+      
+      const formatDate = (d: Date) => {
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      return {
+        hatch: formatDate(hatchDate),
+        fertility: formatDate(fertilityDate)
+      };
     } catch (e) {
-      return "";
+      return { hatch: "", fertility: "" };
     }
   };
 
@@ -1014,13 +1027,15 @@ export default function App() {
 
   const handleAddEgg = async (coupleId: string) => {
     if (!coupleId || !user) return;
-    const hatchDate = newEgg.hatchDate || calculateHatchDate(newEgg.laidDate, coupleId);
+    const { hatch, fertility } = calculateHatchDate(newEgg.laidDate, coupleId);
+    const hatchDate = newEgg.hatchDate || hatch;
     const id = Math.floor(1000 + Math.random() * 9000).toString();
     const newEggData: EggData & { userId: string } = {
       id,
       coupleId,
       ...newEgg,
       hatchDate,
+      fertilityCheckDate: fertility,
       userId: user.uid
     };
     
@@ -2183,7 +2198,25 @@ export default function App() {
                   } catch (e) { return null; }
                 })();
 
-                const isNearHatching = daysToHatch !== null && daysToHatch <= 2 && daysToHatch >= 0;
+                const progress = (() => {
+                  if (!egg.laidDate || !egg.hatchDate || egg.status !== 'Intact') return 0;
+                  try {
+                    const parseDate = (dStr: string) => {
+                      if (dStr.includes('-')) return new Date(dStr);
+                      const [d, m, y] = dStr.split('/').map(Number);
+                      return new Date(y, m - 1, d);
+                    };
+                    const laid = parseDate(egg.laidDate).getTime();
+                    const hatch = parseDate(egg.hatchDate).getTime();
+                    const now = new Date().getTime();
+                    const total = hatch - laid;
+                    const elapsed = now - laid;
+                    return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+                  } catch (e) { return 0; }
+                })();
+
+                const isHatchingToday = daysToHatch === 0;
+                const isNearHatching = daysToHatch !== null && daysToHatch <= 2 && daysToHatch > 0;
 
                 return (
                   <motion.div
@@ -2193,7 +2226,7 @@ export default function App() {
                     whileHover={{ scale: 1.05 }}
                     className="relative flex flex-col items-center group"
                   >
-                    {/* Edit/Delete Buttons - Moved outside overflow-hidden container */}
+                    {/* Edit/Delete Buttons */}
                     <div className="absolute -top-2 -right-2 flex flex-col gap-2 z-40">
                       <button 
                         onClick={(e) => { e.stopPropagation(); openEggModal(undefined, egg); }}
@@ -2211,16 +2244,18 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* Egg Shape Container - Enhanced Professional Design */}
+                    {/* Egg Shape Container */}
                     <div className={`relative w-full aspect-[4/5] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-t border-white/40 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center overflow-hidden
-                      ${isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-amber-200 animate-pulse' : 'bg-gradient-to-b from-white to-slate-50 border-slate-100'}
+                      ${isHatchingToday ? 'bg-gradient-to-b from-orange-100 to-amber-100 border-orange-300 ring-4 ring-orange-400/20' : 
+                        isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-amber-200 animate-pulse' : 
+                        'bg-gradient-to-b from-white to-slate-50 border-slate-100'}
                       ${egg.status === 'Broken' ? 'opacity-60 grayscale' : ''}
                     `}>
                       {/* Depth Shadow */}
                       <div className="absolute inset-0 bg-gradient-to-tr from-black/5 to-transparent pointer-events-none" />
                       
-                      {/* Cracking Effect for near hatching */}
-                      {isNearHatching && (
+                      {/* Cracking Effect */}
+                      {(isNearHatching || isHatchingToday) && (
                         <div className="absolute inset-0 pointer-events-none opacity-30">
                           <svg viewBox="0 0 100 120" className="w-full h-full fill-none stroke-amber-900/20 stroke-[0.5]">
                             <path d="M30,40 L45,55 L35,70" />
@@ -2234,16 +2269,17 @@ export default function App() {
                       <div className={`absolute top-6 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm z-20 ${
                         egg.status === 'Hatched' ? 'bg-green-500 text-white' :
                         egg.status === 'Broken' ? 'bg-red-500 text-white' :
+                        isHatchingToday ? 'bg-orange-500 text-white animate-bounce' :
                         'bg-primary text-white'
                       }`}>
-                        {egg.status}
+                        {isHatchingToday ? 'Hatching Today! 🥚🐣' : egg.status}
                       </div>
 
                       {/* Egg Content */}
                       <div className="space-y-4 relative z-10 w-full">
                         <div className="relative w-16 h-16 mx-auto mb-4">
-                          <div className="w-16 h-16 rounded-2xl bg-white shadow-inner flex items-center justify-center border border-slate-50">
-                            <EggIcon className="w-8 h-8 text-accent-orange" />
+                          <div className={`w-16 h-16 rounded-2xl bg-white shadow-inner flex items-center justify-center border ${isHatchingToday ? 'border-orange-200' : 'border-slate-50'}`}>
+                            <EggIcon className={`w-8 h-8 ${isHatchingToday ? 'text-orange-500' : 'text-accent-orange'}`} />
                           </div>
                           {daysToHatch !== null && daysToHatch > 0 && (
                             <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent-orange text-white rounded-full flex items-center justify-center text-[10px] font-black border-4 border-white shadow-lg animate-bounce">
@@ -2266,6 +2302,23 @@ export default function App() {
                           <p className="text-2xl font-black font-display text-primary">#{egg.id}</p>
                         </div>
 
+                        {/* Progress Bar */}
+                        {egg.status === 'Intact' && (
+                          <div className="space-y-2 pt-2">
+                            <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-slate-400">
+                              <span>Incubation</span>
+                              <span>{progress}%</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                className={`h-full ${isHatchingToday ? 'bg-orange-500' : 'bg-primary'}`}
+                              />
+                            </div>
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100/50">
                           <div className="flex flex-col items-center">
                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Laid</span>
@@ -2276,6 +2329,14 @@ export default function App() {
                             <span className="text-[10px] font-bold text-white bg-accent-orange px-2 py-1 rounded-lg shadow-sm shadow-accent-orange/20">{egg.hatchDate || "TBD"}</span>
                           </div>
                         </div>
+
+                        {/* Fertility Check Date */}
+                        {egg.fertilityCheckDate && egg.status === 'Intact' && (
+                          <div className="pt-2">
+                            <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Fertility Check</span>
+                            <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">{egg.fertilityCheckDate}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Near Hatching Indicator */}
