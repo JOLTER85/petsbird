@@ -250,8 +250,8 @@ export default function App() {
   }, [user]);
 
   const handleLaunchApp = () => {
-    const url = window.location.origin + (user ? '/app' : '/auth');
-    window.open(url, '_blank');
+    const appPath = window.location.origin + (user ? '/app' : '/auth');
+    window.open(appPath, '_blank');
   };
 
   const handleInstallClick = async () => {
