@@ -254,37 +254,34 @@ export default function App() {
 
   useEffect(() => {
     const handleNavigation = () => {
-      const hash = window.location.hash.replace('#', '');
       const path = window.location.pathname.replace('/', '');
       const validTabs = ["Home", "Features", "Genetics", "Advice", "About", "News", "Terms", "Privacy", "Contact", "Marketplace"];
       
-      // Priority: Hash > Path
-      if (validTabs.includes(hash)) {
-        setLandingTab(hash);
-        window.scrollTo(0, 0);
-      } else if (validTabs.includes(path)) {
+      if (validTabs.includes(path)) {
         setLandingTab(path);
         window.scrollTo(0, 0);
-      } else if (!hash && !path) {
+      } else if (!path || path === "") {
         setLandingTab("Home");
       }
     };
 
-    window.addEventListener('hashchange', handleNavigation);
     window.addEventListener('popstate', handleNavigation);
     handleNavigation(); // Initial check
 
     return () => {
-      window.removeEventListener('hashchange', handleNavigation);
       window.removeEventListener('popstate', handleNavigation);
     };
   }, []);
 
   const navigateToTab = (tab: string, newTab = false) => {
+    const path = tab === "Home" ? "/" : `/${tab}`;
     if (newTab) {
-      window.open(window.location.origin + (tab === "Home" ? "" : "#" + tab), '_blank');
+      window.open(window.location.origin + path, '_blank');
     } else {
-      window.location.hash = tab === "Home" ? "" : tab;
+      window.history.pushState({}, '', path);
+      const validTabs = ["Home", "Features", "Genetics", "Advice", "About", "News", "Terms", "Privacy", "Contact", "Marketplace"];
+      setLandingTab(validTabs.includes(tab) ? tab : "Home");
+      window.scrollTo(0, 0);
     }
   };
 
