@@ -94,14 +94,46 @@ interface EggData {
 }
 
 const SPECIES_LIST = [
-  { name: "Canary (كناري)", incubation: 14 },
-  { name: "Budgie (بادجي)", incubation: 18 },
-  { name: "Lovebird (روز/فيشر)", incubation: 23 },
-  { name: "Cockatiel (كوكتيل)", incubation: 20 },
-  { name: "Goldfinch (حسون)", incubation: 13 },
-  { name: "Zebra Finch (زيبرا)", incubation: 13 },
-  { name: "Diamond Dove (يمام ماسي)", incubation: 13 },
-  { name: "Java Sparrow (جاوا)", incubation: 15 },
+  { 
+    name: "Canary (كناري)", 
+    incubation: 14,
+    mutations: ["Normal", "Yellow", "Red Factor", "Gloster", "Crested", "Mosaic", "Lizard"]
+  },
+  { 
+    name: "Budgie (بادجي)", 
+    incubation: 18,
+    mutations: ["Normal", "Opaline", "Lutino", "Albino", "Spangle", "Pied", "Rainbow", "Crested"]
+  },
+  { 
+    name: "Lovebird (روز/فيشر)", 
+    incubation: 23,
+    mutations: ["Normal", "Lutino", "Opaline", "Cinnamon", "Pallid", "Violet", "Blue", "Albino"]
+  },
+  { 
+    name: "Cockatiel (كوكتيل)", 
+    incubation: 20,
+    mutations: ["Normal", "Lutino", "Pearl", "Pied", "Cinnamon", "Whiteface", "Albino", "Emerald"]
+  },
+  { 
+    name: "Goldfinch (حسون)", 
+    incubation: 13,
+    mutations: ["Normal", "Major", "Siberian", "Eumo", "Agate", "Isabel", "Satinet"]
+  },
+  { 
+    name: "Zebra Finch (زيبرا)", 
+    incubation: 13,
+    mutations: ["Normal", "Black Cheek", "Chestnut Flanked", "Fawn", "Pied", "White", "Crested"]
+  },
+  { 
+    name: "Diamond Dove (يمام ماسي)", 
+    incubation: 13,
+    mutations: ["Normal", "Silver", "White-tailed", "Brilliant", "Cinnamon", "Pied"]
+  },
+  { 
+    name: "Java Sparrow (جاوا)", 
+    incubation: 15,
+    mutations: ["Normal", "White", "Silver", "Fawn", "Pied", "Opal"]
+  },
 ];
 
 const SidebarItem = ({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) => (
@@ -601,9 +633,9 @@ export default function App() {
 
     try {
       await setDoc(doc(db, "couples", id), newCouple);
+      setIsCoupleModalOpen(false);
       setSelectedBirds([]);
       setActiveTab("Couples");
-      setIsCoupleModalOpen(false);
       setSelectedMaleId("");
       setSelectedFemaleId("");
     } catch (error) {
@@ -2442,14 +2474,29 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mutation (الطفرة)</label>
-                    <input 
-                      type="text" 
+                    <select 
                       value={newBird.mutation}
                       onChange={(e) => setNewBird({...newBird, mutation: e.target.value})}
-                      placeholder="e.g. Lutino, Opaline..."
-                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
-                    />
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium appearance-none"
+                    >
+                      <option value="">Normal (عادي)</option>
+                      {SPECIES_LIST.find(s => s.name === newBird.species)?.mutations?.map(m => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                      <option value="Other">Other (أخرى)</option>
+                    </select>
                   </div>
+                  {newBird.mutation === "Other" && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Specify Mutation (حدد الطفرة)</label>
+                      <input 
+                        type="text" 
+                        onChange={(e) => setNewBird({...newBird, mutation: e.target.value})}
+                        placeholder="e.g. Rare Mutation"
+                        className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Date Added</label>
                     <input 
