@@ -254,7 +254,7 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      const validTabs = ["Home", "Features", "Genetics", "Resources", "About"];
+      const validTabs = ["Home", "Features", "Genetics", "Advice", "About", "News", "Terms"];
       if (validTabs.includes(hash)) {
         setLandingTab(hash);
         window.scrollTo(0, 0);
@@ -1295,7 +1295,7 @@ export default function App() {
             <h1 className="text-xl font-bold font-display text-slate-800">PetsBird<span className="text-primary">.com</span></h1>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {["Features", "Genetics", "Resources", "About"].map((item) => (
+            {["Features", "Genetics", "Advice", "News", "About"].map((item) => (
               <button 
                 key={item} 
                 onClick={() => navigateToTab(item, true)}
@@ -1421,7 +1421,7 @@ export default function App() {
                       {[
                         { title: "AI Genetics Predictor", desc: "Use advanced neural networks to predict offspring mutations with 99% accuracy.", icon: BrainCircuit, color: "text-primary bg-primary/10", tab: "Genetics" },
                         { title: "Real-time Egg Tracking", desc: "Monitor every nest, track incubation periods, and get hatching alerts.", icon: EggIcon, color: "text-accent-orange bg-accent-orange/10", tab: "Features" },
-                        { title: "Global Marketplace", desc: "Connect with verified breeders worldwide to buy and sell rare mutations.", icon: ShoppingBag, color: "text-accent-gold bg-accent-gold/10", tab: "Resources" }
+                        { title: "Global Marketplace", desc: "Connect with verified breeders worldwide to buy and sell rare mutations.", icon: ShoppingBag, color: "text-accent-gold bg-accent-gold/10", tab: "Advice" }
                       ].map((feature, i) => (
                         <div 
                           key={i} 
@@ -1544,11 +1544,11 @@ export default function App() {
           </section>
         )}
 
-        {landingTab === "Resources" && (
+        {landingTab === "Advice" && (
           <section className="pt-40 pb-20 px-8 max-w-7xl mx-auto min-h-screen">
             <div className="text-center mb-20">
-              <h2 className="text-6xl font-black font-display text-slate-900 mb-6">Knowledge Base</h2>
-              <p className="text-xl text-slate-500 max-w-2xl mx-auto">Everything you need to grow as a breeder, from beginner guides to expert research.</p>
+              <h2 className="text-6xl font-black font-display text-slate-900 mb-6">Breeder Advice</h2>
+              <p className="text-xl text-slate-500 max-w-2xl mx-auto">Expert tips and professional advice to help you succeed in your breeding journey.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
@@ -1571,6 +1571,87 @@ export default function App() {
                   <h4 className="text-2xl font-bold text-slate-800 group-hover:text-primary transition-colors">{r.title}</h4>
                 </div>
               ))}
+            </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
+            </div>
+          </section>
+        )}
+
+        {landingTab === "News" && (
+          <section className="pt-40 pb-20 px-8 max-w-7xl mx-auto min-h-screen">
+            <div className="text-center mb-20">
+              <h2 className="text-6xl font-black font-display text-slate-900 mb-6">Latest News</h2>
+              <p className="text-xl text-slate-500 max-w-2xl mx-auto">Stay updated with the latest trends and discoveries in the world of birds.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { 
+                  title: "New Mutation Discovered in Canary Species", 
+                  date: "April 5, 2026", 
+                  desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
+                  img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600"
+                },
+                { 
+                  title: "Global Bird Expo 2026 Announced", 
+                  date: "March 28, 2026", 
+                  desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
+                  img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600"
+                },
+                { 
+                  title: "Advances in AI Genetic Mapping", 
+                  date: "March 15, 2026", 
+                  desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
+                  img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600"
+                }
+              ].map((n, i) => (
+                <div key={i} className="glass p-8 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group">
+                  <div className="aspect-video rounded-3xl overflow-hidden mb-6">
+                    <img src={n.img} alt={n.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                  </div>
+                  <span className="text-[10px] font-black text-primary uppercase tracking-widest">{n.date}</span>
+                  <h4 className="text-xl font-bold text-slate-800 mt-2 mb-4">{n.title}</h4>
+                  <p className="text-sm text-slate-500 leading-relaxed mb-6">{n.desc}</p>
+                  <button className="text-xs font-black text-slate-900 uppercase tracking-widest hover:text-primary transition-colors">Read More →</button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
+            </div>
+          </section>
+        )}
+
+        {landingTab === "Terms" && (
+          <section className="pt-40 pb-20 px-8 max-w-4xl mx-auto min-h-screen">
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-black font-display text-slate-900 mb-6">Terms & Conditions</h2>
+              <p className="text-slate-500">Last updated: April 9, 2026</p>
+            </div>
+            <div className="prose prose-slate max-w-none glass p-12 rounded-[40px] border-white/20">
+              <h3 className="text-2xl font-bold mb-4">1. Acceptance of Terms</h3>
+              <p className="text-slate-600 mb-8">By accessing and using PetsBird.com, you agree to be bound by these Terms and Conditions and all applicable laws and regulations.</p>
+              
+              <h3 className="text-2xl font-bold mb-4">2. Use License</h3>
+              <p className="text-slate-600 mb-8">Permission is granted to temporarily download one copy of the materials on PetsBird's website for personal, non-commercial transitory viewing only.</p>
+              
+              <h3 className="text-2xl font-bold mb-4">3. Disclaimer</h3>
+              <p className="text-slate-600 mb-8">The materials on PetsBird's website are provided on an 'as is' basis. PetsBird makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability.</p>
+              
+              <h3 className="text-2xl font-bold mb-4">4. Limitations</h3>
+              <p className="text-slate-600 mb-8">In no event shall PetsBird or its suppliers be liable for any damages arising out of the use or inability to use the materials on PetsBird's website.</p>
             </div>
             <div className="mt-20 text-center">
               <button 
@@ -1663,15 +1744,16 @@ export default function App() {
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
                     <li onClick={() => navigateToTab("Features", true)} className="hover:text-primary cursor-pointer">Features</li>
                     <li onClick={() => navigateToTab("Genetics", true)} className="hover:text-primary cursor-pointer">AI Genetics</li>
-                    <li onClick={() => navigateToTab("Resources", true)} className="hover:text-primary cursor-pointer">Marketplace</li>
+                    <li onClick={() => navigateToTab("Advice", true)} className="hover:text-primary cursor-pointer">Advice</li>
                   </ul>
                 </div>
                 <div className="space-y-4">
                   <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Company</h5>
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
                     <li onClick={() => navigateToTab("About", true)} className="hover:text-primary cursor-pointer">About Us</li>
-                    <li className="hover:text-primary cursor-pointer">Contact</li>
-                    <li className="hover:text-primary cursor-pointer">Privacy</li>
+                    <li onClick={() => navigateToTab("Terms", true)} className="hover:text-primary cursor-pointer">Terms & Conditions</li>
+                    <li onClick={() => navigateToTab("About", true)} className="hover:text-primary cursor-pointer">Contact</li>
+                    <li onClick={() => navigateToTab("Terms", true)} className="hover:text-primary cursor-pointer">Privacy</li>
                   </ul>
                 </div>
               </div>
