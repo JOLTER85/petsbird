@@ -14,7 +14,9 @@ import {
   onAuthStateChanged, 
   db,
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  sendEmailVerification
 } from './firebase';
 import { User } from 'firebase/auth';
 import { 
@@ -222,6 +224,7 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
+  const [authSuccessMessage, setAuthSuccessMessage] = useState("");
   const [isAuthProcessing, setIsAuthProcessing] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
@@ -271,8 +274,14 @@ export default function App() {
       setUser(currentUser);
       setAuthLoading(false);
       if (currentUser) {
-        setShowApp(true);
-        setShowAuthPage(false);
+        if (currentUser.emailVerified || currentUser.providerData.some(p => p.providerId === 'google.com')) {
+          setShowApp(true);
+          setShowAuthPage(false);
+        } else {
+          setShowApp(false);
+          setShowAuthPage(true);
+          setAuthError("يرجى تأكيد بريدك الإلكتروني لتتمكن من الدخول.");
+        }
       }
     });
     return () => unsubscribe();
@@ -291,18 +300,46 @@ export default function App() {
   const handleEmailAuth = async (e: FormEvent) => {
     e.preventDefault();
     setAuthError("");
+    setAuthSuccessMessage("");
     setIsAuthProcessing(true);
     try {
       if (authMode === "register") {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCredential.user);
+        setAuthSuccessMessage("تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد.");
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        if (!userCredential.user.emailVerified) {
+          setAuthError("يرجى تأكيد بريدك الإلكتروني أولاً.");
+          await signOut(auth);
+        }
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      setAuthError(error.message || "Authentication failed");
+      let message = "فشلت عملية المصادقة";
+      if (error.code === 'auth/email-already-in-use') message = "هذا البريد الإلكتروني مستخدم بالفعل";
+      if (error.code === 'auth/invalid-email') message = "بريد إلكتروني غير صالح";
+      if (error.code === 'auth/weak-password') message = "كلمة المرور ضعيفة جداً";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') message = "البريد الإلكتروني أو كلمة المرور غير صحيحة";
+      setAuthError(message);
     } finally {
       setIsAuthProcessing(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setAuthError("يرجى إدخال بريدك الإلكتروني أولاً");
+      return;
+    }
+    setAuthError("");
+    setAuthSuccessMessage("");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setAuthSuccessMessage("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.");
+    } catch (error: any) {
+      console.error("Reset error:", error);
+      setAuthError("فشل إرسال رابط إعادة التعيين. تأكد من صحة البريد الإلكتروني.");
     }
   };
 
@@ -952,10 +989,10 @@ export default function App() {
               <Bird className="text-white w-8 h-8" />
             </div>
             <h2 className="text-3xl font-black font-display text-slate-900 mb-2">
-              {authMode === "login" ? "Welcome Back" : "Create Account"}
+              {authMode === "login" ? "مرحباً بعودتك" : "إنشاء حساب جديد"}
             </h2>
             <p className="text-slate-500 font-medium">
-              {authMode === "login" ? "Sign in to manage your aviary" : "Join the global community of breeders"}
+              {authMode === "login" ? "سجل دخولك لإدارة طيورك" : "انضم إلى مجتمع المربين العالمي"}
             </p>
           </div>
 
@@ -965,12 +1002,12 @@ export default function App() {
               className="w-full py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 flex items-center justify-center gap-3 hover:bg-slate-50 transition-all shadow-sm mb-6"
             >
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              Continue with Google
+              المتابعة باستخدام جوجل
             </button>
 
             <div className="relative flex items-center gap-4 mb-6">
               <div className="flex-1 h-px bg-slate-100" />
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Or use email</span>
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">أو استخدم البريد الإلكتروني</span>
               <div className="flex-1 h-px bg-slate-100" />
             </div>
 
@@ -980,9 +1017,15 @@ export default function App() {
               </div>
             )}
 
+            {authSuccessMessage && (
+              <div className="mb-6 p-4 bg-green-50 text-green-600 text-xs font-bold rounded-2xl border border-green-100">
+                {authSuccessMessage}
+              </div>
+            )}
+
             <form className="space-y-4" onSubmit={handleEmailAuth}>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Email Address</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">البريد الإلكتروني</label>
                 <input 
                   type="email" 
                   required
@@ -993,7 +1036,7 @@ export default function App() {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">Password</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">كلمة المرور</label>
                 <input 
                   type="password" 
                   required
@@ -1003,6 +1046,17 @@ export default function App() {
                   className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none font-medium focus:border-primary transition-all"
                 />
               </div>
+              {authMode === "login" && (
+                <div className="text-right">
+                  <button 
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-[10px] font-bold text-primary uppercase tracking-widest hover:underline"
+                  >
+                    نسيت كلمة المرور؟
+                  </button>
+                </div>
+              )}
               <button 
                 type="submit"
                 disabled={isAuthProcessing}
@@ -1011,7 +1065,7 @@ export default function App() {
                 {isAuthProcessing ? (
                   <Loader2 className="w-5 h-5 animate-spin mx-auto" />
                 ) : (
-                  authMode === "login" ? "Sign In" : "Create Account"
+                  authMode === "login" ? "تسجيل الدخول" : "إنشاء حساب"
                 )}
               </button>
             </form>
@@ -1021,7 +1075,7 @@ export default function App() {
                 onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
                 className="text-xs font-bold text-primary uppercase tracking-widest hover:underline"
               >
-                {authMode === "login" ? "Need an account? Register" : "Already have an account? Login"}
+                {authMode === "login" ? "ليس لديك حساب؟ سجل الآن" : "لديك حساب بالفعل؟ سجل دخول"}
               </button>
             </div>
 
