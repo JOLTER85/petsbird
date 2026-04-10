@@ -372,7 +372,11 @@ export default function App() {
             console.error("Error checking/creating user profile:", error);
           }
           
-          setShowApp(true);
+          // Only show app if we are on an app-related path
+          const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
+          if (path === '/app' || path === '/auth') {
+            setShowApp(true);
+          }
           setShowAuthPage(false);
         } else {
           setShowApp(false);
