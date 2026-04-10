@@ -949,7 +949,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         },
         ...notifications
       ]);
-      alert("تمت إضافة الفرخ الجديد بنجاح إلى قائمة طيورك!");
+      setConfirmModal({
+        isOpen: true,
+        title: "Success",
+        message: "تمت إضافة الفرخ الجديد بنجاح إلى قائمة طيورك!",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, "hatch_success");
     }
@@ -972,7 +977,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         },
         ...notifications
       ]);
-      alert(`تم حذف البيضة بنجاح (السبب: ${reason})`);
+      setConfirmModal({
+        isOpen: true,
+        title: "Egg Removed",
+        message: `تم حذف البيضة بنجاح (السبب: ${reason})`,
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `users_data/${user.uid}/eggs/${egg.id}`);
     }
@@ -1033,7 +1043,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       path
     };
     console.error('Firestore Error: ', JSON.stringify(errInfo));
-    alert(`خطأ في قاعدة البيانات: ${errInfo.error}\nيرجى التأكد من إعدادات Firebase وقواعد الحماية.`);
+    setConfirmModal({
+      isOpen: true,
+      title: "Database Error",
+      message: `خطأ في قاعدة البيانات: ${errInfo.error}\nيرجى التأكد من إعدادات Firebase وقواعد الحماية.`,
+      onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+    });
   };
 
   const [newBird, setNewBird] = useState({
@@ -1210,12 +1225,22 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     
     if (!bird1 || !bird2) return;
     if (bird1.gender === bird2.gender) {
-      alert("Please select one Male and one Female bird.");
+      setConfirmModal({
+        isOpen: true,
+        title: "Invalid Selection",
+        message: "Please select one Male and one Female bird.",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
     if (bird1.species !== bird2.species) {
-      alert("لا يمكن لأن النوع مختلف");
+      setConfirmModal({
+        isOpen: true,
+        title: "Species Mismatch",
+        message: "لا يمكن لأن النوع مختلف",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
@@ -1223,7 +1248,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     const isBird2InCouple = couples.some(c => c.status === 'Active' && (c.maleId === bird2.id || c.femaleId === bird2.id));
 
     if (isBird1InCouple || isBird2InCouple) {
-      alert("أحد الطيور أو كلاهما مضاف مسبقاً في كوبل آخر");
+      setConfirmModal({
+        isOpen: true,
+        title: "Already Coupled",
+        message: "أحد الطيور أو كلاهما مضاف مسبقاً في كوبل آخر",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
@@ -1263,7 +1293,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     if (!male || !female) return;
 
     if (male.species !== female.species) {
-      alert("لا يمكن لأن النوع مختلف");
+      setConfirmModal({
+        isOpen: true,
+        title: "Species Mismatch",
+        message: "لا يمكن لأن النوع مختلف",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
@@ -1271,7 +1306,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     const isFemaleInCouple = couples.some(c => c.status === 'Active' && (c.maleId === female.id || c.femaleId === female.id));
 
     if (isMaleInCouple || isFemaleInCouple) {
-      alert("أحد الطيور أو كلاهما مضاف مسبقاً في كوبل آخر");
+      setConfirmModal({
+        isOpen: true,
+        title: "Already Coupled",
+        message: "أحد الطيور أو كلاهما مضاف مسبقاً في كوبل آخر",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
     
@@ -1367,7 +1407,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
   const handlePredictGenetics = async () => {
     if (!geneticsMaleId || !geneticsFemaleId) {
-      alert("يرجى اختيار الذكر والأنثى أولاً");
+      setConfirmModal({
+        isOpen: true,
+        title: "Selection Required",
+        message: "Please select both a male and a female bird to predict genetics.",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
@@ -1377,7 +1422,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     if (!male || !female) return;
 
     if (male.species !== female.species) {
-      alert("يجب أن يكون الذكر والأنثى من نفس النوع للتنبؤ بالوراثة");
+      setConfirmModal({
+        isOpen: true,
+        title: "Species Mismatch",
+        message: "Male and female must be of the same species for genetic prediction.",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
       return;
     }
 
@@ -1433,7 +1483,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setGeneticsResult(result);
     } catch (error) {
       console.error("Genetics Prediction Error:", error);
-      alert("حدث خطأ أثناء التنبؤ بالوراثة. يرجى المحاولة مرة أخرى.");
+      setConfirmModal({
+        isOpen: true,
+        title: "Prediction Error",
+        message: "حدث خطأ أثناء التنبؤ بالوراثة. يرجى المحاولة مرة أخرى.",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
     } finally {
       setIsGeneticsLoading(false);
     }
@@ -3062,9 +3117,37 @@ This update is now live for all Premium users. We continue to push the boundarie
                     </div>
 
                     <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                      <div className="flex items-center gap-2">
-                        <EggIcon className="w-5 h-5 text-accent-orange" />
-                        <span className="font-bold text-slate-800">{coupleEggs.length} Eggs</span>
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <EggIcon className="w-5 h-5 text-accent-orange" />
+                          <span className="font-bold text-slate-800">{coupleEggs.length} Eggs</span>
+                        </div>
+                        <div className="flex gap-2">
+                          {male && (
+                            <button 
+                              onClick={() => {
+                                setPedigreeBirdId(male.id);
+                                setIsPedigreeModalOpen(true);
+                              }}
+                              className="p-2 bg-blue-50 text-blue-500 rounded-xl hover:bg-blue-100 transition-colors"
+                              title="Male Pedigree"
+                            >
+                              <GitBranch className="w-4 h-4" />
+                            </button>
+                          )}
+                          {female && (
+                            <button 
+                              onClick={() => {
+                                setPedigreeBirdId(female.id);
+                                setIsPedigreeModalOpen(true);
+                              }}
+                              className="p-2 bg-pink-50 text-pink-500 rounded-xl hover:bg-pink-100 transition-colors"
+                              title="Female Pedigree"
+                            >
+                              <GitBranch className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <button 
                         onClick={() => openEggModal(couple.id)}
