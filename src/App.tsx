@@ -51,6 +51,8 @@ import {
   Plus,
   X,
   Link as LinkIcon,
+  GitBranch,
+  Network,
   Edit2,
   ShoppingBag,
   Sparkles,
@@ -183,14 +185,14 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
     onClick={onSelect}
     className={`bg-white p-5 rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
   >
-    <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+    <div className="absolute top-4 left-4 flex gap-2 z-10">
       {onEdit && (
         <button 
           onClick={(e) => {
             e.stopPropagation();
             onEdit(e);
           }}
-          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm"
+          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
         >
           <Edit2 className="w-4 h-4" />
         </button>
@@ -201,10 +203,10 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
             e.stopPropagation();
             onViewPedigree(id);
           }}
-          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-accent-gold hover:bg-white shadow-sm"
+          className="p-2 bg-white/80 backdrop-blur-sm text-accent-gold rounded-xl hover:bg-white shadow-sm transition-all"
           title="View Pedigree"
         >
-          <LinkIcon className="w-4 h-4" />
+          <GitBranch className="w-4 h-4" />
         </button>
       )}
     </div>
@@ -310,6 +312,125 @@ const PedigreeNode = ({ bird, label, gender, onClick }: { bird?: BirdData, label
     </div>
   </div>
 );
+
+const GeneticsPredictor = () => {
+  const [species, setSpecies] = useState("Canary");
+  const [fatherMutation, setFatherMutation] = useState("Normal");
+  const [motherMutation, setMotherMutation] = useState("Normal");
+  const [prediction, setPrediction] = useState<any>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+
+  const speciesOptions = ["Canary", "Cockatiel", "Lovebird", "Budgerigar", "Parrot"];
+  const mutations = {
+    "Canary": ["Normal", "Yellow", "White", "Red Factor", "Gloster", "Crested"],
+    "Cockatiel": ["Normal Grey", "Lutino", "Pied", "Pearl", "Cinnamon", "Whiteface"],
+    "Lovebird": ["Green", "Blue", "Lutino", "Albino", "Fischer's", "Masked"],
+    "Budgerigar": ["Normal Green", "Normal Blue", "Lutino", "Albino", "Opaline", "Spangle"],
+    "Parrot": ["Green", "Blue", "Grey", "Yellow", "Cinnamon"]
+  };
+
+  const handlePredict = () => {
+    setIsPredicting(true);
+    // Simulate AI prediction
+    setTimeout(() => {
+      const results = [
+        { mutation: fatherMutation, probability: 50 },
+        { mutation: motherMutation, probability: 30 },
+        { mutation: "Split " + fatherMutation, probability: 15 },
+        { mutation: "Rare Mutation", probability: 5 }
+      ];
+      setPrediction(results);
+      setIsPredicting(false);
+    }, 1500);
+  };
+
+  return (
+    <div className="glass p-8 md:p-12 rounded-[48px] border-white/20 shadow-2xl mb-20">
+      <div className="flex items-center gap-4 mb-10">
+        <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+          <BrainCircuit className="w-6 h-6" />
+        </div>
+        <div>
+          <h3 className="text-2xl md:text-3xl font-black text-slate-900">AI Genetics Predictor</h3>
+          <p className="text-slate-500">Select species and mutations to predict offspring.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+        <div className="space-y-3">
+          <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-2">Species</label>
+          <select 
+            value={species}
+            onChange={(e) => {
+              setSpecies(e.target.value);
+              setFatherMutation("Normal");
+              setMotherMutation("Normal");
+            }}
+            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all"
+          >
+            {speciesOptions.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="space-y-3">
+          <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-2">Father Mutation</label>
+          <select 
+            value={fatherMutation}
+            onChange={(e) => setFatherMutation(e.target.value)}
+            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all"
+          >
+            {mutations[species as keyof typeof mutations].map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div className="space-y-3">
+          <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-2">Mother Mutation</label>
+          <select 
+            value={motherMutation}
+            onChange={(e) => setMotherMutation(e.target.value)}
+            className="w-full bg-slate-50 border-none rounded-2xl p-4 font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 transition-all"
+          >
+            {mutations[species as keyof typeof mutations].map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <button 
+        onClick={handlePredict}
+        disabled={isPredicting}
+        className="w-full py-5 bg-slate-900 text-white rounded-3xl font-black text-lg shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+      >
+        {isPredicting ? (
+          <>
+            <Loader2 className="w-6 h-6 animate-spin" />
+            Analyzing DNA...
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-6 h-6" />
+            Predict Offspring
+          </>
+        )}
+      </button>
+
+      {prediction && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-12 pt-12 border-t border-slate-100"
+        >
+          <h4 className="text-xl font-black text-slate-900 mb-6">Predicted Outcomes:</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {prediction.map((res: any, i: number) => (
+              <div key={i} className="bg-slate-50 p-6 rounded-3xl flex items-center justify-between">
+                <span className="font-bold text-slate-700">{res.mutation}</span>
+                <span className="text-primary font-black">{res.probability}%</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+};
 
 const PedigreeTree = ({ birdId, birds, onBirdClick }: { birdId: string, birds: BirdData[], onBirdClick: (id: string) => void }) => {
   const getBird = (id?: string) => birds.find(b => b.id === id);
@@ -2022,6 +2143,69 @@ This spatial organization is particularly useful for large-scale breeders managi
                 </div>
               ))}
             </div>
+
+            <div className="mt-32">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                <div>
+                  <span className="inline-block px-4 py-1.5 bg-accent-gold/10 text-accent-gold rounded-full text-[10px] font-black uppercase tracking-widest mb-6">
+                    Lineage Tracking
+                  </span>
+                  <h3 className="text-5xl font-black font-display text-slate-900 mb-8">Interactive <br /> <span className="text-accent-gold">Pedigree Trees</span></h3>
+                  <p className="text-xl text-slate-500 mb-8 leading-relaxed">
+                    Visualize generations of breeding with our interactive family trees. Track mutations, health history, and performance across ancestors with a single click.
+                  </p>
+                  <div className="space-y-4">
+                    {[
+                      "Automatic Ancestry Mapping",
+                      "Mutation Inheritance Visualization",
+                      "Health History Integration",
+                      "Exportable Pedigree Certificates"
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-5 h-5 bg-accent-gold/10 text-accent-gold rounded-full flex items-center justify-center">
+                          <GitBranch className="w-3 h-3" />
+                        </div>
+                        <span className="font-bold text-slate-700">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative">
+                  <div className="glass p-8 rounded-[48px] border-white/40 shadow-2xl relative z-10">
+                    <div className="flex flex-col items-center gap-8">
+                      {/* Grandparents */}
+                      <div className="grid grid-cols-4 gap-4 w-full">
+                        {[1, 2, 3, 4].map(i => (
+                          <div key={i} className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col items-center">
+                            <Bird className="w-4 h-4 text-slate-300 mb-1" />
+                            <div className="w-full h-1 bg-slate-200 rounded-full" />
+                          </div>
+                        ))}
+                      </div>
+                      {/* Parents */}
+                      <div className="grid grid-cols-2 gap-12 w-full max-w-sm">
+                        <div className="bg-blue-50 p-4 rounded-3xl border border-blue-100 flex flex-col items-center shadow-sm">
+                          <Bird className="w-8 h-8 text-blue-400 mb-2" />
+                          <span className="text-[10px] font-black text-blue-500 uppercase">Father</span>
+                        </div>
+                        <div className="bg-pink-50 p-4 rounded-3xl border border-pink-100 flex flex-col items-center shadow-sm">
+                          <Bird className="w-8 h-8 text-pink-400 mb-2" />
+                          <span className="text-[10px] font-black text-pink-500 uppercase">Mother</span>
+                        </div>
+                      </div>
+                      {/* Current Bird */}
+                      <div className="bg-primary/10 p-6 rounded-[32px] border-2 border-primary/20 flex flex-col items-center shadow-xl scale-110">
+                        <Bird className="w-12 h-12 text-primary mb-2" />
+                        <span className="text-xs font-black text-primary uppercase">Current Bird</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-accent-gold/20 blur-[80px] rounded-full" />
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/20 blur-[80px] rounded-full" />
+                </div>
+              </div>
+            </div>
+
             <div className="mt-20 text-center">
               <button 
                 onClick={() => navigateToTab("Home")}
@@ -2040,6 +2224,9 @@ This spatial organization is particularly useful for large-scale breeders managi
               <h2 className="text-6xl font-black font-display text-slate-900 mb-6">Advanced Genetics</h2>
               <p className="text-xl text-slate-500 max-w-2xl mx-auto">Master the science of mutation breeding with our AI-driven genetic tools.</p>
             </div>
+
+            <GeneticsPredictor />
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
                 { 
