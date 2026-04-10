@@ -583,6 +583,8 @@ export default function App() {
   const [failureReason, setFailureReason] = useState("");
   const [pedigreeBirdId, setPedigreeBirdId] = useState<string | null>(null);
   const [isPedigreeModalOpen, setIsPedigreeModalOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<any>(null);
+  const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
 
   const handleHatchSuccess = async (egg: EggData) => {
     if (!user) return;
@@ -1506,6 +1508,53 @@ export default function App() {
           )}
         </AnimatePresence>
 
+        {/* Article Detail Modal */}
+        <AnimatePresence>
+          {isArticleModalOpen && selectedArticle && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsArticleModalOpen(false)}
+                className="absolute inset-0 bg-slate-900/90 backdrop-blur-xl"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-4xl bg-white rounded-[48px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              >
+                <div className="relative h-80 shrink-0">
+                  <img src={selectedArticle.img} alt={selectedArticle.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <button 
+                    onClick={() => setIsArticleModalOpen(false)}
+                    className="absolute top-6 right-6 w-12 h-12 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                  <div className="absolute bottom-8 left-8 right-8">
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="px-4 py-1.5 bg-primary text-white rounded-full text-[10px] font-black uppercase tracking-widest">
+                        {selectedArticle.category || selectedArticle.date}
+                      </span>
+                    </div>
+                    <h2 className="text-4xl font-black text-white font-display leading-tight">{selectedArticle.title}</h2>
+                  </div>
+                </div>
+                <div className="p-12 overflow-y-auto custom-scrollbar">
+                  <div className="prose prose-slate max-w-none">
+                    {selectedArticle.content.split('\n\n').map((paragraph: string, i: number) => (
+                      <p key={i} className="text-lg text-slate-600 leading-relaxed mb-6">{paragraph}</p>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Navigation */}
         <nav className="fixed top-0 w-full z-[100] px-8 py-6 flex items-center justify-between backdrop-blur-md bg-white/30">
           <div 
@@ -1775,11 +1824,45 @@ export default function App() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                { title: "Breeding Guides", category: "Education", img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600" },
-                { title: "Health & Nutrition", category: "Care", img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600" },
-                { title: "Market Trends", category: "Business", img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600" }
+                { 
+                  title: "The Ultimate Breeding Guide", 
+                  category: "Education", 
+                  img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
+                  content: `Successful breeding starts with preparation. This guide covers everything from selecting the right pairs based on genetic compatibility to preparing the ideal nesting environment.
+
+Key factors include maintaining a stable temperature, providing high-quality nesting materials, and ensuring your birds are in peak physical condition before the season begins.
+
+We also explore the importance of light cycles and how they trigger breeding instincts in different species like Canaries and Cockatiels.`
+                },
+                { 
+                  title: "Nutrition for Peak Performance", 
+                  category: "Care", 
+                  img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
+                  content: `Diet is the foundation of a healthy aviary. During the breeding season, birds require increased protein, calcium, and essential vitamins to produce healthy eggs and strong chicks.
+
+Learn about the benefits of sprouted seeds, egg food, and fresh vegetables. We provide a seasonal feeding schedule that adapts to the specific needs of your birds throughout the year.
+
+Proper hydration and mineral supplements are also discussed to prevent common issues like egg binding.`
+                },
+                { 
+                  title: "Mastering Market Trends", 
+                  category: "Business", 
+                  img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
+                  content: `The world of rare bird mutations is constantly evolving. To succeed as a professional breeder, you must understand which mutations are currently in high demand and how to price your birds competitively.
+
+This article analyzes global market data to identify emerging trends in the Cockatiel and Lovebird markets. We also provide tips on how to build a reputable brand as a breeder.
+
+Networking with other professionals and maintaining detailed lineage records are key to increasing the value of your aviary.`
+                }
               ].map((r, i) => (
-                <div key={i} className="group cursor-pointer">
+                <div 
+                  key={i} 
+                  className="group cursor-pointer"
+                  onClick={() => {
+                    setSelectedArticle(r);
+                    setIsArticleModalOpen(true);
+                  }}
+                >
                   <div className="aspect-[4/3] rounded-[40px] overflow-hidden mb-6 relative">
                     <img 
                       src={r.img} 
@@ -1792,6 +1875,7 @@ export default function App() {
                     </div>
                   </div>
                   <h4 className="text-2xl font-bold text-slate-800 group-hover:text-primary transition-colors">{r.title}</h4>
+                  <button className="mt-4 text-xs font-black text-primary uppercase tracking-widest">Read Article →</button>
                 </div>
               ))}
             </div>
@@ -1819,19 +1903,34 @@ export default function App() {
                   title: "New Mutation Discovered in Canary Species", 
                   date: "April 5, 2026", 
                   desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
-                  img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600"
+                  img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
+                  content: `A groundbreaking discovery has been made in the world of aviculture. A previously undocumented color mutation has been identified in a population of Gloster Canaries in Western Europe.
+
+Experts describe the mutation as a unique 'iridescent frost' effect on the feathers, which appears to be inherited as a recessive trait. This discovery is expected to spark significant interest among high-end exhibitors.
+
+Breeding trials are currently underway to stabilize the mutation and understand its full genetic potential. PetsBird users will be the first to receive the updated genetic mapping for this new trait.`
                 },
                 { 
                   title: "Global Bird Expo 2026 Announced", 
                   date: "March 28, 2026", 
                   desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
-                  img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600"
+                  img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
+                  content: `The International Avian Federation has officially announced the dates for the Global Bird Expo 2026. This year's event promises to be the largest in history, with Madrid serving as the host city.
+
+The expo will feature specialized pavilions for different bird families, workshops led by world-renowned geneticists, and a massive marketplace for rare species.
+
+PetsBird will have a dedicated booth at the event, showcasing our latest AI-driven management tools. We invite all our users to join us for exclusive live demonstrations and networking opportunities.`
                 },
                 { 
                   title: "Advances in AI Genetic Mapping", 
                   date: "March 15, 2026", 
                   desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
-                  img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600"
+                  img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
+                  content: `Our engineering team has achieved a major milestone in AI-driven genetics. The latest update to the PetsBird engine incorporates a new neural network architecture specifically optimized for complex parrot mutations.
+
+By analyzing over 500,000 successful breeding records, the AI can now predict offspring outcomes with 15% higher accuracy for species like the African Grey and various Macaw mutations.
+
+This update is now live for all Premium users. We continue to push the boundaries of what's possible in digital aviary management to help you breed with absolute confidence.`
                 }
               ].map((n, i) => (
                 <div key={i} className="glass p-8 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group">
@@ -1841,7 +1940,15 @@ export default function App() {
                   <span className="text-[10px] font-black text-primary uppercase tracking-widest">{n.date}</span>
                   <h4 className="text-xl font-bold text-slate-800 mt-2 mb-4">{n.title}</h4>
                   <p className="text-sm text-slate-500 leading-relaxed mb-6">{n.desc}</p>
-                  <button className="text-xs font-black text-slate-900 uppercase tracking-widest hover:text-primary transition-colors">Read More →</button>
+                  <button 
+                    onClick={() => {
+                      setSelectedArticle(n);
+                      setIsArticleModalOpen(true);
+                    }}
+                    className="text-xs font-black text-slate-900 uppercase tracking-widest hover:text-primary transition-colors"
+                  >
+                    Read More →
+                  </button>
                 </div>
               ))}
             </div>
