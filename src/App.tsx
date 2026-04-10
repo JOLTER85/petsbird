@@ -378,6 +378,88 @@ export default function App() {
       if (validTabs.includes(path)) {
         setLandingTab(path);
         window.scrollTo(0, 0);
+      } else if (path.startsWith('News/') || path.startsWith('Advice/')) {
+        // Handle article deep links
+        const [type, id] = path.split('/');
+        const articles = type === 'News' ? [
+          { 
+            id: "new-mutation-canary",
+            title: "New Mutation Discovered in Canary Species", 
+            date: "April 5, 2026", 
+            desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
+            img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
+            content: `A groundbreaking discovery has been made in the world of aviculture. A previously undocumented color mutation has been identified in a population of Gloster Canaries in Western Europe.
+
+Experts describe the mutation as a unique 'iridescent frost' effect on the feathers, which appears to be inherited as a recessive trait. This discovery is expected to spark significant interest among high-end exhibitors.
+
+Breeding trials are currently underway to stabilize the mutation and understand its full genetic potential. PetsBird users will be the first to receive the updated genetic mapping for this new trait.`
+          },
+          { 
+            id: "global-bird-expo-2026",
+            title: "Global Bird Expo 2026 Announced", 
+            date: "March 28, 2026", 
+            desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
+            img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
+            content: `The International Avian Federation has officially announced the dates for the Global Bird Expo 2026. This year's event promises to be the largest in history, with Madrid serving as the host city.
+
+The expo will feature specialized pavilions for different bird families, workshops led by world-renowned geneticists, and a massive marketplace for rare species.
+
+PetsBird will have a dedicated booth at the event, showcasing our latest AI-driven management tools. We invite all our users to join us for exclusive live demonstrations and networking opportunities.`
+          },
+          { 
+            id: "ai-genetic-mapping-advances",
+            title: "Advances in AI Genetic Mapping", 
+            date: "March 15, 2026", 
+            desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
+            img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
+            content: `Our engineering team has achieved a major milestone in AI-driven genetics. The latest update to the PetsBird engine incorporates a new neural network architecture specifically optimized for complex parrot mutations.
+
+By analyzing over 500,000 successful breeding records, the AI can now predict offspring outcomes with 15% higher accuracy for species like the African Grey and various Macaw mutations.
+
+This update is now live for all Premium users. We continue to push the boundaries of what's possible in digital aviary management to help you breed with absolute confidence.`
+          }
+        ] : [
+          { 
+            id: "ultimate-breeding-guide",
+            title: "The Ultimate Breeding Guide", 
+            category: "Education", 
+            img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
+            content: `Successful breeding starts with preparation. This guide covers everything from selecting the right pairs based on genetic compatibility to preparing the ideal nesting environment.
+
+Key factors include maintaining a stable temperature, providing high-quality nesting materials, and ensuring your birds are in peak physical condition before the season begins.
+
+We also explore the importance of light cycles and how they trigger breeding instincts in different species like Canaries and Cockatiels.`
+          },
+          { 
+            id: "nutrition-peak-performance",
+            title: "Nutrition for Peak Performance", 
+            category: "Care", 
+            img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
+            content: `Diet is the foundation of a healthy aviary. During the breeding season, birds require increased protein, calcium, and essential vitamins to produce healthy eggs and strong chicks.
+
+Learn about the benefits of sprouted seeds, egg food, and fresh vegetables. We provide a seasonal feeding schedule that adapts to the specific needs of your birds throughout the year.
+
+Proper hydration and mineral supplements are also discussed to prevent common issues like egg binding.`
+          },
+          { 
+            id: "mastering-market-trends",
+            title: "Mastering Market Trends", 
+            category: "Business", 
+            img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
+            content: `The world of rare bird mutations is constantly evolving. To succeed as a professional breeder, you must understand which mutations are currently in high demand and how to price your birds competitively.
+
+This article analyzes global market data to identify emerging trends in the Cockatiel and Lovebird markets. We also provide tips on how to build a reputable brand as a breeder.
+
+Networking with other professionals and maintaining detailed lineage records are key to increasing the value of your aviary.`
+          }
+        ];
+        
+        const article = articles.find(a => a.id === id);
+        if (article) {
+          setSelectedArticle(article);
+          setIsArticleModalOpen(true);
+          setLandingTab(type);
+        }
       } else if (!path || path === "") {
         setLandingTab("Home");
       }
@@ -1825,6 +1907,7 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
                 { 
+                  id: "ultimate-breeding-guide",
                   title: "The Ultimate Breeding Guide", 
                   category: "Education", 
                   img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
@@ -1835,6 +1918,7 @@ Key factors include maintaining a stable temperature, providing high-quality nes
 We also explore the importance of light cycles and how they trigger breeding instincts in different species like Canaries and Cockatiels.`
                 },
                 { 
+                  id: "nutrition-peak-performance",
                   title: "Nutrition for Peak Performance", 
                   category: "Care", 
                   img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
@@ -1845,6 +1929,7 @@ Learn about the benefits of sprouted seeds, egg food, and fresh vegetables. We p
 Proper hydration and mineral supplements are also discussed to prevent common issues like egg binding.`
                 },
                 { 
+                  id: "mastering-market-trends",
                   title: "Mastering Market Trends", 
                   category: "Business", 
                   img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
@@ -1859,8 +1944,8 @@ Networking with other professionals and maintaining detailed lineage records are
                   key={i} 
                   className="group cursor-pointer"
                   onClick={() => {
-                    setSelectedArticle(r);
-                    setIsArticleModalOpen(true);
+                    const articlePath = `/Advice/${r.id}`;
+                    window.open(window.location.origin + articlePath, '_blank');
                   }}
                 >
                   <div className="aspect-[4/3] rounded-[40px] overflow-hidden mb-6 relative">
@@ -1900,6 +1985,7 @@ Networking with other professionals and maintaining detailed lineage records are
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 { 
+                  id: "new-mutation-canary",
                   title: "New Mutation Discovered in Canary Species", 
                   date: "April 5, 2026", 
                   desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
@@ -1911,6 +1997,7 @@ Experts describe the mutation as a unique 'iridescent frost' effect on the feath
 Breeding trials are currently underway to stabilize the mutation and understand its full genetic potential. PetsBird users will be the first to receive the updated genetic mapping for this new trait.`
                 },
                 { 
+                  id: "global-bird-expo-2026",
                   title: "Global Bird Expo 2026 Announced", 
                   date: "March 28, 2026", 
                   desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
@@ -1922,6 +2009,7 @@ The expo will feature specialized pavilions for different bird families, worksho
 PetsBird will have a dedicated booth at the event, showcasing our latest AI-driven management tools. We invite all our users to join us for exclusive live demonstrations and networking opportunities.`
                 },
                 { 
+                  id: "ai-genetic-mapping-advances",
                   title: "Advances in AI Genetic Mapping", 
                   date: "March 15, 2026", 
                   desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
@@ -1942,8 +2030,8 @@ This update is now live for all Premium users. We continue to push the boundarie
                   <p className="text-sm text-slate-500 leading-relaxed mb-6">{n.desc}</p>
                   <button 
                     onClick={() => {
-                      setSelectedArticle(n);
-                      setIsArticleModalOpen(true);
+                      const articlePath = `/News/${n.id}`;
+                      window.open(window.location.origin + articlePath, '_blank');
                     }}
                     className="text-xs font-black text-slate-900 uppercase tracking-widest hover:text-primary transition-colors"
                   >
