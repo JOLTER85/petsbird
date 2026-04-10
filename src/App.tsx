@@ -514,6 +514,7 @@ export default function App() {
         },
         ...notifications
       ]);
+      alert("تمت إضافة الفرخ الجديد بنجاح إلى قائمة طيورك!");
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, "hatch_success");
     }
@@ -521,18 +522,24 @@ export default function App() {
 
   const handleHatchFailure = async (egg: EggData, reason: string) => {
     if (!user) return;
-    const updatedEgg: EggData = {
-      ...egg,
-      status: 'Failed',
-      failureReason: reason
-    };
-
     try {
-      await setDoc(doc(db, "users_data", user.uid, "eggs", egg.id), updatedEgg);
+      await deleteDoc(doc(db, "users_data", user.uid, "eggs", egg.id));
       setHatchFailureEgg(null);
       setFailureReason("");
+      
+      setNotifications([
+        { 
+          id: Date.now(), 
+          title: "Egg Removed", 
+          message: `Egg #${egg.id} was removed (Reason: ${reason}).`, 
+          time: "Just now", 
+          read: false 
+        },
+        ...notifications
+      ]);
+      alert(`تم حذف البيضة بنجاح (السبب: ${reason})`);
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, "hatch_failure");
+      handleFirestoreError(error, OperationType.DELETE, `users_data/${user.uid}/eggs/${egg.id}`);
     }
   };
   const [editingBirdId, setEditingBirdId] = useState<string | null>(null);
@@ -1000,7 +1007,7 @@ export default function App() {
   const [newEgg, setNewEgg] = useState({
     laidDate: new Date().toLocaleDateString(),
     hatchDate: "",
-    status: "Intact" as "Intact" | "Hatched" | "Broken"
+    status: "Intact" as "Intact" | "Hatched" | "Broken" | "Completed" | "Failed"
   });
 
   const calculateHatchDate = (laidDate: string, coupleId: string) => {
@@ -2533,7 +2540,7 @@ export default function App() {
                         )}
 
                         {/* Hatch Confirmation Buttons */}
-                        {egg.status === 'Intact' && (isHatchingToday || (daysToHatch !== null && daysToHatch < 0)) && (
+                        {egg.status === 'Intact' && (
                           <div className="pt-6 space-y-2">
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleHatchSuccess(egg); }}
