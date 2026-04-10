@@ -378,83 +378,197 @@ export default function App() {
       if (validTabs.includes(path)) {
         setLandingTab(path);
         window.scrollTo(0, 0);
-      } else if (path.startsWith('News/') || path.startsWith('Advice/')) {
-        // Handle article deep links
+      } else if (path.startsWith('News/') || path.startsWith('Advice/') || path.startsWith('Features/') || path.startsWith('Genetics/')) {
+        // Handle article, feature, and genetics deep links
         const [type, id] = path.split('/');
-        const articles = type === 'News' ? [
-          { 
-            id: "new-mutation-canary",
-            title: "New Mutation Discovered in Canary Species", 
-            date: "April 5, 2026", 
-            desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
-            img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
-            content: `A groundbreaking discovery has been made in the world of aviculture. A previously undocumented color mutation has been identified in a population of Gloster Canaries in Western Europe.
+        let article = null;
+        
+        if (type === 'News') {
+          const news = [
+            { 
+              id: "new-mutation-canary",
+              title: "New Mutation Discovered in Canary Species", 
+              date: "April 5, 2026", 
+              desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
+              img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
+              content: `A groundbreaking discovery has been made in the world of aviculture. A previously undocumented color mutation has been identified in a population of Gloster Canaries in Western Europe.
 
 Experts describe the mutation as a unique 'iridescent frost' effect on the feathers, which appears to be inherited as a recessive trait. This discovery is expected to spark significant interest among high-end exhibitors.
 
 Breeding trials are currently underway to stabilize the mutation and understand its full genetic potential. PetsBird users will be the first to receive the updated genetic mapping for this new trait.`
-          },
-          { 
-            id: "global-bird-expo-2026",
-            title: "Global Bird Expo 2026 Announced", 
-            date: "March 28, 2026", 
-            desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
-            img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
-            content: `The International Avian Federation has officially announced the dates for the Global Bird Expo 2026. This year's event promises to be the largest in history, with Madrid serving as the host city.
+            },
+            { 
+              id: "global-bird-expo-2026",
+              title: "Global Bird Expo 2026 Announced", 
+              date: "March 28, 2026", 
+              desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
+              img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
+              content: `The International Avian Federation has officially announced the dates for the Global Bird Expo 2026. This year's event promises to be the largest in history, with Madrid serving as the host city.
 
 The expo will feature specialized pavilions for different bird families, workshops led by world-renowned geneticists, and a massive marketplace for rare species.
 
 PetsBird will have a dedicated booth at the event, showcasing our latest AI-driven management tools. We invite all our users to join us for exclusive live demonstrations and networking opportunities.`
-          },
-          { 
-            id: "ai-genetic-mapping-advances",
-            title: "Advances in AI Genetic Mapping", 
-            date: "March 15, 2026", 
-            desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
-            img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
-            content: `Our engineering team has achieved a major milestone in AI-driven genetics. The latest update to the PetsBird engine incorporates a new neural network architecture specifically optimized for complex parrot mutations.
+            },
+            { 
+              id: "ai-genetic-mapping-advances",
+              title: "Advances in AI Genetic Mapping", 
+              date: "March 15, 2026", 
+              desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
+              img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
+              content: `Our engineering team has achieved a major milestone in AI-driven genetics. The latest update to the PetsBird engine incorporates a new neural network architecture specifically optimized for complex parrot mutations.
 
 By analyzing over 500,000 successful breeding records, the AI can now predict offspring outcomes with 15% higher accuracy for species like the African Grey and various Macaw mutations.
 
 This update is now live for all Premium users. We continue to push the boundaries of what's possible in digital aviary management to help you breed with absolute confidence.`
-          }
-        ] : [
-          { 
-            id: "ultimate-breeding-guide",
-            title: "The Ultimate Breeding Guide", 
-            category: "Education", 
-            img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
-            content: `Successful breeding starts with preparation. This guide covers everything from selecting the right pairs based on genetic compatibility to preparing the ideal nesting environment.
+            }
+          ];
+          article = news.find(a => a.id === id);
+        } else if (type === 'Advice') {
+          const advice = [
+            { 
+              id: "ultimate-breeding-guide",
+              title: "The Ultimate Breeding Guide", 
+              category: "Education", 
+              img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
+              content: `Successful breeding starts with preparation. This guide covers everything from selecting the right pairs based on genetic compatibility to preparing the ideal nesting environment.
 
 Key factors include maintaining a stable temperature, providing high-quality nesting materials, and ensuring your birds are in peak physical condition before the season begins.
 
 We also explore the importance of light cycles and how they trigger breeding instincts in different species like Canaries and Cockatiels.`
-          },
-          { 
-            id: "nutrition-peak-performance",
-            title: "Nutrition for Peak Performance", 
-            category: "Care", 
-            img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
-            content: `Diet is the foundation of a healthy aviary. During the breeding season, birds require increased protein, calcium, and essential vitamins to produce healthy eggs and strong chicks.
+            },
+            { 
+              id: "nutrition-peak-performance",
+              title: "Nutrition for Peak Performance", 
+              category: "Care", 
+              img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
+              content: `Diet is the foundation of a healthy aviary. During the breeding season, birds require increased protein, calcium, and essential vitamins to produce healthy eggs and strong chicks.
 
 Learn about the benefits of sprouted seeds, egg food, and fresh vegetables. We provide a seasonal feeding schedule that adapts to the specific needs of your birds throughout the year.
 
 Proper hydration and mineral supplements are also discussed to prevent common issues like egg binding.`
-          },
-          { 
-            id: "mastering-market-trends",
-            title: "Mastering Market Trends", 
-            category: "Business", 
-            img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
-            content: `The world of rare bird mutations is constantly evolving. To succeed as a professional breeder, you must understand which mutations are currently in high demand and how to price your birds competitively.
+            },
+            { 
+              id: "mastering-market-trends",
+              title: "Mastering Market Trends", 
+              category: "Business", 
+              img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
+              content: `The world of rare bird mutations is constantly evolving. To succeed as a professional breeder, you must understand which mutations are currently in high demand and how to price your birds competitively.
 
 This article analyzes global market data to identify emerging trends in the Cockatiel and Lovebird markets. We also provide tips on how to build a reputable brand as a breeder.
 
 Networking with other professionals and maintaining detailed lineage records are key to increasing the value of your aviary.`
-          }
-        ];
+            }
+          ];
+          article = advice.find(a => a.id === id);
+        } else if (type === 'Features') {
+          const features = [
+            {
+              id: "inventory-management",
+              title: "Inventory Management",
+              category: "Core Feature",
+              img: "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=1000",
+              content: `Our Inventory Management system is designed to handle thousands of birds with ease. Every bird is assigned a unique digital profile where you can store its ring number, species, mutation, and birth date.
+
+Lineage tracking is automated, allowing you to view an interactive pedigree tree for any bird in your collection. This is essential for maintaining genetic diversity and proving the value of your stock to potential buyers.
+
+The system also includes a comprehensive health log. You can record vaccinations, treatments, and general health observations, ensuring that every bird in your aviary receives the care it needs.`
+            },
+            {
+              id: "breeding-pairs",
+              title: "Breeding Pairs",
+              category: "Breeding",
+              img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=1000",
+              content: `Managing breeding pairs has never been simpler. PetsBird allows you to create digital 'couples' and track their performance over multiple seasons.
+
+You can monitor success rates, average clutch sizes, and the quality of offspring produced by each pair. This data-driven approach helps you make informed decisions about which pairs to maintain and which to retire.
+
+The system also alerts you to potential genetic risks, such as inbreeding or incompatible mutations, before you even set the pair up.`
+            },
+            {
+              id: "egg-monitoring",
+              title: "Egg Monitoring",
+              category: "Automation",
+              img: "https://images.unsplash.com/photo-1516233501032-2475d32c3741?auto=format&fit=crop&q=80&w=1000",
+              content: `The Egg Monitoring system is the heart of our automation tools. Once an egg is laid, simply log it in the app, and PetsBird will calculate the expected hatch date based on the species' specific incubation period.
+
+You'll receive automated notifications for fertility checks and hatching alerts, so you never miss a critical moment in the nest.
+
+The system also tracks failure reasons (e.g., infertile, broken, dead in shell), providing you with valuable insights into your aviary's overall productivity and identifying areas for improvement.`
+            },
+            {
+              id: "financial-tracking",
+              title: "Financial Tracking",
+              category: "Business",
+              img: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&q=80&w=1000",
+              content: `Turn your passion into a professional business with our Financial Tracking tools. Log every expense, from seed and supplements to vet bills and equipment.
+
+Track your sales and revenue to get a clear picture of your aviary's profitability. The system generates detailed reports, helping you understand your return on investment for different species or mutations.
+
+With PetsBird, you can manage your aviary's budget with the same precision as a professional enterprise.`
+            },
+            {
+              id: "health-records",
+              title: "Health Records",
+              category: "Care",
+              img: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80&w=1000",
+              content: `Maintaining a healthy aviary is paramount. Our Health Records system allows you to maintain a digital medical history for every bird.
+
+Schedule recurring treatments like deworming or vitamin supplements, and receive reminders when they are due. You can also upload vet certificates and lab results directly to a bird's profile.
+
+In the event of an outbreak, the system helps you quickly identify which birds have been treated and which are at risk, allowing for rapid and effective quarantine measures.`
+            },
+            {
+              id: "cage-mapping",
+              title: "Cage Mapping",
+              category: "Organization",
+              img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=1000",
+              content: `Visualize your entire aviary with our interactive Cage Mapping tool. Define your rooms, blocks, and individual cages to create a digital twin of your physical setup.
+
+Easily move birds between cages with a simple drag-and-drop interface. The system tracks the history of every cage, showing you which birds have occupied it and its current status (e.g., occupied, empty, needs cleaning).
+
+This spatial organization is particularly useful for large-scale breeders managing multiple rooms or species.`
+            }
+          ];
+          article = features.find(a => a.id === id);
+        } else if (type === 'Genetics') {
+          const genetics = [
+            { 
+              id: "mutation-prediction",
+              title: "Mutation Prediction", 
+              category: "AI Engine", 
+              img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
+              content: `Our AI Mutation Predictor is the most advanced tool in the aviculture industry. By analyzing the genetic profiles of both parents, the system calculates the exact probability of every possible offspring mutation.
+
+Whether you are working with simple recessive traits or complex multi-mutation combinations, our engine provides a clear percentage breakdown of the results.
+
+This allows you to plan your breeding season with scientific precision, ensuring you focus on the pairs that have the highest potential for producing rare and valuable mutations.`
+            },
+            { 
+              id: "inheritance-patterns",
+              title: "Inheritance Patterns", 
+              category: "Education", 
+              img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
+              content: `Understanding inheritance patterns is key to successful breeding. This guide breaks down the fundamental principles of avian genetics, including dominant, recessive, and sex-linked traits.
+
+We explain how different mutations interact with each other and how to identify 'split' birds that carry hidden genetic information.
+
+Mastering these patterns will help you predict not just the color of your birds, but also their physical characteristics and overall quality.`
+            },
+            { 
+              id: "genetic-diversity",
+              title: "Genetic Diversity", 
+              category: "Aviary Health", 
+              img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
+              content: `Maintaining genetic diversity is essential for the long-term health and sustainability of your aviary. Inbreeding can lead to weakened immune systems, reduced fertility, and physical deformities.
+
+PetsBird's lineage tracking system automatically calculates the Coefficient of Inbreeding (COI) for every potential pairing, alerting you to high-risk combinations.
+
+Learn how to introduce new bloodlines effectively and how to maintain a diverse genetic pool while still focusing on specific mutation goals.`
+            }
+          ];
+          article = genetics.find(a => a.id === id);
+        }
         
-        const article = articles.find(a => a.id === id);
         if (article) {
           setSelectedArticle(article);
           setIsArticleModalOpen(true);
@@ -1818,19 +1932,93 @@ Networking with other professionals and maintaining detailed lineage records are
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { title: "Inventory Management", desc: "Keep track of every bird, its lineage, and health history.", icon: Box },
-                { title: "Breeding Pairs", desc: "Manage couples and track their breeding success over time.", icon: Heart },
-                { title: "Egg Monitoring", desc: "Never miss a hatch date with our automated notification system.", icon: EggIcon },
-                { title: "Financial Tracking", desc: "Monitor your aviary's expenses and sales in one place.", icon: TrendingUp },
-                { title: "Health Records", desc: "Log vaccinations, treatments, and vet visits for every bird.", icon: Activity },
-                { title: "Cage Mapping", desc: "Visualize your aviary layout and bird distribution.", icon: MapPin }
+                { 
+                  id: "inventory-management",
+                  title: "Inventory Management", 
+                  desc: "Keep track of every bird, its lineage, and health history.", 
+                  icon: Box,
+                  content: `Our Inventory Management system is designed to handle thousands of birds with ease. Every bird is assigned a unique digital profile where you can store its ring number, species, mutation, and birth date.
+
+Lineage tracking is automated, allowing you to view an interactive pedigree tree for any bird in your collection. This is essential for maintaining genetic diversity and proving the value of your stock to potential buyers.
+
+The system also includes a comprehensive health log. You can record vaccinations, treatments, and general health observations, ensuring that every bird in your aviary receives the care it needs.`
+                },
+                { 
+                  id: "breeding-pairs",
+                  title: "Breeding Pairs", 
+                  desc: "Manage couples and track their breeding success over time.", 
+                  icon: Heart,
+                  content: `Managing breeding pairs has never been simpler. PetsBird allows you to create digital 'couples' and track their performance over multiple seasons.
+
+You can monitor success rates, average clutch sizes, and the quality of offspring produced by each pair. This data-driven approach helps you make informed decisions about which pairs to maintain and which to retire.
+
+The system also alerts you to potential genetic risks, such as inbreeding or incompatible mutations, before you even set the pair up.`
+                },
+                { 
+                  id: "egg-monitoring",
+                  title: "Egg Monitoring", 
+                  desc: "Never miss a hatch date with our automated notification system.", 
+                  icon: EggIcon,
+                  content: `The Egg Monitoring system is the heart of our automation tools. Once an egg is laid, simply log it in the app, and PetsBird will calculate the expected hatch date based on the species' specific incubation period.
+
+You'll receive automated notifications for fertility checks and hatching alerts, so you never miss a critical moment in the nest.
+
+The system also tracks failure reasons (e.g., infertile, broken, dead in shell), providing you with valuable insights into your aviary's overall productivity and identifying areas for improvement.`
+                },
+                { 
+                  id: "financial-tracking",
+                  title: "Financial Tracking", 
+                  desc: "Monitor your aviary's expenses and sales in one place.", 
+                  icon: TrendingUp,
+                  content: `Turn your passion into a professional business with our Financial Tracking tools. Log every expense, from seed and supplements to vet bills and equipment.
+
+Track your sales and revenue to get a clear picture of your aviary's profitability. The system generates detailed reports, helping you understand your return on investment for different species or mutations.
+
+With PetsBird, you can manage your aviary's budget with the same precision as a professional enterprise.`
+                },
+                { 
+                  id: "health-records",
+                  title: "Health Records", 
+                  desc: "Log vaccinations, treatments, and vet visits for every bird.", 
+                  icon: Activity,
+                  content: `Maintaining a healthy aviary is paramount. Our Health Records system allows you to maintain a digital medical history for every bird.
+
+Schedule recurring treatments like deworming or vitamin supplements, and receive reminders when they are due. You can also upload vet certificates and lab results directly to a bird's profile.
+
+In the event of an outbreak, the system helps you quickly identify which birds have been treated and which are at risk, allowing for rapid and effective quarantine measures.`
+                },
+                { 
+                  id: "cage-mapping",
+                  title: "Cage Mapping", 
+                  desc: "Visualize your aviary layout and bird distribution.", 
+                  icon: MapPin,
+                  content: `Visualize your entire aviary with our interactive Cage Mapping tool. Define your rooms, blocks, and individual cages to create a digital twin of your physical setup.
+
+Easily move birds between cages with a simple drag-and-drop interface. The system tracks the history of every cage, showing you which birds have occupied it and its current status (e.g., occupied, empty, needs cleaning).
+
+This spatial organization is particularly useful for large-scale breeders managing multiple rooms or species.`
+                }
               ].map((f, i) => (
-                <div key={i} className="glass p-10 rounded-[40px] border-white/20 hover:shadow-2xl transition-all">
-                  <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6">
+                <div 
+                  key={i} 
+                  className="glass p-10 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group cursor-pointer"
+                  onClick={() => {
+                    const featurePath = `/Features/${f.id}`;
+                    window.history.pushState({}, '', featurePath);
+                    setSelectedArticle({
+                      ...f,
+                      img: "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=1000", // Default feature image
+                      category: "Core Feature"
+                    });
+                    setIsArticleModalOpen(true);
+                  }}
+                >
+                  <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                     <f.icon className="w-8 h-8" />
                   </div>
-                  <h4 className="text-2xl font-bold text-slate-800 mb-4">{f.title}</h4>
-                  <p className="text-slate-500 leading-relaxed">{f.desc}</p>
+                  <h4 className="text-2xl font-bold text-slate-800 mb-4 group-hover:text-primary transition-colors">{f.title}</h4>
+                  <p className="text-slate-500 leading-relaxed mb-6">{f.desc}</p>
+                  <button className="text-xs font-black text-primary uppercase tracking-widest">Learn More →</button>
                 </div>
               ))}
             </div>
@@ -1848,52 +2036,80 @@ Networking with other professionals and maintaining detailed lineage records are
 
         {landingTab === "Genetics" && (
           <section className="pt-40 pb-20 px-8 max-w-7xl mx-auto min-h-screen">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-              <div className="relative">
-                <div className="aspect-[4/5] rounded-[64px] overflow-hidden shadow-2xl">
-                  <img 
-                    src="https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=1000" 
-                    alt="Genetics Lab" 
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-                <div className="absolute -bottom-10 -right-10 glass p-8 rounded-[40px] shadow-2xl border-white/40 max-w-xs">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Dna className="w-6 h-6 text-primary" />
-                    <span className="text-sm font-black uppercase tracking-widest text-slate-800">DNA Analysis</span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium">Our AI analyzes thousands of genetic markers to predict offspring with unmatched precision.</p>
-                </div>
-              </div>
-              <div>
-                <h2 className="text-6xl font-black font-display text-slate-900 leading-[0.9] mb-8">AI GENETICS <br /> <span className="text-primary">REDEFINED</span></h2>
-                <p className="text-xl text-slate-500 mb-12 leading-relaxed">Stop guessing. Our advanced genetic engine uses deep learning to calculate probabilities for even the most complex mutations.</p>
-                <div className="space-y-6">
-                  {[
-                    "99.8% Prediction Accuracy",
-                    "Support for 200+ Bird Species",
-                    "Complex Mutation Combinations",
-                    "Lineage Probability Mapping"
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <div className="w-6 h-6 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center">
-                        <TrendingUp className="w-4 h-4" />
-                      </div>
-                      <span className="text-lg font-bold text-slate-700">{item}</span>
+            <div className="text-center mb-20">
+              <h2 className="text-6xl font-black font-display text-slate-900 mb-6">Advanced Genetics</h2>
+              <p className="text-xl text-slate-500 max-w-2xl mx-auto">Master the science of mutation breeding with our AI-driven genetic tools.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[
+                { 
+                  id: "mutation-prediction",
+                  title: "Mutation Prediction", 
+                  category: "AI Engine", 
+                  img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
+                  content: `Our AI Mutation Predictor is the most advanced tool in the aviculture industry. By analyzing the genetic profiles of both parents, the system calculates the exact probability of every possible offspring mutation.
+
+Whether you are working with simple recessive traits or complex multi-mutation combinations, our engine provides a clear percentage breakdown of the results.
+
+This allows you to plan your breeding season with scientific precision, ensuring you focus on the pairs that have the highest potential for producing rare and valuable mutations.`
+                },
+                { 
+                  id: "inheritance-patterns",
+                  title: "Inheritance Patterns", 
+                  category: "Education", 
+                  img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
+                  content: `Understanding inheritance patterns is key to successful breeding. This guide breaks down the fundamental principles of avian genetics, including dominant, recessive, and sex-linked traits.
+
+We explain how different mutations interact with each other and how to identify 'split' birds that carry hidden genetic information.
+
+Mastering these patterns will help you predict not just the color of your birds, but also their physical characteristics and overall quality.`
+                },
+                { 
+                  id: "genetic-diversity",
+                  title: "Genetic Diversity", 
+                  category: "Aviary Health", 
+                  img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
+                  content: `Maintaining genetic diversity is essential for the long-term health and sustainability of your aviary. Inbreeding can lead to weakened immune systems, reduced fertility, and physical deformities.
+
+PetsBird's lineage tracking system automatically calculates the Coefficient of Inbreeding (COI) for every potential pairing, alerting you to high-risk combinations.
+
+Learn how to introduce new bloodlines effectively and how to maintain a diverse genetic pool while still focusing on specific mutation goals.`
+                }
+              ].map((g, i) => (
+                <div 
+                  key={i} 
+                  className="group cursor-pointer"
+                  onClick={() => {
+                    const geneticsPath = `/Genetics/${g.id}`;
+                    window.history.pushState({}, '', geneticsPath);
+                    setSelectedArticle(g);
+                    setIsArticleModalOpen(true);
+                  }}
+                >
+                  <div className="aspect-[4/3] rounded-[40px] overflow-hidden mb-6 relative">
+                    <img 
+                      src={g.img} 
+                      alt={g.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-6 left-6 px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-slate-800">
+                      {g.category}
                     </div>
-                  ))}
+                  </div>
+                  <h4 className="text-2xl font-bold text-slate-800 group-hover:text-primary transition-colors">{g.title}</h4>
+                  <button className="mt-4 text-xs font-black text-primary uppercase tracking-widest">Read Article →</button>
                 </div>
-                <div className="mt-12">
-                  <button 
-                    onClick={() => navigateToTab("Home")}
-                    className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                    Back to Home
-                  </button>
-                </div>
-              </div>
+              ))}
+            </div>
+            <div className="mt-20 text-center">
+              <button 
+                onClick={() => navigateToTab("Home")}
+                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Home
+              </button>
             </div>
           </section>
         )}
