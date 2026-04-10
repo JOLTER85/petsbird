@@ -2021,22 +2021,21 @@ By analyzing over 500,000 successful breeding records, the AI can now predict of
 This update is now live for all Premium users. We continue to push the boundaries of what's possible in digital aviary management to help you breed with absolute confidence.`
                 }
               ].map((n, i) => (
-                <div key={i} className="glass p-8 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group">
+                <div 
+                  key={i} 
+                  className="glass p-8 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group cursor-pointer"
+                  onClick={() => {
+                    const articlePath = `/News/${n.id}`;
+                    window.open(window.location.origin + articlePath, '_blank');
+                  }}
+                >
                   <div className="aspect-video rounded-3xl overflow-hidden mb-6">
                     <img src={n.img} alt={n.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
                   </div>
                   <span className="text-[10px] font-black text-primary uppercase tracking-widest">{n.date}</span>
-                  <h4 className="text-xl font-bold text-slate-800 mt-2 mb-4">{n.title}</h4>
+                  <h4 className="text-xl font-bold text-slate-800 mt-2 mb-4 group-hover:text-primary transition-colors">{n.title}</h4>
                   <p className="text-sm text-slate-500 leading-relaxed mb-6">{n.desc}</p>
-                  <button 
-                    onClick={() => {
-                      const articlePath = `/News/${n.id}`;
-                      window.open(window.location.origin + articlePath, '_blank');
-                    }}
-                    className="text-xs font-black text-slate-900 uppercase tracking-widest hover:text-primary transition-colors"
-                  >
-                    Read More →
-                  </button>
+                  <button className="text-xs font-black text-slate-900 uppercase tracking-widest hover:text-primary transition-colors">Read More →</button>
                 </div>
               ))}
             </div>
