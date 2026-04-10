@@ -78,7 +78,8 @@ interface BirdData {
   date: string;
   cage: string;
   mutation?: string;
-  parents?: { maleId: string; femaleId: string };
+  fatherId?: string;
+  motherId?: string;
   lineage?: string;
   status?: string;
 }
@@ -176,23 +177,37 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, onSelect, isSelected, onEdit, onDelete }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void }) => (
+const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, onSelect, isSelected, onEdit, onDelete, onViewPedigree }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void }) => (
   <motion.div
     whileHover={{ y: -8, scale: 1.02 }}
     onClick={onSelect}
     className={`bg-white p-5 rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
   >
-    {onEdit && (
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit(e);
-        }}
-        className="absolute top-4 left-4 p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:text-primary hover:bg-white z-10 shadow-sm"
-      >
-        <Edit2 className="w-4 h-4" />
-      </button>
-    )}
+    <div className="absolute top-4 left-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+      {onEdit && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(e);
+          }}
+          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+      )}
+      {onViewPedigree && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewPedigree(id);
+          }}
+          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-accent-gold hover:bg-white shadow-sm"
+          title="View Pedigree"
+        >
+          <LinkIcon className="w-4 h-4" />
+        </button>
+      )}
+    </div>
     <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
       <Bird className="w-16 h-16 text-primary/20 group-hover:scale-110 transition-transform duration-500" />
@@ -256,6 +271,100 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
     </div>
   </motion.div>
 );
+
+const PedigreeNode = ({ bird, label, gender, onClick }: { bird?: BirdData, label: string, gender?: 'Male' | 'Female', onClick?: (id: string) => void }) => (
+  <div className="flex flex-col items-center gap-2 w-full">
+    <div className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{label}</div>
+    <div 
+      onClick={() => bird && onClick?.(bird.id)}
+      className={`relative w-full p-3 rounded-2xl border-2 transition-all group ${
+        bird 
+          ? 'bg-white border-slate-100 hover:border-primary hover:shadow-xl cursor-pointer' 
+          : 'bg-slate-50 border-dashed border-slate-200 opacity-50'
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+          gender === 'Male' ? 'bg-male/20 text-male-text' : 
+          gender === 'Female' ? 'bg-female/20 text-female-text' : 
+          'bg-slate-100 text-slate-400'
+        }`}>
+          <Bird className="w-5 h-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] font-bold text-slate-800 truncate">
+            {bird ? bird.name : 'Unknown Ancestor'}
+          </div>
+          <div className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
+            {bird ? (
+              <>
+                <span>{bird.ring}</span>
+                <span className={bird.gender === 'Male' ? 'text-blue-500' : 'text-pink-500'}>
+                  {bird.gender === 'Male' ? '♂️' : bird.gender === 'Female' ? '♀️' : ''}
+                </span>
+              </>
+            ) : '---'}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const PedigreeTree = ({ birdId, birds, onBirdClick }: { birdId: string, birds: BirdData[], onBirdClick: (id: string) => void }) => {
+  const getBird = (id?: string) => birds.find(b => b.id === id);
+  
+  const targetBird = getBird(birdId);
+  if (!targetBird) return null;
+
+  const father = getBird(targetBird.fatherId);
+  const mother = getBird(targetBird.motherId);
+
+  const paternalGrandfather = getBird(father?.fatherId);
+  const paternalGrandmother = getBird(father?.motherId);
+  const maternalGrandfather = getBird(mother?.fatherId);
+  const maternalGrandmother = getBird(mother?.motherId);
+
+  return (
+    <div className="p-8 space-y-12">
+      {/* Level 1: Grandparents */}
+      <div className="grid grid-cols-4 gap-4">
+        <PedigreeNode bird={paternalGrandfather} label="Paternal GF" gender="Male" onClick={onBirdClick} />
+        <PedigreeNode bird={paternalGrandmother} label="Paternal GM" gender="Female" onClick={onBirdClick} />
+        <PedigreeNode bird={maternalGrandfather} label="Maternal GF" gender="Male" onClick={onBirdClick} />
+        <PedigreeNode bird={maternalGrandmother} label="Maternal GM" gender="Female" onClick={onBirdClick} />
+      </div>
+
+      {/* Connectors L1-L2 */}
+      <div className="grid grid-cols-2 gap-4 -mt-8">
+        <div className="flex justify-center">
+          <div className="h-8 w-1/2 border-x-2 border-b-2 border-slate-100 rounded-b-2xl" />
+        </div>
+        <div className="flex justify-center">
+          <div className="h-8 w-1/2 border-x-2 border-b-2 border-slate-100 rounded-b-2xl" />
+        </div>
+      </div>
+
+      {/* Level 2: Parents */}
+      <div className="grid grid-cols-2 gap-12 px-12">
+        <PedigreeNode bird={father} label="Father" gender="Male" onClick={onBirdClick} />
+        <PedigreeNode bird={mother} label="Mother" gender="Female" onClick={onBirdClick} />
+      </div>
+
+      {/* Connectors L2-L3 */}
+      <div className="flex justify-center -mt-8">
+        <div className="h-8 w-1/2 border-x-2 border-b-2 border-slate-100 rounded-b-2xl" />
+      </div>
+
+      {/* Level 3: Target Bird */}
+      <div className="flex justify-center px-24">
+        <div className="w-full max-w-xs">
+          <PedigreeNode bird={targetBird} label="Current Bird" onClick={onBirdClick} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function App() {
   const [showApp, setShowApp] = useState(false);
@@ -472,6 +581,8 @@ export default function App() {
   });
   const [hatchFailureEgg, setHatchFailureEgg] = useState<EggData | null>(null);
   const [failureReason, setFailureReason] = useState("");
+  const [pedigreeBirdId, setPedigreeBirdId] = useState<string | null>(null);
+  const [isPedigreeModalOpen, setIsPedigreeModalOpen] = useState(false);
 
   const handleHatchSuccess = async (egg: EggData) => {
     if (!user) return;
@@ -493,7 +604,8 @@ export default function App() {
       date: new Date().toLocaleDateString(),
       cage: female?.cage || "1",
       status: "Chick",
-      parents: { maleId: couple.maleId, femaleId: couple.femaleId },
+      fatherId: couple.maleId,
+      motherId: couple.femaleId,
       lineage: couple.id,
       userId: user.uid
     };
@@ -2241,6 +2353,10 @@ export default function App() {
                   isSelected={selectedBirds.includes(bird.id)}
                   onEdit={() => openBirdModal(bird)}
                   onDelete={handleDeleteBird}
+                  onViewPedigree={(id) => {
+                    setPedigreeBirdId(id);
+                    setIsPedigreeModalOpen(true);
+                  }}
                 />
               ))}
               <motion.div 
@@ -3321,6 +3437,44 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+      {/* Pedigree Modal */}
+      <AnimatePresence>
+        {isPedigreeModalOpen && pedigreeBirdId && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsPedigreeModalOpen(false)}
+              className="absolute inset-0 bg-sidebar/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-4xl bg-[#fcfcf9] rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white">
+                <div>
+                  <h3 className="text-2xl font-black font-display text-slate-900">Pedigree Tree</h3>
+                  <p className="text-slate-400 text-sm font-medium">Lineage for {birds.find(b => b.id === pedigreeBirdId)?.name} ({birds.find(b => b.id === pedigreeBirdId)?.ring})</p>
+                </div>
+                <button onClick={() => setIsPedigreeModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                  <X className="w-6 h-6 text-slate-400" />
+                </button>
+              </div>
+              <div className="overflow-x-auto max-h-[70vh]">
+                <PedigreeTree 
+                  birdId={pedigreeBirdId} 
+                  birds={birds} 
+                  onBirdClick={(id) => setPedigreeBirdId(id)} 
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Hatch Failure Reason Modal */}
       <AnimatePresence>
         {hatchFailureEgg && (
