@@ -78,6 +78,9 @@ interface BirdData {
   date: string;
   cage: string;
   mutation?: string;
+  parents?: { maleId: string; femaleId: string };
+  lineage?: string;
+  status?: string;
 }
 
 interface CoupleData {
@@ -94,7 +97,8 @@ interface EggData {
   laidDate: string;
   hatchDate?: string;
   fertilityCheckDate?: string;
-  status: 'Intact' | 'Hatched' | 'Broken';
+  status: 'Intact' | 'Hatched' | 'Broken' | 'Completed' | 'Failed';
+  failureReason?: string;
 }
 
 const SPECIES_LIST = [
@@ -172,7 +176,7 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, onSelect, isSelected, onEdit, onDelete }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void }) => (
+const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, onSelect, isSelected, onEdit, onDelete }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void }) => (
   <motion.div
     whileHover={{ y: -8, scale: 1.02 }}
     onClick={onSelect}
@@ -199,6 +203,11 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
       }`}>
         {gender}
       </div>
+      {status && (
+        <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white shadow-lg shadow-amber-500/20">
+          {status}
+        </div>
+      )}
       <button 
         onClick={(e) => {
           e.stopPropagation();
@@ -457,6 +466,75 @@ export default function App() {
     message: "",
     onConfirm: () => {}
   });
+  const [hatchFailureEgg, setHatchFailureEgg] = useState<EggData | null>(null);
+  const [failureReason, setFailureReason] = useState("");
+
+  const handleHatchSuccess = async (egg: EggData) => {
+    if (!user) return;
+    const couple = couples.find(c => c.id === egg.coupleId);
+    if (!couple) return;
+
+    const female = birds.find(b => b.id === couple.femaleId);
+    
+    // 1. Create new bird
+    const birdId = Math.floor(10000 + Math.random() * 90000).toString();
+    const newBirdData: BirdData & { userId: string } = {
+      id: birdId,
+      name: `Chick #${egg.id}`,
+      ring: "Pending",
+      species: female?.species || "Unknown",
+      gender: "Unknown",
+      age: 0,
+      birthYear: new Date().getFullYear().toString(),
+      date: new Date().toLocaleDateString(),
+      cage: female?.cage || "1",
+      status: "Chick",
+      parents: { maleId: couple.maleId, femaleId: couple.femaleId },
+      lineage: couple.id,
+      userId: user.uid
+    };
+
+    // 2. Update egg status
+    const updatedEgg: EggData = {
+      ...egg,
+      status: 'Completed'
+    };
+
+    try {
+      await setDoc(doc(db, "users_data", user.uid, "birds", birdId), newBirdData);
+      await setDoc(doc(db, "users_data", user.uid, "eggs", egg.id), updatedEgg);
+      
+      setNotifications([
+        { 
+          id: Date.now(), 
+          title: "New Chick!", 
+          message: `Egg #${egg.id} hatched successfully! A new chick has been added to your birds.`, 
+          time: "Just now", 
+          read: false 
+        },
+        ...notifications
+      ]);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, "hatch_success");
+    }
+  };
+
+  const handleHatchFailure = async (egg: EggData, reason: string) => {
+    if (!user) return;
+    const updatedEgg: EggData = {
+      ...egg,
+      status: 'Failed',
+      failureReason: reason
+    };
+
+    try {
+      await setDoc(doc(db, "users_data", user.uid, "eggs", egg.id), updatedEgg);
+      setHatchFailureEgg(null);
+      setFailureReason("");
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, "hatch_failure");
+    }
+  };
   const [editingBirdId, setEditingBirdId] = useState<string | null>(null);
   const [editingCoupleId, setEditingCoupleId] = useState<string | null>(null);
   const [editingEggId, setEditingEggId] = useState<string | null>(null);
@@ -2085,8 +2163,8 @@ export default function App() {
               />
               <StatCard 
                 icon={EggIcon} 
-                value={eggs.length} 
-                label="Total Eggs" 
+                value={eggs.filter(e => e.status === 'Intact').length} 
+                label="Active Eggs" 
                 colorClass="bg-accent-orange/10 text-accent-orange" 
                 onClick={() => setActiveTab("Eggs")}
               />
@@ -2100,7 +2178,9 @@ export default function App() {
                     <TrendingUp className="w-6 h-6" />
                   </div>
                   <div className="text-2xl font-bold font-display">
-                    {eggs.length > 0 ? Math.round((eggs.filter(e => e.status === 'Hatched').length / eggs.length) * 100) : 0}%
+                    {eggs.filter(e => e.status !== 'Intact').length > 0 
+                      ? Math.round((eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.status !== 'Intact').length) * 100) 
+                      : 0}%
                   </div>
                 </div>
                 <div>
@@ -2110,7 +2190,9 @@ export default function App() {
                   <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: eggs.length > 0 ? `${(eggs.filter(e => e.status === 'Hatched').length / eggs.length) * 100}%` : "0%" }}
+                      animate={{ width: eggs.filter(e => e.status !== 'Intact').length > 0 
+                        ? `${(eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.status !== 'Intact').length) * 100}%` 
+                        : "0%" }}
                       className="h-full bg-gradient-to-r from-primary to-blue-500"
                     />
                   </div>
@@ -2292,7 +2374,7 @@ export default function App() {
               <h3 className="text-2xl font-bold font-display text-slate-800">Egg Tracking</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {eggs.map((egg) => {
+              {eggs.filter(e => e.status === 'Intact').map((egg) => {
                 const couple = couples.find(c => c.id === egg.coupleId);
                 const male = birds.find(b => b.id === couple?.maleId);
                 const female = birds.find(b => b.id === couple?.femaleId);
@@ -2379,8 +2461,8 @@ export default function App() {
 
                       {/* Status Badge */}
                       <div className={`absolute top-6 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm z-20 ${
-                        egg.status === 'Hatched' ? 'bg-green-500 text-white' :
-                        egg.status === 'Broken' ? 'bg-red-500 text-white' :
+                        egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-500 text-white' :
+                        egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-red-500 text-white' :
                         isHatchingToday ? 'bg-orange-500 text-white animate-bounce' :
                         'bg-primary text-white'
                       }`}>
@@ -2447,6 +2529,24 @@ export default function App() {
                           <div className="pt-2">
                             <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Fertility Check</span>
                             <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">{egg.fertilityCheckDate}</span>
+                          </div>
+                        )}
+
+                        {/* Hatch Confirmation Buttons */}
+                        {egg.status === 'Intact' && (isHatchingToday || (daysToHatch !== null && daysToHatch < 0)) && (
+                          <div className="pt-6 space-y-2">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handleHatchSuccess(egg); }}
+                              className="w-full py-2.5 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all flex items-center justify-center gap-2"
+                            >
+                              <Sparkles className="w-3 h-3" /> Hatched Successfully
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setHatchFailureEgg(egg); }}
+                              className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all"
+                            >
+                              Failed to Hatch
+                            </button>
                           </div>
                         )}
                       </div>
@@ -3031,6 +3131,8 @@ export default function App() {
                     <option value="Intact">Intact</option>
                     <option value="Hatched">Hatched</option>
                     <option value="Broken">Broken</option>
+                    <option value="Completed">Completed (Hatched)</option>
+                    <option value="Failed">Failed</option>
                   </select>
                 </div>
                 <button 
@@ -3208,6 +3310,50 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+      {/* Hatch Failure Reason Modal */}
+      <AnimatePresence>
+        {hatchFailureEgg && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setHatchFailureEgg(null)}
+              className="absolute inset-0 bg-sidebar/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="text-xl font-bold font-display">Hatch Failure</h3>
+                <button onClick={() => setHatchFailureEgg(null)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+              <div className="p-8 space-y-6">
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Reason for failure</label>
+                  <div className="grid grid-cols-1 gap-3">
+                    {['Infertile', 'Dead in shell', 'Broken', 'Abandoned', 'Other'].map((reason) => (
+                      <button
+                        key={reason}
+                        onClick={() => handleHatchFailure(hatchFailureEgg, reason)}
+                        className="w-full px-6 py-4 rounded-2xl bg-slate-50 border border-slate-100 text-left font-bold text-slate-700 hover:border-primary hover:bg-primary/5 transition-all"
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Confirmation Modal */}
       <AnimatePresence>
         {confirmModal.isOpen && (
