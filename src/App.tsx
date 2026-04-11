@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, FormEvent, MouseEvent } from "react";
+import { useState, useEffect, FormEvent, MouseEvent, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
@@ -67,7 +67,8 @@ import {
   LogIn,
   Download,
   ArrowLeft,
-  ArrowRight
+  ArrowRight,
+  Share2
 } from "lucide-react";
 
 import { 
@@ -83,6 +84,9 @@ import {
   Cell,
   Legend
 } from 'recharts';
+
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 interface BirdData {
   id: string;
@@ -289,7 +293,7 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, onSelect, isSelected, onEdit, onDelete, onViewPedigree }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void }) => (
+const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void }) => (
   <motion.div
     whileHover={{ y: -8, scale: 1.02 }}
     onClick={onSelect}
@@ -305,6 +309,18 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
           className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
         >
           <Edit2 className="w-4 h-4" />
+        </button>
+      )}
+      {onExportCertificate && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onExportCertificate(id);
+          }}
+          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+          title="Export Pedigree PDF"
+        >
+          <Download className="w-4 h-4" />
         </button>
       )}
     </div>
@@ -944,22 +960,48 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           } catch (error) {
             console.error("Error checking/creating user profile:", error);
           }
-          
-          // Only show app if we are on an app-related path
-          const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
-          if (path === '/app' || path === '/auth') {
-            setShowApp(true);
-          }
-          setShowAuthPage(false);
-        } else {
-          setShowApp(false);
-          setShowAuthPage(true);
-          setAuthError("يرجى تأكيد بريدك الإلكتروني لتتمكن من الدخول.");
         }
       }
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
+      if (user.emailVerified || isGoogleUser) {
+        const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
+        if (path === '/app' || path === '/auth' || showAuthPage) {
+          setShowApp(true);
+          setShowAuthPage(false);
+        }
+      } else {
+        setShowApp(false);
+        setShowAuthPage(true);
+        setAuthError("يرجى تأكيد بريدك الإلكتروني لتتمكن من الدخول.");
+      }
+    }
+  }, [user, showAuthPage]);
+
+  // Handle initial URL routing
+  useEffect(() => {
+    const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
+    if (path === '/app') {
+      if (user && (user.emailVerified || user.providerData.some(p => p.providerId === 'google.com'))) {
+        setShowApp(true);
+        setShowAuthPage(false);
+      } else {
+        setShowAuthPage(true);
+      }
+    } else if (path === '/auth') {
+      if (user && (user.emailVerified || user.providerData.some(p => p.providerId === 'google.com'))) {
+        setShowApp(true);
+        setShowAuthPage(false);
+      } else {
+        setShowAuthPage(true);
+      }
+    }
+  }, [user]);
 
   const handleGoogleSignIn = async () => {
     setAuthError("");
@@ -1053,6 +1095,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [isPedigreeModalOpen, setIsPedigreeModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   const handleHatchSuccess = async (egg: EggData) => {
     if (!user) return;
@@ -1166,6 +1209,135 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [birds, setBirds] = useState<BirdData[]>([]);
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
+
+  const exportPedigreePDF = async (birdId: string) => {
+    const bird = birds.find(b => b.id === birdId);
+    if (!bird) return;
+
+    const doc = new jsPDF();
+    const primaryColor = "#1A73E8";
+    const accentColor = "#FBBC05";
+
+    // Header
+    doc.setFillColor(primaryColor);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text("PetsBird Pedigree Certificate", 20, 25);
+    
+    doc.setFontSize(10);
+    doc.text("GLOBAL AVIARY MANAGEMENT SYSTEM", 20, 32);
+
+    // Bird Info
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(18);
+    doc.text(`Bird: ${bird.name}`, 20, 60);
+    
+    doc.setFontSize(12);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Ring ID: ${bird.ring}`, 20, 70);
+    doc.text(`Species: ${bird.species}`, 20, 78);
+    doc.text(`Mutation: ${bird.mutation}`, 20, 86);
+    doc.text(`Gender: ${bird.gender}`, 20, 94);
+    doc.text(`Birth Year: ${bird.birthYear}`, 20, 102);
+
+    // Family Tree Section
+    doc.setDrawColor(primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(20, 115, 190, 115);
+    
+    doc.setTextColor(primaryColor);
+    doc.setFontSize(14);
+    doc.text("Lineage / Family Tree", 20, 125);
+
+    const father = birds.find(b => b.id === bird.fatherId);
+    const mother = birds.find(b => b.id === bird.motherId);
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.text(`Father: ${father?.name || 'Unknown'} (${father?.ring || 'N/A'})`, 30, 140);
+    doc.text(`Mother: ${mother?.name || 'Unknown'} (${mother?.ring || 'N/A'})`, 30, 150);
+
+    // Footer
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, 270, 210, 27, 'F');
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(8);
+    doc.text("Generated by PetsBird.com - Your Professional Breeding Partner", 105, 285, { align: 'center' });
+
+    doc.save(`${bird.name}_Pedigree.pdf`);
+  };
+
+  const shareDashboardStats = async () => {
+    if (!dashboardRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        backgroundColor: "#F8FAFC",
+        logging: false,
+        useCORS: true
+      });
+      
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = image;
+      link.download = "PetsBird_Stats.png";
+      link.click();
+      
+      setNotifications(prev => [
+        {
+          id: Date.now(),
+          title: "Stats Exported!",
+          message: "Your dashboard stats have been saved as an image. Share it on your social media!",
+          time: "Just now",
+          read: false
+        },
+        ...prev
+      ]);
+    } catch (error) {
+      console.error("Error sharing stats:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || eggs.length === 0) return;
+
+    const checkHatchingSoon = () => {
+      const today = new Date();
+      
+      eggs.forEach(egg => {
+        if (egg.status === 'Intact' && egg.hatchDate) {
+          const hatchDate = new Date(egg.hatchDate);
+          const diffTime = hatchDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+          if (diffDays <= 2 && diffDays >= 0) {
+            const notificationId = `hatch-${egg.id}`;
+            if (!notifications.some(n => n.id === notificationId)) {
+              const couple = couples.find(c => c.id === egg.coupleId);
+              const male = birds.find(b => b.id === couple?.maleId);
+              const female = birds.find(b => b.id === couple?.femaleId);
+              
+              setNotifications(prev => [
+                {
+                  id: notificationId,
+                  title: "Hatching Soon!",
+                  message: `Get ready! Egg #${egg.eggNumber || egg.id.slice(-3)} from ${male?.name || 'Tio'} & ${female?.name || 'Rosa'} is hatching soon!`,
+                  time: "Alert",
+                  read: false
+                },
+                ...prev
+              ]);
+            }
+          }
+        }
+      });
+    };
+
+    checkHatchingSoon();
+  }, [user, eggs, couples, birds]);
 
   enum OperationType {
     CREATE = 'create',
@@ -3145,8 +3317,18 @@ This update is now live for all Premium users. We continue to push the boundarie
         </header>
 
         {activeTab === "Dashboard" && (
-          <div className="space-y-12">
+          <div className="space-y-12" ref={dashboardRef}>
             {/* Analytics Stats */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-bold font-display text-slate-800">Performance Overview</h3>
+              <button 
+                onClick={shareDashboardStats}
+                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-primary hover:text-primary transition-all shadow-sm"
+              >
+                <Share2 className="w-4 h-4" />
+                Share My Stats
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard 
                 icon={Bird} 
@@ -3286,7 +3468,11 @@ This update is now live for all Premium users. We continue to push the boundarie
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {birds.slice(-3).map((bird) => (
-                  <BirdCard key={bird.id} {...bird} />
+                  <BirdCard 
+                    key={bird.id} 
+                    {...bird} 
+                    onExportCertificate={exportPedigreePDF}
+                  />
                 ))}
               </div>
             </section>
@@ -3314,6 +3500,7 @@ This update is now live for all Premium users. We continue to push the boundarie
                     setPedigreeBirdId(id);
                     setIsPedigreeModalOpen(true);
                   }}
+                  onExportCertificate={exportPedigreePDF}
                 />
               ))}
               <motion.div 
