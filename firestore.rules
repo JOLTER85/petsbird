@@ -6,46 +6,17 @@ service cloud.firestore {
     // Assumed Data Model
     // ===============================================================
     //
-    // Collection: users
-    // Document ID: userId (uid)
-    // Fields:
-    //   - uid: string (required)
-    //   - email: string (required, email format)
-    //   - displayName: string (optional)
-    //   - aviaryName: string (optional)
-    //   - createdAt: string (optional, ISO 8601)
-    //
     // Collection: birds
-    // Document ID: birdId
-    // Fields:
-    //   - ownerId: string (required, matches auth.uid)
-    //   - ringNumber: string (required, unique ID)
-    //   - species: string (required)
-    //   - mutation: string (optional)
-    //   - sex: string (optional, enum: Male, Female, Unknown)
-    //   - birthDate: string (optional, date format)
-    //   - photoURL: string (optional)
-    //   - notes: string (optional)
-    //   - fatherId: string (optional)
-    //   - motherId: string (optional)
-    //   - origin: string (optional, enum: Bred by me, Purchased)
-    //   - healthStatus: string (optional)
-    //   - availability: string (optional, enum: For Sale, Bred)
-    //   - isForSale: bool (optional)
-    //   - salePrice: number (optional)
-    //   - publicProfileEnabled: bool (optional)
+    // Fields: id, ring, species, gender, age, date, cage, mutation, userId
     //
-    // Collection: nests
-    // Document ID: nestId
-    // Fields:
-    //   - ownerId: string (required, matches auth.uid)
-    //   - pairId: string (optional)
-    //   - pairName: string (required)
-    //   - firstEggDate: string (optional, date format)
-    //   - status: string (required, enum: Laying, Incubating, Hatching, Fledging)
-    //   - eggsCount: int (required)
-    //   - chicksCount: int (required)
-    //   - color: string (optional)
+    // Collection: couples
+    // Fields: id, maleId, femaleId, startDate, status, userId
+    //
+    // Collection: eggs
+    // Fields: id, coupleId, laidDate, hatchDate, status, userId
+    //
+    // Collection: users
+    // Fields: name, location, email, avatar, userId
     //
     // ===============================================================
 
@@ -62,103 +33,54 @@ service cloud.firestore {
     }
 
     function isDocOwner() {
-      return isAuthenticated() && request.auth.uid == resource.data.ownerId;
-    }
-
-    function isAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "elberraksoussan@gmail.com" && request.auth.token.email_verified == true));
-    }
-
-    function isValidEmail(email) {
-      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    }
-
-    function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'email']) &&
-             data.uid == request.auth.uid &&
-             isValidEmail(data.email) &&
-             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
-             (!('aviaryName' in data) || (data.aviaryName is string && data.aviaryName.size() < 100));
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
     }
 
     function isValidBird(data) {
-      return data.keys().hasAll(['ownerId', 'species', 'ringNumber']) &&
-             data.ownerId == request.auth.uid &&
-             data.ringNumber is string && data.ringNumber.size() > 0 && data.ringNumber.size() < 50 &&
-             data.species is string && data.species.size() > 0 && data.species.size() < 50 &&
-             (!('mutation' in data) || (data.mutation is string && data.mutation.size() < 100)) &&
-             (!('sex' in data) || (data.sex in ['Male', 'Female', 'Unknown'])) &&
-             (!('birthDate' in data) || (data.birthDate is string)) &&
-             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() < 2000000)) && 
-             (!('notes' in data) || (data.notes is string && data.notes.size() < 1000)) &&
-             (!('fatherId' in data) || (data.fatherId is string && data.fatherId.size() < 50)) &&
-             (!('motherId' in data) || (data.motherId is string && data.motherId.size() < 50)) &&
-             (!('origin' in data) || (data.origin in ['Bred by me', 'Purchased'])) &&
-             (!('healthStatus' in data) || (data.healthStatus is string && data.healthStatus.size() < 50)) &&
-             (!('availability' in data) || (data.availability in ['For Sale', 'Bred'])) &&
-             (!('isForSale' in data) || (data.isForSale is bool)) &&
-             (!('salePrice' in data) || (data.salePrice is number)) &&
-             (!('publicProfileEnabled' in data) || (data.publicProfileEnabled is bool));
+      return data.keys().hasAll(['id', 'ring', 'species', 'gender', 'userId']) &&
+             data.id is string && data.ring is string && data.species is string &&
+             data.gender in ['Male', 'Female', 'Unknown'] && data.userId == request.auth.uid;
     }
 
-    function isValidNest(data) {
-      return data.keys().hasAll(['ownerId', 'pairName', 'status', 'eggsCount', 'chicksCount']) &&
-             data.ownerId == request.auth.uid &&
-             data.pairName is string && data.pairName.size() > 0 && data.pairName.size() < 100 &&
-             data.status in ['Laying', 'Incubating', 'Hatching', 'Fledging'] &&
-             data.eggsCount is int && data.eggsCount >= 0 &&
-             data.chicksCount is int && data.chicksCount >= 0 &&
-             (!('pairId' in data) || (data.pairId is string)) &&
-             (!('firstEggDate' in data) || (data.firstEggDate is string)) &&
-             (!('color' in data) || (data.color is string));
+    function isValidCouple(data) {
+      return data.keys().hasAll(['id', 'maleId', 'femaleId', 'userId']) &&
+             data.id is string && data.maleId is string && data.femaleId is string &&
+             data.userId == request.auth.uid;
     }
 
-    function isValidMail(data) {
-      return data.keys().hasAll(['to', 'message']) &&
-             data.to == request.auth.token.email &&
-             data.message is map &&
-             data.message.keys().hasAll(['subject', 'html']) &&
-             data.message.subject is string &&
-             data.message.html is string;
+    function isValidEgg(data) {
+      return data.keys().hasAll(['id', 'coupleId', 'laidDate', 'userId']) &&
+             data.id is string && data.coupleId is string && data.laidDate is string &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['userId']) &&
+             data.userId == request.auth.uid;
     }
 
     // ===============================================================
     // Rules
     // ===============================================================
 
+    match /users_data/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      match /birds/{birdId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /couples/{coupleId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /eggs/{eggId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && isValidUser(request.resource.data) && 
-                      request.resource.data.uid == resource.data.uid &&
-                      request.resource.data.email == resource.data.email;
-    }
-
-    match /birds/{birdId} {
-      allow read: if isDocOwner() || isAdmin() || resource.data.publicProfileEnabled == true || resource.data.isForSale == true;
-      allow create: if isAuthenticated() && isValidBird(request.resource.data);
-      allow update: if isDocOwner() && isValidBird(request.resource.data) &&
-                      request.resource.data.ownerId == resource.data.ownerId;
-      allow delete: if isDocOwner() || isAdmin();
-    }
-
-    match /nests/{nestId} {
-      allow read: if isDocOwner() || isAdmin();
-      allow create: if isAuthenticated() && isValidNest(request.resource.data);
-      allow update: if isDocOwner() && isValidNest(request.resource.data) &&
-                      request.resource.data.ownerId == resource.data.ownerId;
-      allow delete: if isDocOwner() || isAdmin();
-    }
-
-    match /mail/{mailId} {
-      allow create: if isAuthenticated() && isValidMail(request.resource.data);
-    }
-
-    // Default deny
-    match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isOwner(userId);
     }
   }
 }
