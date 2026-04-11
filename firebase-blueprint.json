@@ -1,82 +1,115 @@
 {
   "entities": {
-    "Bird": {
-      "title": "Bird",
-      "description": "A bird in the aviary",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "ring": { "type": "string" },
-        "species": { "type": "string" },
-        "gender": { "type": "string", "enum": ["Male", "Female"] },
-        "age": { "type": "number" },
-        "birthYear": { "type": "string" },
-        "date": { "type": "string" },
-        "cage": { "type": "string" },
-        "mutation": { "type": "string" },
-        "userId": { "type": "string" }
-      },
-      "required": ["id", "name", "ring", "species", "gender", "userId"]
-    },
-    "Couple": {
-      "title": "Couple",
-      "description": "A breeding pair of birds",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "maleId": { "type": "string" },
-        "femaleId": { "type": "string" },
-        "startDate": { "type": "string" },
-        "status": { "type": "string", "enum": ["Active", "Inactive"] },
-        "userId": { "type": "string" }
-      },
-      "required": ["id", "maleId", "femaleId", "userId"]
-    },
-    "Egg": {
-      "title": "Egg",
-      "description": "An egg laid by a couple",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "coupleId": { "type": "string" },
-        "laidDate": { "type": "string" },
-        "hatchDate": { "type": "string" },
-        "status": { "type": "string", "enum": ["Intact", "Hatched", "Broken"] },
-        "userId": { "type": "string" }
-      },
-      "required": ["id", "coupleId", "laidDate", "userId"]
-    },
-    "UserProfile": {
-      "title": "UserProfile",
+    "User": {
+      "title": "User",
       "description": "User profile information",
       "type": "object",
       "properties": {
-        "name": { "type": "string" },
-        "location": { "type": "string" },
-        "email": { "type": "string" },
-        "avatar": { "type": "string" },
-        "userId": { "type": "string" }
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "aviaryName": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["userId"]
+      "required": ["uid", "email"]
+    },
+    "Bird": {
+      "title": "Bird",
+      "description": "Bird record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "ringNumber": { "type": "string" },
+        "species": { "type": "string" },
+        "mutation": { "type": "string" },
+        "sex": { "type": "string", "enum": ["Male", "Female", "Unknown"] },
+        "birthDate": { "type": "string", "format": "date" },
+        "photoURL": { "type": "string" },
+        "notes": { "type": "string" },
+        "fatherId": { "type": "string" },
+        "motherId": { "type": "string" },
+        "origin": { "type": "string", "enum": ["Bred by me", "Purchased"] },
+        "healthStatus": { "type": "string" },
+        "availability": { "type": "string", "enum": ["For Sale", "Bred"] },
+        "isForSale": { "type": "boolean" },
+        "salePrice": { "type": "number" },
+        "publicProfileEnabled": { "type": "boolean" }
+      },
+      "required": ["ownerId", "species", "ringNumber"]
+    },
+    "Nest": {
+      "title": "Nest",
+      "description": "Breeding nest record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "pairId": { "type": "string" },
+        "pairName": { "type": "string" },
+        "firstEggDate": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["Laying", "Incubating", "Hatching", "Fledging"] },
+        "eggsCount": { "type": "integer" },
+        "chicksCount": { "type": "integer" },
+        "color": { "type": "string" }
+      },
+      "required": ["ownerId", "pairName"]
+    },
+    "Mail": {
+      "title": "Mail",
+      "description": "Email to be sent by Trigger Email extension",
+      "type": "object",
+      "properties": {
+        "to": { "type": "string", "format": "email" },
+        "message": {
+          "type": "object",
+          "properties": {
+            "subject": { "type": "string" },
+            "text": { "type": "string" },
+            "html": { "type": "string" }
+          }
+        }
+      },
+      "required": ["to", "message"]
+    },
+    "ProductionRecord": {
+      "title": "Production Record",
+      "description": "Breeding results for a bird",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "birdId": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "year": { "type": "integer" },
+        "clutchNumber": { "type": "integer" },
+        "eggsCount": { "type": "integer" },
+        "hatchedCount": { "type": "integer" },
+        "weanedCount": { "type": "integer" },
+        "notes": { "type": "string" }
+      },
+      "required": ["birdId", "ownerId", "year", "clutchNumber"]
     }
   },
   "firestore": {
-    "/users_data/{userId}/birds/{birdId}": {
-      "schema": "Bird",
-      "description": "User's collection of birds"
-    },
-    "/users_data/{userId}/couples/{coupleId}": {
-      "schema": "Couple",
-      "description": "User's collection of breeding pairs"
-    },
-    "/users_data/{userId}/eggs/{eggId}": {
-      "schema": "Egg",
-      "description": "User's collection of eggs"
-    },
     "/users/{userId}": {
-      "schema": "UserProfile",
-      "description": "User profile data"
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/birds/{birdId}": {
+      "schema": "Bird",
+      "description": "Bird records"
+    },
+    "/nests/{nestId}": {
+      "schema": "Nest",
+      "description": "Breeding nest records"
+    },
+    "/mail/{mailId}": {
+      "schema": "Mail",
+      "description": "Collection for Trigger Email extension"
+    },
+    "/production/{recordId}": {
+      "schema": "ProductionRecord",
+      "description": "Breeding results for birds"
     }
   }
 }

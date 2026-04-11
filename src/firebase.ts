@@ -4,26 +4,39 @@ import {
   GoogleAuthProvider, 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
-  sendPasswordResetEmail,
-  sendEmailVerification
+  sendEmailVerification,
+  sendPasswordResetEmail
 } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, getDocFromServer, collection, addDoc, updateDoc, deleteDoc, query, where, onSnapshot } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = (firebaseConfig as any).firestoreDatabaseId 
+  ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId) 
+  : getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 
+// Test connection removed to prevent console errors when Firebase is not configured.
 export { 
   signInWithPopup, 
   signOut, 
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
+  sendEmailVerification,
   sendPasswordResetEmail,
-  sendEmailVerification
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  onSnapshot
 };
