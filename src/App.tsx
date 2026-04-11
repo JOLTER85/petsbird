@@ -50,6 +50,7 @@ import {
   Bell,
   Plus,
   X,
+  Check,
   Link as LinkIcon,
   GitBranch,
   Network,
@@ -900,11 +901,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     isOpen: boolean;
     title: string;
     message: string;
+    confirmText?: string;
+    variant?: 'danger' | 'success' | 'info';
     onConfirm: () => void;
   }>({
     isOpen: false,
     title: "",
     message: "",
+    confirmText: "تأكيد",
+    variant: 'info',
     onConfirm: () => {}
   });
   const [hatchFailureEgg, setHatchFailureEgg] = useState<EggData | null>(null);
@@ -965,6 +970,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         isOpen: true,
         title: "Success",
         message: "تمت إضافة الفرخ الجديد بنجاح إلى قائمة طيورك!",
+        variant: 'success',
+        confirmText: "حسناً",
         onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
       });
     } catch (error) {
@@ -993,6 +1000,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         isOpen: true,
         title: "Egg Removed",
         message: `تم حذف البيضة بنجاح (السبب: ${reason})`,
+        variant: 'success',
+        confirmText: "حسناً",
         onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
       });
     } catch (error) {
@@ -1059,6 +1068,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       isOpen: true,
       title: "Database Error",
       message: `خطأ في قاعدة البيانات: ${errInfo.error}\nيرجى التأكد من إعدادات Firebase وقواعد الحماية.`,
+      variant: 'danger',
+      confirmText: "حسناً",
       onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
     });
   };
@@ -1172,6 +1183,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       isOpen: true,
       title: "حذف طائر",
       message: "هل أنت متأكد من حذف هذا الطائر؟ سيتم حذف جميع البيانات المرتبطة به.",
+      variant: 'danger',
+      confirmText: "تأكيد الحذف",
       onConfirm: async () => {
         try {
           await deleteDoc(doc(db, "users_data", user.uid, "birds", id));
@@ -1394,6 +1407,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         isOpen: true,
         title: "حذف كوبل",
         message: "هل أنت متأكد من حذف هذا الكوبل؟",
+        variant: 'danger',
+        confirmText: "تأكيد الحذف",
         onConfirm: performDelete
       });
     }
@@ -1586,6 +1601,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       isOpen: true,
       title: "حذف بيضة",
       message: "هل أنت متأكد من حذف هذه البيضة؟",
+      variant: 'danger',
+      confirmText: "تأكيد الحذف",
       onConfirm: async () => {
         try {
           await deleteDoc(doc(db, "users_data", user.uid, "eggs", id));
@@ -1677,6 +1694,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         isOpen: true,
         title: "Fertility Confirmed",
         message: "تم تأكيد خصوبة البيضة بنجاح!",
+        variant: 'success',
+        confirmText: "حسناً",
         onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
       });
     } catch (error) {
@@ -4341,23 +4360,35 @@ This update is now live for all Premium users. We continue to push the boundarie
               className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl overflow-hidden"
             >
               <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <X className="w-10 h-10" />
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
+                  confirmModal.variant === 'success' ? 'bg-green-50 text-green-500' :
+                  confirmModal.variant === 'info' ? 'bg-blue-50 text-blue-500' :
+                  'bg-red-50 text-red-500'
+                }`}>
+                  {confirmModal.variant === 'success' ? <Check className="w-10 h-10" /> :
+                   confirmModal.variant === 'info' ? <Info className="w-10 h-10" /> :
+                   <X className="w-10 h-10" />}
                 </div>
                 <h3 className="text-2xl font-bold font-display text-slate-800 mb-2">{confirmModal.title}</h3>
                 <p className="text-slate-500 font-medium mb-8">{confirmModal.message}</p>
                 <div className="flex gap-4">
-                  <button 
-                    onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-                    className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all"
-                  >
-                    إلغاء
-                  </button>
+                  {confirmModal.variant === 'danger' && (
+                    <button 
+                      onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                      className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                    >
+                      إلغاء
+                    </button>
+                  )}
                   <button 
                     onClick={confirmModal.onConfirm}
-                    className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-bold shadow-lg shadow-red-500/20 hover:bg-red-600 transition-all"
+                    className={`flex-1 py-4 text-white rounded-2xl font-bold shadow-lg transition-all ${
+                      confirmModal.variant === 'success' ? 'bg-green-500 shadow-green-500/20 hover:bg-green-600' :
+                      confirmModal.variant === 'info' ? 'bg-blue-500 shadow-blue-500/20 hover:bg-blue-600' :
+                      'bg-red-500 shadow-red-500/20 hover:bg-red-600'
+                    }`}
                   >
-                    تأكيد الحذف
+                    {confirmModal.confirmText || (confirmModal.variant === 'danger' ? "تأكيد الحذف" : "حسناً")}
                   </button>
                 </div>
               </div>
