@@ -70,6 +70,20 @@ import {
   ArrowRight
 } from "lucide-react";
 
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer, 
+  PieChart, 
+  Pie, 
+  Cell,
+  Legend
+} from 'recharts';
+
 interface BirdData {
   id: string;
   name: string;
@@ -215,17 +229,23 @@ const Logo = ({ variant = 'full', className = "", theme = 'light' }: { variant?:
       <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
         <title>PetsBird Logo</title>
         <rect width="100" height="100" rx="28" fill="#1A73E8" />
+        {/* Stylized Bird Silhouette */}
         <path 
-          d="M50 25 C38 25 30 45 30 65 C30 82 38 90 50 90 C62 90 70 82 70 65 C70 45 62 25 50 25Z" 
+          d="M35 65 C35 45 45 35 65 35 C75 35 80 40 80 50 C80 65 70 75 50 75 C40 75 35 70 35 65Z" 
+          fill="white" 
+          opacity="0.2"
+        />
+        <path 
+          d="M40 60 C40 40 50 30 70 30 C75 30 80 35 80 40 C80 55 70 65 50 65 C45 65 40 60 40 60Z" 
           fill="#FBBC05" 
         />
+        <circle cx="65" cy="42" r="3" fill="#1A73E8" />
         <path 
-          d="M50 25 C55 15 65 10 75 15" 
+          d="M70 30 C72 20 78 15 85 18" 
           stroke="white" 
-          strokeWidth="6" 
+          strokeWidth="4" 
           strokeLinecap="round" 
         />
-        <circle cx="45" cy="45" r="3" fill="#1A73E8" />
       </svg>
     </div>
     {variant === 'full' && (
@@ -3125,72 +3145,152 @@ This update is now live for all Premium users. We continue to push the boundarie
         </header>
 
         {activeTab === "Dashboard" && (
-          <>
-            <div className="grid grid-cols-4 gap-6 mb-12">
+          <div className="space-y-12">
+            {/* Analytics Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard 
                 icon={Bird} 
                 value={birds.length} 
-                label="Bird count" 
+                label="Total Birds" 
                 colorClass="bg-primary/10 text-primary" 
                 onClick={() => setActiveTab("My Birds")}
               />
               <StatCard 
-                icon={Heart} 
-                value={couples.filter(c => c.status === 'Active').length} 
-                label="Active nests" 
+                icon={Sparkles} 
+                value={`${eggs.length > 0 ? Math.round((eggs.filter(e => e.isFertile).length / eggs.length) * 100) : 0}%`} 
+                label="Fertility Rate" 
                 colorClass="bg-accent-gold/10 text-accent-gold" 
-                onClick={() => setActiveTab("Couples")}
               />
               <StatCard 
-                icon={EggIcon} 
-                value={eggs.filter(e => e.status === 'Intact').length} 
-                label="Active Eggs" 
-                colorClass="bg-accent-orange/10 text-accent-orange" 
-                onClick={() => setActiveTab("Eggs")}
+                icon={TrendingUp} 
+                value={`${eggs.filter(e => e.isFertile).length > 0 ? Math.round((eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.isFertile).length) * 100) : 0}%`} 
+                label="Hatch Rate" 
+                colorClass="bg-green-500/10 text-green-500" 
               />
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass p-6 rounded-3xl shadow-sm border border-white/20 flex flex-col justify-between"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6" />
-                  </div>
-                  <div className="text-2xl font-bold font-display">
-                    {eggs.filter(e => e.status !== 'Intact').length > 0 
-                      ? Math.round((eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.status !== 'Intact').length) * 100) 
-                      : 0}%
-                  </div>
+              <StatCard 
+                icon={Activity} 
+                value={Math.round((eggs.filter(e => e.status === 'Completed').length / (eggs.length || 1)) * 100)} 
+                label="Success Score" 
+                colorClass="bg-purple-500/10 text-purple-500" 
+              />
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="glass p-8 rounded-[40px] border-white/20 shadow-xl">
+                <h3 className="text-xl font-bold font-display text-slate-800 mb-8">Production Chart</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={(() => {
+                      const monthlyData: { [key: string]: number } = {};
+                      eggs.forEach(egg => {
+                        const month = new Date(egg.laidDate).toLocaleString('default', { month: 'short' });
+                        monthlyData[month] = (monthlyData[month] || 0) + 1;
+                      });
+                      return Object.entries(monthlyData).map(([name, count]) => ({ name, count }));
+                    })()}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        cursor={{ fill: '#f8fafc' }}
+                      />
+                      <Bar dataKey="count" fill="#1A73E8" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Hatch rate</span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: eggs.filter(e => e.status !== 'Intact').length > 0 
-                        ? `${(eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.status !== 'Intact').length) * 100}%` 
-                        : "0%" }}
-                      className="h-full bg-gradient-to-r from-primary to-blue-500"
-                    />
-                  </div>
+              </div>
+
+              <div className="glass p-8 rounded-[40px] border-white/20 shadow-xl">
+                <h3 className="text-xl font-bold font-display text-slate-800 mb-8">Egg Status Distribution</h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Fertile', value: eggs.filter(e => e.isFertile && e.status !== 'Completed').length, color: '#FBBC05' },
+                          { name: 'Hatched', value: eggs.filter(e => e.status === 'Completed').length, color: '#1A73E8' },
+                          { name: 'Broken', value: eggs.filter(e => e.status === 'Broken').length, color: '#EF4444' },
+                          { name: 'Pending', value: eggs.filter(e => e.status === 'Intact' && e.isFertile === undefined).length, color: '#94A3B8' }
+                        ]}
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {[0, 1, 2, 3].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={['#FBBC05', '#1A73E8', '#EF4444', '#94A3B8'][index]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend verticalAlign="bottom" height={36}/>
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              </motion.div>
+              </div>
+            </div>
+
+            {/* Top Couples Ranking */}
+            <div className="glass p-8 rounded-[40px] border-white/20 shadow-xl">
+              <h3 className="text-xl font-bold font-display text-slate-800 mb-8">Top Performing Couples</h3>
+              <div className="space-y-4">
+                {couples
+                  .map(couple => {
+                    const coupleEggs = eggs.filter(e => e.coupleId === couple.id);
+                    const hatchedCount = coupleEggs.filter(e => e.status === 'Completed').length;
+                    const fertilityRate = coupleEggs.length > 0 
+                      ? (coupleEggs.filter(e => e.isFertile).length / coupleEggs.length) * 100 
+                      : 0;
+                    const male = birds.find(b => b.id === couple.maleId);
+                    const female = birds.find(b => b.id === couple.femaleId);
+                    return { ...couple, hatchedCount, fertilityRate, male, female };
+                  })
+                  .sort((a, b) => b.hatchedCount - a.hatchedCount)
+                  .slice(0, 5)
+                  .map((couple, i) => (
+                    <div key={couple.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-100">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                          #{i + 1}
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-800">
+                            {couple.male?.name || 'Unknown'} × {couple.female?.name || 'Unknown'}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {couple.hatchedCount} Successful Hatches
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        {couple.fertilityRate < 50 && couple.hatchedCount > 0 && (
+                          <div className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold flex items-center gap-1">
+                            <Info className="w-3 h-3" />
+                            Advice: Check diet/age
+                          </div>
+                        )}
+                        <div className="text-right">
+                          <div className="text-sm font-bold text-slate-800">{Math.round(couple.fertilityRate)}%</div>
+                          <div className="text-[10px] text-slate-400 uppercase font-bold">Fertility</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
 
             <section>
               <div className="flex items-center justify-between mb-8">
                 <h3 className="text-2xl font-bold font-display text-slate-800">Recent Birds</h3>
               </div>
-              <div className="grid grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {birds.slice(-3).map((bird) => (
                   <BirdCard key={bird.id} {...bird} />
                 ))}
               </div>
             </section>
-          </>
+          </div>
         )}
 
         {activeTab === "My Birds" && (
