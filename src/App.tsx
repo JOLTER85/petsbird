@@ -209,6 +209,34 @@ const TRANSLATIONS = {
   }
 };
 
+const Logo = ({ variant = 'full', className = "", theme = 'light' }: { variant?: 'full' | 'icon', className?: string, theme?: 'light' | 'dark' }) => (
+  <div className={`flex items-center gap-3 ${className}`}>
+    <div className="w-10 h-10 shrink-0">
+      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
+        <title>PetsBird Logo</title>
+        <rect width="100" height="100" rx="28" fill="#1A73E8" />
+        <path 
+          d="M50 25 C38 25 30 45 30 65 C30 82 38 90 50 90 C62 90 70 82 70 65 C70 45 62 25 50 25Z" 
+          fill="#FBBC05" 
+        />
+        <path 
+          d="M50 25 C55 15 65 10 75 15" 
+          stroke="white" 
+          strokeWidth="6" 
+          strokeLinecap="round" 
+        />
+        <circle cx="45" cy="45" r="3" fill="#1A73E8" />
+      </svg>
+    </div>
+    {variant === 'full' && (
+      <div className="flex flex-col">
+        <h1 className={`text-xl font-black font-display leading-none tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>PetsBird</h1>
+        <span className={`text-[7px] font-bold uppercase tracking-[0.2em] mt-1 ${theme === 'dark' ? 'text-primary' : 'text-slate-400'}`}>Global Aviary Management</span>
+      </div>
+    )}
+  </div>
+);
+
 const SidebarItem = ({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) => (
   <motion.div
     whileHover={{ x: 4 }}
@@ -2078,12 +2106,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         <nav className="fixed top-0 w-full z-[100] px-8 py-6 flex items-center justify-between backdrop-blur-md bg-white/30">
           <div 
             onClick={() => navigateToTab("Home")}
-            className="flex items-center gap-3 cursor-pointer group"
+            className="cursor-pointer group"
           >
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform">
-              <Bird className="text-white w-6 h-6" />
-            </div>
-            <h1 className="text-xl font-bold font-display text-slate-800">PetsBird<span className="text-primary">.com</span></h1>
+            <Logo className="group-hover:scale-105 transition-transform" />
           </div>
           <div className="hidden md:flex items-center gap-8">
             {["Features", "Genetics", "Advice", "News", "About"].map((item) => (
@@ -2898,15 +2923,9 @@ This update is now live for all Premium users. We continue to push the boundarie
             <div className="flex flex-col md:flex-row justify-between items-center gap-12">
               <div 
                 onClick={() => navigateToTab("Home")}
-                className="flex items-center gap-3 cursor-pointer"
+                className="cursor-pointer group"
               >
-                <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20">
-                  <Bird className="text-white w-7 h-7" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold font-display text-slate-800 leading-none">PetsBird</h1>
-                  <span className="text-[10px] text-primary font-bold uppercase tracking-widest">Premium Aviary Management</span>
-                </div>
+                <Logo className="group-hover:scale-105 transition-transform" />
               </div>
               <div className="flex gap-12">
                 <div className="space-y-4">
@@ -2949,15 +2968,9 @@ This update is now live for all Premium users. We continue to push the boundarie
       <aside className="w-72 bg-sidebar text-white flex flex-col p-6 fixed h-screen z-50 overflow-y-auto custom-scrollbar">
         <div 
           onClick={() => setShowApp(false)}
-          className="flex items-center gap-3 mb-10 px-2 cursor-pointer group"
+          className="mb-10 px-2 cursor-pointer group"
         >
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-            <Bird className="text-white w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold font-display leading-none">PetsBird</h1>
-            <span className="text-[10px] text-primary font-bold uppercase tracking-widest">.com</span>
-          </div>
+          <Logo theme="dark" className="group-hover:scale-105 transition-transform" />
         </div>
 
         <div 
