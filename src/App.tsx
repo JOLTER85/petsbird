@@ -197,18 +197,6 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
           <Edit2 className="w-4 h-4" />
         </button>
       )}
-      {onViewPedigree && (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewPedigree(id);
-          }}
-          className="p-2 bg-white/80 backdrop-blur-sm text-accent-gold rounded-xl hover:bg-white shadow-sm transition-all"
-          title="View Pedigree"
-        >
-          <GitBranch className="w-4 h-4" />
-        </button>
-      )}
     </div>
     <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
@@ -269,6 +257,19 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
           <MapPin className="w-3.5 h-3.5" />
           <span className="text-[11px] font-medium">Cage {cage}</span>
         </div>
+      </div>
+
+      <div className="pt-4 mt-2 border-t border-slate-50">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewPedigree?.(id);
+          }}
+          className="w-full py-3 bg-accent-gold/10 text-accent-gold rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent-gold hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm"
+        >
+          <GitBranch className="w-4 h-4" />
+          View Pedigree Tree
+        </button>
       </div>
     </div>
   </motion.div>
@@ -2804,6 +2805,7 @@ This update is now live for all Premium users. We continue to push the boundarie
           <SidebarItem icon={Heart} label="Couples" active={activeTab === "Couples"} onClick={() => setActiveTab("Couples")} />
           <SidebarItem icon={EggIcon} label="Eggs" active={activeTab === "Eggs"} onClick={() => setActiveTab("Eggs")} />
           <SidebarItem icon={Sparkles} label="AI Genetics" active={activeTab === "AI Genetics"} onClick={() => setActiveTab("AI Genetics")} />
+          <SidebarItem icon={GitBranch} label="Pedigree Tree" active={activeTab === "Pedigree Tree"} onClick={() => setActiveTab("Pedigree Tree")} />
           <SidebarItem icon={ShoppingBag} label="Marketplace" active={activeTab === "Marketplace"} onClick={() => setActiveTab("Marketplace")} />
           
           <div className="pt-8 pb-4 px-4">
@@ -3537,6 +3539,55 @@ This update is now live for all Premium users. We continue to push the boundarie
                   )}
                 </AnimatePresence>
               </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "Pedigree Tree" && (
+          <section className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-4 mb-12">
+              <div className="w-16 h-16 rounded-[24px] bg-accent-gold/10 text-accent-gold flex items-center justify-center shadow-xl shadow-accent-gold/5">
+                <GitBranch className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-black font-display text-slate-900">Pedigree Explorer</h3>
+                <p className="text-slate-500 font-medium">Visualize and trace the lineage of your birds</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {birds.map(bird => (
+                <motion.div 
+                  key={bird.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onClick={() => {
+                    setPedigreeBirdId(bird.id);
+                    setIsPedigreeModalOpen(true);
+                  }}
+                  className="glass p-6 rounded-[32px] border-white/20 hover:border-accent-gold/30 transition-all cursor-pointer group relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-accent-gold/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700" />
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${bird.gender === 'Male' ? 'bg-male/20 text-male-text' : 'bg-female/20 text-female-text'}`}>
+                      <Bird className="w-7 h-7" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-slate-800 truncate">{bird.name}</h4>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">#{bird.ring}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-accent-gold/10 text-accent-gold flex items-center justify-center group-hover:bg-accent-gold group-hover:text-white transition-all">
+                      <GitBranch className="w-5 h-5" />
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+              {birds.length === 0 && (
+                <div className="col-span-full glass p-20 rounded-[40px] text-center border-white/20">
+                  <GitBranch className="w-12 h-12 text-accent-gold/40 mx-auto mb-4" />
+                  <p className="text-slate-500 font-medium">No birds found to display pedigree.</p>
+                </div>
+              )}
             </div>
           </section>
         )}
