@@ -69,7 +69,9 @@ import {
   Download,
   ArrowLeft,
   ArrowRight,
-  Share2
+  Share2,
+  Facebook,
+  Instagram
 } from "lucide-react";
 
 import { 
@@ -3309,6 +3311,22 @@ This update is now live for all Premium users. We continue to push the boundarie
             <div className="mt-20 pt-8 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
               <p className="text-xs font-bold text-slate-400">© 2026 PetsBird. All rights reserved.</p>
               <div className="flex gap-6">
+                <a 
+                  href="https://web.facebook.com/PetsBirdOfficial/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                >
+                  <Facebook className="w-4 h-4" />
+                </a>
+                <a 
+                  href="https://www.instagram.com/petsbirdofficial/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer"
+                >
+                  <Instagram className="w-4 h-4" />
+                </a>
                 <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-primary/10 hover:text-primary transition-all cursor-pointer">
                   <Mail className="w-4 h-4" />
                 </div>
