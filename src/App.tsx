@@ -150,6 +150,65 @@ const SPECIES_LIST = [
   },
 ];
 
+const TRANSLATIONS = {
+  en: {
+    home: "Home",
+    birds: "Birds",
+    eggs: "Eggs",
+    profile: "Profile",
+    heroTitle: "BREED",
+    heroTitleAccent: "SMARTER",
+    heroSubtitle: "The Future of Aviary Management",
+    heroDesc: "PetsBird combines advanced AI genetics, real-time tracking, and a global marketplace to help you build the perfect aviary.",
+    startManaging: "Start Managing Now",
+    goDashboard: "Go to Dashboard",
+    watchDemo: "Watch Demo",
+    downloadApp: "Download App",
+    featuresTitle: "EVERYTHING YOU NEED TO",
+    featuresTitleAccent: "EXCEL",
+    aiGenetics: "AI Genetics Predictor",
+    aiGeneticsDesc: "Use advanced neural networks to predict offspring mutations with 99% accuracy.",
+    eggTracking: "Real-time Egg Tracking",
+    eggTrackingDesc: "Monitor every nest, track incubation periods, and get hatching alerts.",
+    marketplace: "Global Marketplace",
+    marketplaceDesc: "Connect with verified breeders worldwide to buy and sell rare mutations.",
+    hatchSuccess: "Hatch Success",
+    dnaAnalyzing: "Analyzing DNA...",
+    predictOffspring: "Predict Offspring",
+    inventory: "Inventory Management",
+    breedingPairs: "Breeding Pairs",
+    eggMonitoring: "Egg Monitoring",
+  },
+  ar: {
+    home: "الرئيسية",
+    birds: "الطيور",
+    eggs: "البيض",
+    profile: "الملف الشخصي",
+    heroTitle: "تربية",
+    heroTitleAccent: "أذكى",
+    heroSubtitle: "مستقبل إدارة المناحل",
+    heroDesc: "يجمع PetsBird بين وراثة الذكاء الاصطناعي المتقدمة والتتبع في الوقت الفعلي والسوق العالمي لمساعدتك في بناء المنحل المثالي.",
+    startManaging: "ابدأ الإدارة الآن",
+    goDashboard: "اذهب إلى لوحة التحكم",
+    watchDemo: "شاهد العرض",
+    downloadApp: "تحميل التطبيق",
+    featuresTitle: "كل ما تحتاجه لـ",
+    featuresTitleAccent: "التفوق",
+    aiGenetics: "متنبئ الوراثة بالذكاء الاصطناعي",
+    aiGeneticsDesc: "استخدم الشبكات العصبية المتقدمة للتنبؤ بطفرات النسل بدقة 99٪.",
+    eggTracking: "تتبع البيض في الوقت الفعلي",
+    eggTrackingDesc: "راقب كل عش، وتتبع فترات الحضانة، واحصل على تنبيهات الفقس.",
+    marketplace: "السوق العالمي",
+    marketplaceDesc: "تواصل مع المربين المعتمدين في جميع أنحاء العالم لشراء وبيع الطفرات النادرة.",
+    hatchSuccess: "نجاح الفقس",
+    dnaAnalyzing: "تحليل الحمض النووي...",
+    predictOffspring: "توقع النسل",
+    inventory: "إدارة المخزون",
+    breedingPairs: "أزواج التربية",
+    eggMonitoring: "مراقبة البيض",
+  }
+};
+
 const SidebarItem = ({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) => (
   <motion.div
     whileHover={{ x: 4 }}
@@ -202,9 +261,15 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
       )}
     </div>
     <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
-      <Bird className="w-16 h-16 text-primary/20 group-hover:scale-110 transition-transform duration-500" />
-      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+      <img 
+        src={`https://picsum.photos/seed/${id}/400/400`} 
+        alt={name} 
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+        referrerPolicy="no-referrer"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider z-10 ${
         gender === 'Female' ? 'bg-female text-female-text' : 
         gender === 'Male' ? 'bg-male text-male-text' : 
         'bg-slate-100 text-slate-500'
@@ -325,7 +390,7 @@ const PedigreeNode = ({ bird, label, gender, onClick }: { bird?: BirdData, label
   </div>
 );
 
-const GeneticsPredictor = () => {
+const GeneticsPredictor = ({ t }: { t: any }) => {
   const [species, setSpecies] = useState("Canary");
   const [fatherMutation, setFatherMutation] = useState("Normal");
   const [motherMutation, setMotherMutation] = useState("Normal");
@@ -363,8 +428,8 @@ const GeneticsPredictor = () => {
           <BrainCircuit className="w-6 h-6" />
         </div>
         <div>
-          <h3 className="text-2xl md:text-3xl font-black text-slate-900">AI Genetics Predictor</h3>
-          <p className="text-slate-500">Select species and mutations to predict offspring.</p>
+          <h3 className="text-2xl md:text-3xl font-black text-slate-900">{t.aiGenetics}</h3>
+          <p className="text-slate-500">{t.aiGeneticsDesc}</p>
         </div>
       </div>
 
@@ -502,6 +567,8 @@ const PedigreeTree = ({ birdId, birds, onBirdClick }: { birdId: string, birds: B
 export default function App() {
   const [showApp, setShowApp] = useState(false);
   const [landingTab, setLandingTab] = useState("Home");
+  const [language, setLanguage] = useState<'en' | 'ar'>('en');
+  const t = TRANSLATIONS[language];
 
   useEffect(() => {
     const handleNavigation = () => {
@@ -734,6 +801,26 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
+
+  const BottomNav = () => (
+    <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-3 flex items-center justify-between z-[100] md:hidden">
+      {[
+        { id: "Dashboard", icon: LayoutDashboard, label: t.home },
+        { id: "My Birds", icon: Bird, label: t.birds },
+        { id: "Eggs", icon: EggIcon, label: t.eggs },
+        { id: "Settings", icon: Settings, label: t.profile }
+      ].map((item) => (
+        <button
+          key={item.id}
+          onClick={() => setActiveTab(item.id)}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-primary scale-110' : 'text-slate-400'}`}
+        >
+          <item.icon className="w-6 h-6" />
+          <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showAuthPage, setShowAuthPage] = useState(false);
@@ -2011,6 +2098,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           </div>
           <div className="flex items-center gap-4">
             <button 
+              onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
+              className="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+            >
+              {language === 'en' ? 'العربية' : 'English'}
+            </button>
+            <button 
               onClick={handleInstallClick}
               className="hidden lg:flex items-center gap-2 text-slate-500 hover:text-primary transition-colors font-bold text-sm uppercase tracking-widest"
             >
@@ -2027,7 +2120,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         </nav>
 
         {landingTab === "Home" && (
-          <>
+          <div className={language === 'ar' ? 'font-arabic' : ''} dir={language === 'ar' ? 'rtl' : 'ltr'}>
             {/* Hero Section */}
             <section className="relative pt-40 pb-20 px-8 min-h-screen flex flex-col items-center justify-center text-center overflow-hidden">
               <motion.div 
@@ -2036,34 +2129,34 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 className="relative z-10"
               >
                 <span className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-6">
-                  The Future of Aviary Management
+                  {t.heroSubtitle}
                 </span>
                 <h1 className="text-[12vw] md:text-[8vw] font-black font-display leading-[0.85] text-slate-900 mb-8 tracking-tighter">
-                  BREED <br /> <span className="text-primary italic">SMARTER</span>
+                  {t.heroTitle} <br /> <span className="text-primary italic">{t.heroTitleAccent}</span>
                 </h1>
                 <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-500 font-medium mb-12 leading-relaxed">
-                  PetsBird combines advanced AI genetics, real-time tracking, and a global marketplace to help you build the perfect aviary.
+                  {t.heroDesc}
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                   <button 
                     onClick={handleLaunchApp}
                     className="w-full sm:w-auto px-10 py-5 bg-slate-900 text-white rounded-[24px] font-bold text-lg shadow-2xl hover:bg-primary transition-all flex items-center justify-center gap-3 group"
                   >
-                    {user ? "Go to Dashboard" : "Start Managing Now"}
+                    {user ? t.goDashboard : t.startManaging}
                     <TrendingUp className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button 
                     onClick={() => setIsDemoOpen(true)}
                     className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border border-slate-200 rounded-[24px] font-bold text-lg hover:bg-slate-50 transition-all"
                   >
-                    Watch Demo
+                    {t.watchDemo}
                   </button>
                   <button 
                     onClick={handleInstallClick}
                     className="w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-[24px] font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-all flex items-center justify-center gap-3"
                   >
                     <Download className="w-5 h-5" />
-                    Download App
+                    {t.downloadApp}
                   </button>
                 </div>
               </motion.div>
@@ -2116,48 +2209,86 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             {/* Features Preview */}
             <section className="py-32 px-8 bg-white">
               <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                  <div>
-                    <h2 className="text-5xl md:text-6xl font-black font-display text-slate-900 leading-[0.9] mb-8">
-                      EVERYTHING <br /> YOU NEED TO <br /> <span className="text-accent-gold">EXCEL</span>
-                    </h2>
-                    <div className="space-y-8">
-                      {[
-                        { title: "AI Genetics Predictor", desc: "Use advanced neural networks to predict offspring mutations with 99% accuracy.", icon: BrainCircuit, color: "text-primary bg-primary/10", tab: "Genetics" },
-                        { title: "Real-time Egg Tracking", desc: "Monitor every nest, track incubation periods, and get hatching alerts.", icon: EggIcon, color: "text-accent-orange bg-accent-orange/10", tab: "Features" },
-                        { title: "Global Marketplace", desc: "Connect with verified breeders worldwide to buy and sell rare mutations.", icon: ShoppingBag, color: "text-accent-gold bg-accent-gold/10", tab: "Advice" }
-                      ].map((feature, i) => (
-                        <div 
-                          key={i} 
-                          className="flex gap-6 group cursor-pointer"
-                          onClick={() => navigateToTab(feature.tab, true)}
-                        >
-                          <div className={`w-16 h-16 shrink-0 rounded-3xl flex items-center justify-center ${feature.color} group-hover:scale-110 transition-transform`}>
-                            <feature.icon className="w-8 h-8" />
-                          </div>
-                          <div>
-                            <h4 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-primary transition-colors">{feature.title}</h4>
-                            <p className="text-slate-500 leading-relaxed">{feature.desc}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <div className="aspect-square rounded-[64px] bg-slate-50 overflow-hidden relative group">
-                      <img 
-                        src="https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=1000" 
-                        alt="Bird Genetics" 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute inset-0 bg-primary/20 mix-blend-overlay" />
-                    </div>
-                  </div>
+                <div className="text-center mb-20">
+                  <h2 className="text-5xl md:text-6xl font-black font-display text-slate-900 leading-[0.9] mb-6">
+                    {t.featuresTitle} <br /> <span className="text-accent-gold">{t.featuresTitleAccent}</span>
+                  </h2>
+                  <p className="text-xl text-slate-500 max-w-2xl mx-auto">{t.heroDesc}</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {[
+                    { title: t.aiGenetics, desc: t.aiGeneticsDesc, icon: BrainCircuit, color: "text-primary bg-primary/10", tab: "Genetics" },
+                    { title: t.eggTracking, desc: t.eggTrackingDesc, icon: EggIcon, color: "text-accent-orange bg-accent-orange/10", tab: "Features" },
+                    { title: t.marketplace, desc: t.marketplaceDesc, icon: ShoppingBag, color: "text-accent-gold bg-accent-gold/10", tab: "Advice" }
+                  ].map((feature, i) => (
+                    <motion.div 
+                      key={i} 
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                      className="bg-slate-50 p-8 rounded-[40px] border border-slate-100 hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all group cursor-pointer"
+                      onClick={() => navigateToTab(feature.tab, true)}
+                    >
+                      <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-8 ${feature.color} group-hover:scale-110 transition-transform`}>
+                        <feature.icon className="w-10 h-10" />
+                      </div>
+                      <h4 className="text-2xl font-bold text-slate-800 mb-4 group-hover:text-primary transition-colors">{feature.title}</h4>
+                      <p className="text-slate-500 leading-relaxed mb-8">{feature.desc}</p>
+                      <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-widest">
+                        Learn More <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </section>
-          </>
+
+            {/* Global Marketplace Section */}
+            <section className="py-32 px-8 bg-slate-900 text-white overflow-hidden relative">
+              <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+                <motion.div
+                  initial={{ opacity: 0, x: -40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                >
+                  <h2 className="text-5xl md:text-6xl font-black font-display leading-[0.9] mb-8">
+                    {t.marketplace}
+                  </h2>
+                  <p className="text-xl text-slate-400 leading-relaxed mb-12">
+                    {t.marketplaceDesc}
+                  </p>
+                  <button className="px-10 py-5 bg-primary text-white rounded-[24px] font-bold text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+                    Explore Marketplace
+                  </button>
+                </motion.div>
+                <div className="relative">
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.05, 1],
+                      rotate: [0, -2, 0]
+                    }}
+                    transition={{ 
+                      duration: 8,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="relative z-10 rounded-[64px] overflow-hidden shadow-2xl border-8 border-white/10"
+                  >
+                    <img 
+                      src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1000" 
+                      alt="Marketplace" 
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
+                  <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+                  <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent-gold/20 rounded-full blur-3xl animate-pulse" />
+                </div>
+              </div>
+            </section>
+          </div>
         )}
 
         {landingTab === "Features" && (
@@ -2340,7 +2471,7 @@ This spatial organization is particularly useful for large-scale breeders managi
               <p className="text-xl text-slate-500 max-w-2xl mx-auto">Master the science of mutation breeding with our AI-driven genetic tools.</p>
             </div>
 
-            <GeneticsPredictor />
+            <GeneticsPredictor t={t} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
@@ -4341,6 +4472,9 @@ This update is now live for all Premium users. We continue to push the boundarie
           </div>
         )}
       </AnimatePresence>
+
+      {/* Bottom Navigation for Mobile */}
+      <BottomNav />
 
       {/* Confirmation Modal */}
       <AnimatePresence>
