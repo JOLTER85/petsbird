@@ -1056,7 +1056,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       console.error("Error signing in with Google:", error);
       // Don't show error if user just closed the popup
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-        setAuthError(error.message || "Failed to sign in with Google. Please try again.");
+        let message = "فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.";
+        if (error.code === 'auth/unauthorized-domain') {
+          message = "هذا النطاق غير مصرح به في إعدادات Firebase. يرجى إضافة النطاق الحالي إلى Authorized Domains.";
+        } else if (error.code === 'auth/operation-not-allowed') {
+          message = "تسجيل الدخول عبر جوجل غير مفعل في Firebase Console.";
+        } else if (error.code === 'auth/configuration-not-found') {
+          message = "خطأ في إعدادات Firebase. يرجى التحقق من apiKey و authDomain.";
+        }
+        setAuthError(`${message} (${error.code})`);
       }
     } finally {
       setIsAuthProcessing(false);
