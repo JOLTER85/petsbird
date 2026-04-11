@@ -232,33 +232,23 @@ const TRANSLATIONS = {
 
 const Logo = ({ variant = 'full', className = "", theme = 'light' }: { variant?: 'full' | 'icon', className?: string, theme?: 'light' | 'dark' }) => (
   <div className={`flex items-center gap-3 ${className}`}>
-    <div className="w-10 h-10 shrink-0">
-      <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-lg">
-        <title>PetsBird Logo</title>
-        <rect width="100" height="100" rx="28" fill="#1A73E8" />
-        {/* Stylized Bird Silhouette */}
-        <path 
-          d="M35 65 C35 45 45 35 65 35 C75 35 80 40 80 50 C80 65 70 75 50 75 C40 75 35 70 35 65Z" 
-          fill="white" 
-          opacity="0.2"
-        />
-        <path 
-          d="M40 60 C40 40 50 30 70 30 C75 30 80 35 80 40 C80 55 70 65 50 65 C45 65 40 60 40 60Z" 
-          fill="#FBBC05" 
-        />
-        <circle cx="65" cy="42" r="3" fill="#1A73E8" />
-        <path 
-          d="M70 30 C72 20 78 15 85 18" 
-          stroke="white" 
-          strokeWidth="4" 
-          strokeLinecap="round" 
-        />
-      </svg>
+    <div className="w-12 h-12 shrink-0 relative">
+      <div className="absolute inset-0 bg-white rounded-full shadow-lg border border-slate-100" />
+      <img 
+        src="/logo.png" 
+        alt="PetsBird Logo" 
+        className="w-full h-full object-contain rounded-full relative z-10 p-1"
+        onError={(e) => {
+          // Fallback if logo.png is not found
+          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=100";
+        }}
+        referrerPolicy="no-referrer"
+      />
     </div>
     {variant === 'full' && (
       <div className="flex flex-col">
-        <h1 className={`text-xl font-black font-display leading-none tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>PetsBird</h1>
-        <span className={`text-[7px] font-bold uppercase tracking-[0.2em] mt-1 ${theme === 'dark' ? 'text-primary' : 'text-slate-400'}`}>Global Aviary Management</span>
+        <h1 className={`text-2xl font-black font-display leading-none tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>PetsBird</h1>
+        <span className={`text-[8px] font-bold uppercase tracking-[0.2em] mt-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Global Aviary Management</span>
       </div>
     )}
   </div>
@@ -3404,7 +3394,25 @@ This update is now live for all Premium users. We continue to push the boundarie
           <SidebarItem icon={LogOut} label="Logout" onClick={handleLogout} />
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-white/5 text-center">
+        <div className="mt-auto pt-6 border-t border-white/5 flex flex-col items-center gap-4">
+          <div className="flex gap-4">
+            <a 
+              href="https://web.facebook.com/PetsBirdOfficial/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer"
+            >
+              <Facebook className="w-4 h-4" />
+            </a>
+            <a 
+              href="https://www.instagram.com/petsbirdofficial/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer"
+            >
+              <Instagram className="w-4 h-4" />
+            </a>
+          </div>
           <span className="text-[10px] text-slate-600 font-medium">v2.1.0</span>
         </div>
       </aside>
