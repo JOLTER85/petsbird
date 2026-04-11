@@ -1014,18 +1014,29 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   }, [user, authLoading, isAuthProcessing, showAuthPage]);
 
   const handleGoogleSignIn = async (e?: MouseEvent) => {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    console.log("Initiating Google Sign-In with Popup...");
     setAuthError("");
     setIsAuthProcessing(true);
+    
     try {
+      // Ensure select_account to avoid silent failures or unintended account usage
+      googleProvider.setCustomParameters({ prompt: 'select_account' });
+      
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      console.log("Google Sign-In successful for:", user.email);
       
       // Explicit Firestore check/creation
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
       
       if (!userDoc.exists()) {
+        console.log("Creating new user profile in Firestore...");
         await setDoc(userDocRef, {
           userId: user.uid,
           name: user.displayName || "مربي جديد",
@@ -1039,19 +1050,21 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         console.log("%c📧 Welcome Email Sent to " + user.email, "color: #1A73E8; font-weight: bold; font-size: 14px;");
       }
       
-      // Explicit navigation to app
+      // Explicit navigation to app AFTER successful auth and profile check
+      console.log("Navigating to Dashboard...");
       setShowApp(true);
       setShowAuthPage(false);
       
-      // Update URL without reload if possible, or just rely on state
+      // Update URL without reload
       if (window.location.pathname !== '/app') {
         window.history.pushState({}, '', '/app');
       }
       
     } catch (error: any) {
       console.error("Error signing in with Google:", error);
-      if (error.code !== 'auth/popup-closed-by-user') {
-        setAuthError(error.message || "Failed to sign in with Google");
+      // Don't show error if user just closed the popup
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+        setAuthError(error.message || "Failed to sign in with Google. Please try again.");
       }
     } finally {
       setIsAuthProcessing(false);
@@ -2246,6 +2259,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
           <div className="glass p-10 rounded-[40px] border-white/20 shadow-2xl">
             <button 
+              type="button"
               onClick={handleGoogleSignIn}
               disabled={isAuthProcessing}
               className="w-full py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 flex items-center justify-center gap-3 hover:bg-slate-50 transition-all shadow-sm mb-6 disabled:opacity-50"
