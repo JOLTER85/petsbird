@@ -953,8 +953,17 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 name: currentUser.displayName || "مربي جديد",
                 email: currentUser.email || "",
                 location: "",
-                avatar: currentUser.photoURL || (currentUser.displayName ? currentUser.displayName.substring(0, 2).toUpperCase() : "??")
+                avatar: currentUser.photoURL || (currentUser.displayName ? currentUser.displayName.substring(0, 2).toUpperCase() : "??"),
+                welcomeEmailSent: true,
+                createdAt: new Date().toISOString()
               });
+              
+              // Simulate sending welcome email
+              console.log("%c📧 Welcome Email Sent to " + currentUser.email, "color: #1A73E8; font-weight: bold; font-size: 14px;");
+              console.log("%c--------------------------------------------------", "color: #ccc;");
+              console.log("%cSubject: Welcome to the PetsBird Global Community! 🐦", "font-weight: bold;");
+              console.log("Hello " + (currentUser.displayName || "Breeder") + ",\n\nWelcome to PetsBird! We're thrilled to have you as part of our global community of passionate breeders.\n\nYour aviary management just got a whole lot smarter. Start tracking your birds, calculating hatch dates, and exploring genetic mutations today.\n\nHappy Breeding!\nThe PetsBird Team");
+              console.log("%c--------------------------------------------------", "color: #ccc;");
             }
           } catch (error) {
             console.error("Error checking/creating user profile:", error);
@@ -968,14 +977,21 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   }, []);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || isAuthProcessing) return;
 
     const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
     
     if (user) {
       const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
       if (user.emailVerified || isGoogleUser) {
-        if (path === '/app' || path === '/auth' || showAuthPage) {
+        // If logged in and on auth or home, go to app
+        if (path === '/auth' || path === '' || showAuthPage) {
+          setShowApp(true);
+          setShowAuthPage(false);
+          if (path !== '/app') {
+            window.history.pushState({}, '', '/app');
+          }
+        } else if (path === '/app') {
           setShowApp(true);
           setShowAuthPage(false);
         }
@@ -988,18 +1004,55 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       if (path === '/app' || path === '/auth') {
         setShowAuthPage(true);
         setShowApp(false);
+      } else {
+        // On home page, ensure app is hidden unless explicitly shown
+        if (!showAuthPage) {
+          setShowApp(false);
+        }
       }
     }
-  }, [user, authLoading, showAuthPage]);
+  }, [user, authLoading, isAuthProcessing, showAuthPage]);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (e?: MouseEvent) => {
+    if (e) e.preventDefault();
     setAuthError("");
     setIsAuthProcessing(true);
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      // Explicit Firestore check/creation
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          userId: user.uid,
+          name: user.displayName || "مربي جديد",
+          email: user.email || "",
+          location: "",
+          avatar: user.photoURL || (user.displayName ? user.displayName.substring(0, 2).toUpperCase() : "??"),
+          welcomeEmailSent: true,
+          createdAt: new Date().toISOString()
+        });
+        
+        console.log("%c📧 Welcome Email Sent to " + user.email, "color: #1A73E8; font-weight: bold; font-size: 14px;");
+      }
+      
+      // Explicit navigation to app
+      setShowApp(true);
+      setShowAuthPage(false);
+      
+      // Update URL without reload if possible, or just rely on state
+      if (window.location.pathname !== '/app') {
+        window.history.pushState({}, '', '/app');
+      }
+      
     } catch (error: any) {
       console.error("Error signing in with Google:", error);
-      setAuthError(error.message || "Failed to sign in with Google");
+      if (error.code !== 'auth/popup-closed-by-user') {
+        setAuthError(error.message || "Failed to sign in with Google");
+      }
     } finally {
       setIsAuthProcessing(false);
     }
@@ -2153,11 +2206,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#fcfcf9] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center animate-bounce">
-            <Bird className="w-8 h-8" />
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl animate-pulse" />
+            <Logo variant="icon" className="w-20 h-20 relative animate-[pulse_2s_ease-in-out_infinite]" />
           </div>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading PetsBird...</p>
+          <div className="flex flex-col items-center gap-2">
+            <h3 className="text-xl font-black font-display text-slate-900">PetsBird</h3>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] animate-pulse">Global Aviary Management</p>
+          </div>
         </div>
       </div>
     );
@@ -2169,10 +2226,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <div 
-              onClick={() => setShowAuthPage(false)}
-              className="w-16 h-16 bg-primary rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/20 cursor-pointer hover:scale-110 transition-all"
+              onClick={() => {
+                setShowAuthPage(false);
+                if (window.location.pathname !== '/') {
+                  window.history.pushState({}, '', '/');
+                }
+              }}
+              className="w-20 h-20 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-primary/10 cursor-pointer hover:scale-110 transition-all border border-slate-100"
             >
-              <Bird className="text-white w-8 h-8" />
+              <Logo variant="icon" className="w-12 h-12" />
             </div>
             <h2 className="text-3xl font-black font-display text-slate-900 mb-2">
               {authMode === "login" ? "مرحباً بعودتك" : "إنشاء حساب جديد"}
@@ -2313,8 +2375,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 </button>
                 
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12">
-                  <div className="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center mb-8 animate-pulse">
-                    <Bird className="w-10 h-10 text-white" />
+                  <div className="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mb-8 shadow-2xl shadow-primary/20 border border-white/10">
+                    <Logo variant="icon" className="w-14 h-14 animate-pulse" />
                   </div>
                   <h2 className="text-4xl font-black text-white mb-4 font-display">Experience PetsBird</h2>
                   <p className="text-slate-400 max-w-lg mb-8">Watch how our AI Genetics and real-time tracking transform your aviary management.</p>
@@ -3040,8 +3102,8 @@ This update is now live for all Premium users. We continue to push the boundarie
 
         {landingTab === "About" && (
           <section className="pt-40 pb-20 px-8 max-w-5xl mx-auto min-h-screen text-center">
-            <div className="w-24 h-24 bg-primary/10 text-primary rounded-[40px] flex items-center justify-center mx-auto mb-10">
-              <Bird className="w-12 h-12" />
+            <div className="w-32 h-32 bg-white rounded-[48px] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-primary/10 border border-slate-100">
+              <Logo variant="icon" className="w-16 h-16" />
             </div>
             <h2 className="text-6xl font-black font-display text-slate-900 mb-8 tracking-tight">PASSION FOR <br /> <span className="text-primary italic">AVICULTURE</span></h2>
             <p className="text-2xl text-slate-500 leading-relaxed mb-16 font-medium">
@@ -3318,9 +3380,14 @@ This update is now live for all Premium users. We continue to push the boundarie
       {/* Main Content */}
       <main className="flex-1 ml-72 p-10">
         <header className="flex items-center justify-between mb-12">
-          <div>
-            <h2 className="text-4xl font-bold font-display text-slate-800 mb-2">{activeTab}</h2>
-            <p className="text-slate-500 font-medium">Welcome back <span className="text-primary font-bold">JOLI</span>! Here's an overview of your aviary.</p>
+          <div className="flex items-center gap-4">
+            <div className="lg:hidden">
+              <Logo variant="icon" className="w-10 h-10" />
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold font-display text-slate-800 mb-2">{activeTab}</h2>
+              <p className="text-slate-500 font-medium">Welcome back <span className="text-primary font-bold">{user?.displayName?.split(' ')[0] || "Breeder"}</span>! Here's an overview of your aviary.</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <motion.button 
