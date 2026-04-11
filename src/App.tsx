@@ -940,8 +940,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
       if (currentUser) {
         const isGoogleUser = currentUser.providerData.some(p => p.providerId === 'google.com');
         if (currentUser.emailVerified || isGoogleUser) {
@@ -963,15 +961,20 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           }
         }
       }
+      setUser(currentUser);
+      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
+
+    const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
+    
     if (user) {
       const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
       if (user.emailVerified || isGoogleUser) {
-        const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
         if (path === '/app' || path === '/auth' || showAuthPage) {
           setShowApp(true);
           setShowAuthPage(false);
@@ -981,36 +984,24 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         setShowAuthPage(true);
         setAuthError("يرجى تأكيد بريدك الإلكتروني لتتمكن من الدخول.");
       }
-    }
-  }, [user, showAuthPage]);
-
-  // Handle initial URL routing
-  useEffect(() => {
-    const path = window.location.pathname.toLowerCase().replace(/\/$/, "");
-    if (path === '/app') {
-      if (user && (user.emailVerified || user.providerData.some(p => p.providerId === 'google.com'))) {
-        setShowApp(true);
-        setShowAuthPage(false);
-      } else {
+    } else {
+      if (path === '/app' || path === '/auth') {
         setShowAuthPage(true);
-      }
-    } else if (path === '/auth') {
-      if (user && (user.emailVerified || user.providerData.some(p => p.providerId === 'google.com'))) {
-        setShowApp(true);
-        setShowAuthPage(false);
-      } else {
-        setShowAuthPage(true);
+        setShowApp(false);
       }
     }
-  }, [user]);
+  }, [user, authLoading, showAuthPage]);
 
   const handleGoogleSignIn = async () => {
     setAuthError("");
+    setIsAuthProcessing(true);
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
       console.error("Error signing in with Google:", error);
       setAuthError(error.message || "Failed to sign in with Google");
+    } finally {
+      setIsAuthProcessing(false);
     }
   };
 
@@ -2194,10 +2185,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           <div className="glass p-10 rounded-[40px] border-white/20 shadow-2xl">
             <button 
               onClick={handleGoogleSignIn}
-              className="w-full py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 flex items-center justify-center gap-3 hover:bg-slate-50 transition-all shadow-sm mb-6"
+              disabled={isAuthProcessing}
+              className="w-full py-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-700 flex items-center justify-center gap-3 hover:bg-slate-50 transition-all shadow-sm mb-6 disabled:opacity-50"
             >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              المتابعة باستخدام جوجل
+              {isAuthProcessing ? (
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+              )}
+              {isAuthProcessing ? "جاري التحميل..." : "المتابعة باستخدام جوجل"}
             </button>
 
             <div className="relative flex items-center gap-4 mb-6">
