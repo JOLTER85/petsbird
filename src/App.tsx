@@ -29,7 +29,8 @@ import {
   query, 
   where,
   getDoc,
-  getDocFromServer
+  getDocFromServer,
+  addDoc
 } from 'firebase/firestore';
 import { 
   Bird, 
@@ -1095,7 +1096,63 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [isPedigreeModalOpen, setIsPedigreeModalOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
   const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const downloadUserData = () => {
+    const data = {
+      birds,
+      couples,
+      eggs,
+      exportDate: new Date().toISOString(),
+      user: user?.email
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `PetsBird_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    setNotifications(prev => [
+      {
+        id: Date.now(),
+        title: "Backup Complete",
+        message: "Your data has been successfully exported as a JSON file.",
+        time: "Just now",
+        read: false
+      },
+      ...prev
+    ]);
+  };
+
+  const handleFeedbackSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!user || !feedbackText.trim()) return;
+    
+    try {
+      await addDoc(collection(db, "feedback"), {
+        userId: user.uid,
+        userEmail: user.email,
+        text: feedbackText,
+        timestamp: new Date().toISOString()
+      });
+      setIsFeedbackModalOpen(false);
+      setFeedbackText("");
+      setConfirmModal({
+        isOpen: true,
+        title: "Feedback Received",
+        message: "Thank you for your feedback! We'll review it and get back to you if needed.",
+        variant: 'success',
+        confirmText: "Close",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+    }
+  };
 
   const handleHatchSuccess = async (egg: EggData) => {
     if (!user) return;
@@ -1388,10 +1445,29 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     gender: "Male" as "Male" | "Female",
     age: 0,
     birthYear: new Date().getFullYear().toString(),
-    date: new Date().toLocaleDateString(),
+    date: new Date().toISOString().split('T')[0],
     cage: "1",
     mutation: ""
   });
+
+  // Auto-save Recovery for Bird Form
+  useEffect(() => {
+    const savedBird = localStorage.getItem('petsbird_draft_bird');
+    if (savedBird && !editingBirdId) {
+      try {
+        const draft = JSON.parse(savedBird);
+        setNewBird(prev => ({ ...prev, ...draft }));
+      } catch (e) {
+        console.error("Error loading bird draft:", e);
+      }
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    if (isModalOpen && !editingBirdId) {
+      localStorage.setItem('petsbird_draft_bird', JSON.stringify(newBird));
+    }
+  }, [newBird, isModalOpen]);
 
   // Firestore Real-time Sync
   useEffect(() => {
@@ -1463,7 +1539,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     try {
       await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
       setIsModalOpen(false);
-      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
+      localStorage.removeItem('petsbird_draft_bird');
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "" });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }
@@ -1477,7 +1554,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird });
       setIsModalOpen(false);
       setEditingBirdId(null);
-      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toLocaleDateString(), cage: "1", mutation: "" });
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "" });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, path);
     }
@@ -1829,10 +1906,29 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   };
 
   const [newEgg, setNewEgg] = useState({
-    laidDate: new Date().toLocaleDateString(),
+    laidDate: new Date().toISOString().split('T')[0],
     hatchDate: "",
     status: "Intact" as "Intact" | "Hatched" | "Broken" | "Completed" | "Failed"
   });
+
+  // Auto-save Recovery for Egg Form
+  useEffect(() => {
+    const savedEgg = localStorage.getItem('petsbird_draft_egg');
+    if (savedEgg && !editingEggId) {
+      try {
+        const draft = JSON.parse(savedEgg);
+        setNewEgg(prev => ({ ...prev, ...draft }));
+      } catch (e) {
+        console.error("Error loading egg draft:", e);
+      }
+    }
+  }, [isEggModalOpen]);
+
+  useEffect(() => {
+    if (isEggModalOpen && !editingEggId) {
+      localStorage.setItem('petsbird_draft_egg', JSON.stringify(newEgg));
+    }
+  }, [newEgg, isEggModalOpen]);
 
   const calculateHatchDate = (laidDate: string, coupleId: string) => {
     const couple = couples.find(c => c.id === coupleId);
@@ -1865,10 +1961,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       hatchDate.setDate(hatchDate.getDate() + incubation);
       
       const formatDate = (d: Date) => {
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        return `${day}/${month}/${year}`;
+        return d.toISOString().split('T')[0];
       };
 
       return {
@@ -1935,7 +2028,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setEditingEggId(null);
       setSelectedCoupleId(coupleId || "");
       setNewEgg({
-        laidDate: new Date().toLocaleDateString(),
+        laidDate: new Date().toISOString().split('T')[0],
         hatchDate: "",
         status: "Intact"
       });
@@ -1966,8 +2059,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     try {
       await setDoc(doc(db, "users_data", user.uid, "eggs", id), newEggData);
       setIsEggModalOpen(false);
+      localStorage.removeItem('petsbird_draft_egg');
       setSelectedCoupleId("");
-      setNewEgg({ laidDate: new Date().toLocaleDateString(), hatchDate: "", status: "Intact" });
+      setNewEgg({ laidDate: new Date().toISOString().split('T')[0], hatchDate: "", status: "Intact" });
       
       setNotifications([
         { 
@@ -4226,13 +4320,59 @@ This update is now live for all Premium users. We continue to push the boundarie
           </section>
         )}
 
-        {["Marketplace", "Settings"].includes(activeTab) && (
+        {activeTab === "Settings" && (
+          <section className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-4 mb-12">
+              <div className="w-16 h-16 rounded-[24px] bg-slate-100 text-slate-600 flex items-center justify-center">
+                <Settings className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-black font-display text-slate-900">Settings</h3>
+                <p className="text-slate-500 font-medium">Manage your account and data</p>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="glass p-10 rounded-[40px] border-white/20">
+                <h4 className="text-xl font-bold mb-6">Data & Privacy</h4>
+                <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                  <div>
+                    <h5 className="font-bold text-slate-800">Export All Data</h5>
+                    <p className="text-sm text-slate-500">Download a backup of all your birds, couples, and eggs in JSON format.</p>
+                  </div>
+                  <button 
+                    onClick={downloadUserData}
+                    className="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-primary hover:text-primary transition-all shadow-sm flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download JSON
+                  </button>
+                </div>
+              </div>
+
+              <div className="glass p-10 rounded-[40px] border-white/20">
+                <h4 className="text-xl font-bold mb-6">Account Information</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between py-4 border-b border-slate-100">
+                    <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Email</span>
+                    <span className="font-medium text-slate-700">{user?.email}</span>
+                  </div>
+                  <div className="flex justify-between py-4 border-b border-slate-100">
+                    <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">User ID</span>
+                    <span className="font-mono text-xs text-slate-400">{user?.uid}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {activeTab === "Marketplace" && (
           <div className="glass p-20 rounded-[40px] text-center border-white/20">
             <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-6">
-              {activeTab === "Marketplace" && <ShoppingBag className="w-10 h-10" />}
-              {activeTab === "Settings" && <Settings className="w-10 h-10" />}
+              <ShoppingBag className="w-10 h-10" />
             </div>
-            <h3 className="text-2xl font-bold font-display mb-2">{activeTab} Page</h3>
+            <h3 className="text-2xl font-bold font-display mb-2">Marketplace Page</h3>
             <p className="text-slate-500">This section is currently under development.</p>
           </div>
         )}
@@ -4691,6 +4831,64 @@ This update is now live for all Premium users. We continue to push the boundarie
           </div>
         )}
       </AnimatePresence>
+      {/* Feedback Widget */}
+      <div className="fixed bottom-24 right-8 z-[90]">
+        <motion.button
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setIsFeedbackModalOpen(true)}
+          className="w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-2xl shadow-slate-900/40 group"
+        >
+          <Mail className="w-6 h-6 group-hover:scale-110 transition-transform" />
+        </motion.button>
+      </div>
+
+      {/* Feedback Modal */}
+      <AnimatePresence>
+        {isFeedbackModalOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsFeedbackModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="text-xl font-bold font-display">Send Feedback</h3>
+                <button onClick={() => setIsFeedbackModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+              <form onSubmit={handleFeedbackSubmit} className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Message</label>
+                  <textarea 
+                    required
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder="Report a bug or suggest a feature..."
+                    className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium h-40"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  className="w-full py-5 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-primary transition-all"
+                >
+                  Submit Feedback
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Pedigree Modal */}
       <AnimatePresence>
         {isPedigreeModalOpen && pedigreeBirdId && (
