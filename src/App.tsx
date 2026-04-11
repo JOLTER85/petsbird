@@ -96,10 +96,12 @@ interface CoupleData {
 
 interface EggData {
   id: string;
+  eggNumber: string; // Sequential ID like 001
   coupleId: string;
   laidDate: string;
   hatchDate?: string;
   fertilityCheckDate?: string;
+  isFertile?: boolean;
   status: 'Intact' | 'Hatched' | 'Broken' | 'Completed' | 'Failed';
   failureReason?: string;
 }
@@ -280,33 +282,41 @@ const PedigreeNode = ({ bird, label, gender, onClick }: { bird?: BirdData, label
     <div className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{label}</div>
     <div 
       onClick={() => bird && onClick?.(bird.id)}
-      className={`relative w-full p-3 rounded-2xl border-2 transition-all group ${
+      className={`relative w-full p-4 rounded-3xl border-2 transition-all group ${
         bird 
           ? 'bg-white border-slate-100 hover:border-primary hover:shadow-xl cursor-pointer' 
           : 'bg-slate-50 border-dashed border-slate-200 opacity-50'
       }`}
     >
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
           gender === 'Male' ? 'bg-male/20 text-male-text' : 
           gender === 'Female' ? 'bg-female/20 text-female-text' : 
           'bg-slate-100 text-slate-400'
         }`}>
-          <Bird className="w-5 h-5" />
+          <Bird className="w-6 h-6" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] font-bold text-slate-800 truncate">
+          <div className="text-xs font-bold text-slate-800 truncate mb-0.5">
             {bird ? bird.name : 'Unknown Ancestor'}
           </div>
-          <div className="text-[9px] font-medium text-slate-400 flex items-center gap-1">
-            {bird ? (
-              <>
-                <span>{bird.ring}</span>
-                <span className={bird.gender === 'Male' ? 'text-blue-500' : 'text-pink-500'}>
-                  {bird.gender === 'Male' ? '♂️' : bird.gender === 'Female' ? '♀️' : ''}
-                </span>
-              </>
-            ) : '---'}
+          <div className="flex flex-col gap-0.5">
+            <div className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+              {bird ? (
+                <>
+                  <span className="font-bold">#{bird.ring}</span>
+                  <span className={bird.gender === 'Male' ? 'text-blue-500' : 'text-pink-500'}>
+                    {bird.gender === 'Male' ? '♂️' : bird.gender === 'Female' ? '♀️' : ''}
+                  </span>
+                </>
+              ) : '---'}
+            </div>
+            {bird && (
+              <div className="flex flex-col gap-0.5 mt-1 pt-1 border-t border-slate-50">
+                <span className="text-[9px] font-black text-primary uppercase tracking-tight truncate">{bird.mutation || 'Normal'}</span>
+                <span className="text-[8px] font-medium text-slate-400 truncate">{bird.species}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -915,9 +925,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     const birdId = Math.floor(10000 + Math.random() * 90000).toString();
     const newBirdData: BirdData & { userId: string } = {
       id: birdId,
-      name: `Chick #${egg.id}`,
+      name: `Chick #${egg.eggNumber || egg.id.slice(-3)}`,
       ring: "Pending",
       species: female?.species || "Unknown",
+      mutation: "Normal", // User can edit this manually
       gender: "Unknown",
       age: 0,
       birthYear: new Date().getFullYear().toString(),
@@ -1613,8 +1624,13 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     const { hatch, fertility } = calculateHatchDate(newEgg.laidDate, coupleId);
     const hatchDate = newEgg.hatchDate || hatch;
     const id = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    // Calculate sequential egg number
+    const nextNumber = (eggs.length + 1).toString().padStart(3, '0');
+    
     const newEggData: EggData & { userId: string } = {
       id,
+      eggNumber: nextNumber,
       coupleId,
       ...newEgg,
       hatchDate,
@@ -1639,6 +1655,30 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         },
         ...notifications
       ]);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  };
+
+  const handleFertilityCheck = async (eggId: string, isFertile: boolean) => {
+    if (!user) return;
+    if (!isFertile) {
+      // Delete egg if not fertile
+      handleDeleteEgg(eggId);
+      return;
+    }
+    
+    const path = `users_data/${user.uid}/eggs/${eggId}`;
+    try {
+      await updateDoc(doc(db, "users_data", user.uid, "eggs", eggId), {
+        isFertile: true
+      });
+      setConfirmModal({
+        isOpen: true,
+        title: "Fertility Confirmed",
+        message: "تم تأكيد خصوبة البيضة بنجاح!",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }
@@ -2803,9 +2843,9 @@ This update is now live for all Premium users. We continue to push the boundarie
           <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === "Dashboard"} onClick={() => setActiveTab("Dashboard")} />
           <SidebarItem icon={Users} label="My Birds" active={activeTab === "My Birds"} onClick={() => setActiveTab("My Birds")} />
           <SidebarItem icon={Heart} label="Couples" active={activeTab === "Couples"} onClick={() => setActiveTab("Couples")} />
+          <SidebarItem icon={GitBranch} label="Pedigree Tree" active={activeTab === "Pedigree Tree"} onClick={() => setActiveTab("Pedigree Tree")} />
           <SidebarItem icon={EggIcon} label="Eggs" active={activeTab === "Eggs"} onClick={() => setActiveTab("Eggs")} />
           <SidebarItem icon={Sparkles} label="AI Genetics" active={activeTab === "AI Genetics"} onClick={() => setActiveTab("AI Genetics")} />
-          <SidebarItem icon={GitBranch} label="Pedigree Tree" active={activeTab === "Pedigree Tree"} onClick={() => setActiveTab("Pedigree Tree")} />
           <SidebarItem icon={ShoppingBag} label="Marketplace" active={activeTab === "Marketplace"} onClick={() => setActiveTab("Marketplace")} />
           
           <div className="pt-8 pb-4 px-4">
@@ -3293,16 +3333,24 @@ This update is now live for all Premium users. We continue to push the boundarie
                         
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Couple</p>
-                          <p className="text-sm font-bold text-slate-800 truncate px-2">
-                            {male ? `${male.name} (${male.ring})` : 'N/A'} 
-                            <span className="text-slate-300 mx-1">×</span> 
-                            {female ? `${female.name} (${female.ring})` : 'N/A'}
-                          </p>
+                          <div className="bg-slate-50 rounded-xl p-2 border border-slate-100">
+                            <p className="text-[11px] font-bold text-slate-800 leading-tight">
+                              {male ? male.name : 'N/A'} <span className="text-slate-400 font-medium">({male?.ring})</span>
+                            </p>
+                            <div className="flex items-center justify-center my-1">
+                              <div className="h-[1px] flex-1 bg-slate-200" />
+                              <span className="text-[10px] text-slate-300 mx-2 font-black">×</span>
+                              <div className="h-[1px] flex-1 bg-slate-200" />
+                            </div>
+                            <p className="text-[11px] font-bold text-slate-800 leading-tight">
+                              {female ? female.name : 'N/A'} <span className="text-slate-400 font-medium">({female?.ring})</span>
+                            </p>
+                          </div>
                         </div>
 
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Egg ID</p>
-                          <p className="text-2xl font-black font-display text-primary">#{egg.id}</p>
+                          <p className="text-2xl font-black font-display text-primary">#{egg.eggNumber || egg.id.slice(-3)}</p>
                         </div>
 
                         {/* Progress Bar */}
@@ -3333,11 +3381,36 @@ This update is now live for all Premium users. We continue to push the boundarie
                           </div>
                         </div>
 
-                        {/* Fertility Check Date */}
-                        {egg.fertilityCheckDate && egg.status === 'Intact' && (
-                          <div className="pt-2">
-                            <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Fertility Check</span>
-                            <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">{egg.fertilityCheckDate}</span>
+                        {/* Fertility Check Date & Buttons */}
+                        {egg.status === 'Intact' && (
+                          <div className="pt-4 space-y-3">
+                            <div className="flex flex-col items-center">
+                              <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Fertility Check</span>
+                              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">{egg.fertilityCheckDate}</span>
+                            </div>
+                            
+                            {!egg.isFertile && (
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleFertilityCheck(egg.id, true); }}
+                                  className="flex-1 py-2 bg-blue-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-sm"
+                                >
+                                  Fertile
+                                </button>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleFertilityCheck(egg.id, false); }}
+                                  className="flex-1 py-2 bg-red-50 text-red-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-100 transition-all border border-red-100"
+                                >
+                                  Infertile
+                                </button>
+                              </div>
+                            )}
+                            {egg.isFertile && (
+                              <div className="flex items-center justify-center gap-1.5 text-green-500 bg-green-50 py-2 rounded-xl border border-green-100">
+                                <Sparkles className="w-3 h-3" />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Confirmed Fertile</span>
+                              </div>
+                            )}
                           </div>
                         )}
 
