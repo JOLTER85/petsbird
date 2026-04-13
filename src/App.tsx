@@ -13,11 +13,13 @@ import {
   signOut, 
   onAuthStateChanged, 
   db,
+  storage,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   sendEmailVerification
 } from './firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { User } from 'firebase/auth';
 import { 
   collection, 
@@ -61,6 +63,9 @@ import {
   BrainCircuit,
   Loader2,
   BookOpen,
+  Camera,
+  Upload,
+  Image as ImageIcon,
   Newspaper,
   Info,
   Mail,
@@ -106,6 +111,7 @@ interface BirdData {
   motherId?: string;
   lineage?: string;
   status?: string;
+  imageUrl?: string;
 }
 
 interface CoupleData {
@@ -232,14 +238,15 @@ const TRANSLATIONS = {
 
 const Logo = ({ variant = 'full', className = "", theme = 'light' }: { variant?: 'full' | 'icon', className?: string, theme?: 'light' | 'dark' }) => (
   <div className={`flex items-center gap-3 ${className}`}>
-    <div className="w-12 h-12 shrink-0 relative">
-      <div className="absolute inset-0 bg-white rounded-full shadow-lg border border-slate-100" />
+    <div className="w-12 h-12 shrink-0 relative group/logo">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent-gold rounded-full shadow-xl opacity-20 group-hover/logo:opacity-30 transition-opacity" />
+      <div className="absolute inset-[2px] bg-white rounded-full z-0" />
       <img 
-        src="/logo.png" 
+        src="https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=200" 
         alt="PetsBird Logo" 
-        className="w-full h-full object-contain rounded-full relative z-10 p-1"
+        className="w-full h-full object-cover rounded-full relative z-10 border-2 border-white shadow-sm"
         onError={(e) => {
-          // Fallback if logo.png is not found
+          // Fallback if image is not found
           (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=100";
         }}
         referrerPolicy="no-referrer"
@@ -286,7 +293,7 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void }) => (
+const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void }) => (
   <motion.div
     whileHover={{ y: -8, scale: 1.02 }}
     onClick={onSelect}
@@ -319,7 +326,7 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
     </div>
     <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
       <img 
-        src={`https://picsum.photos/seed/${id}/400/400`} 
+        src={imageUrl || `https://picsum.photos/seed/${id}/400/400`} 
         alt={name} 
         loading="lazy"
         className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -1504,7 +1511,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     birthYear: new Date().getFullYear().toString(),
     date: new Date().toISOString().split('T')[0],
     cage: "1",
-    mutation: ""
+    mutation: "",
+    imageUrl: ""
   });
 
   // Auto-save Recovery for Bird Form
@@ -1903,7 +1911,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     setGeneticsResult(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+      
       const prompt = `
         You are an expert avian genetics consultant. 
         Predict the possible offspring (chicks) mutations for a pair of birds with the following details:
@@ -1947,8 +1956,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         }
       });
 
-      const result = JSON.parse(response.text);
-      setGeneticsResult(result);
+      const text = response.text || "{}";
+      const parsedResult = JSON.parse(text);
+      setGeneticsResult(parsedResult);
     } catch (error) {
       console.error("Genetics Prediction Error:", error);
       setConfirmModal({
