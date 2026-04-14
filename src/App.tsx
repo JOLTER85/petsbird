@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, FormEvent, MouseEvent, useRef } from "react";
+import React, { useState, useEffect, FormEvent, MouseEvent, useRef, Component, ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
@@ -78,7 +78,8 @@ import {
   Facebook,
   Instagram,
   CheckCircle2,
-  Moon
+  Moon,
+  AlertTriangle
 } from "lucide-react";
 
 import { 
@@ -811,7 +812,60 @@ const uploadImageWithTimeout = async (file: File, userId: string): Promise<strin
   });
 };
 
+// Error Boundary Component
+class ErrorBoundary extends (Component as any) {
+  state = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
+          <div className="max-w-md glass p-10 rounded-[40px] border-white/20 shadow-2xl">
+            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertTriangle className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-black text-slate-800 mb-4">عذراً، حدث خطأ غير متوقع</h2>
+            <p className="text-slate-500 mb-8 text-sm leading-relaxed">
+              لقد واجهنا مشكلة تقنية. يرجى محاولة إعادة تحميل الصفحة.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+            >
+              إعادة تحميل الصفحة
+            </button>
+            <details className="mt-6 text-left">
+              <summary className="text-[10px] font-bold text-slate-400 uppercase cursor-pointer">تفاصيل الخطأ</summary>
+              <pre className="mt-2 p-4 bg-slate-900 text-slate-300 text-[10px] rounded-xl overflow-auto max-h-40">
+                {this.state.error?.toString()}
+              </pre>
+            </details>
+          </div>
+        </div>
+      );
+    }
+
+    return (this.props as any).children;
+  }
+}
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
+  );
+}
+
+function AppContent() {
   const [showApp, setShowApp] = useState(false);
   const [landingTab, setLandingTab] = useState("Home");
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
@@ -1122,6 +1176,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      console.log("Auth state changed:", currentUser?.email);
       if (currentUser) {
         const isGoogleUser = currentUser.providerData.some(p => p.providerId === 'google.com');
         if (currentUser.emailVerified || isGoogleUser) {
@@ -1154,9 +1209,32 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       }
       setUser(currentUser);
       setAuthLoading(false);
+      setIsAuthProcessing(false); // Ensure processing is cleared on state change
     });
     return () => unsubscribe();
   }, []);
+
+  // Safety timeout for auth loading
+  useEffect(() => {
+    if (authLoading) {
+      const timer = setTimeout(() => {
+        console.warn("Auth loading timeout reached");
+        setAuthLoading(false);
+      }, 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading]);
+
+  // Safety timeout for auth processing
+  useEffect(() => {
+    if (isAuthProcessing) {
+      const timer = setTimeout(() => {
+        console.warn("Auth processing timeout reached");
+        setIsAuthProcessing(false);
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthProcessing]);
 
   useEffect(() => {
     if (authLoading || isAuthProcessing) return;
@@ -1276,6 +1354,13 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         if (!userCredential.user.emailVerified) {
           setAuthError("يرجى تأكيد بريدك الإلكتروني أولاً.");
           await signOut(auth);
+        } else {
+          // Explicit navigation on success
+          setShowApp(true);
+          setShowAuthPage(false);
+          if (window.location.pathname !== '/app') {
+            window.history.pushState({}, '', '/app');
+          }
         }
       }
     } catch (error: any) {
@@ -3883,7 +3968,10 @@ This update is now live for all Premium users. We continue to push the boundarie
                     <BarChart data={(() => {
                       const monthlyData: { [key: string]: number } = {};
                       eggs.forEach(egg => {
-                        const month = new Date(egg.laidDate).toLocaleString('default', { month: 'short' });
+                        if (!egg.laidDate) return;
+                        const date = new Date(egg.laidDate);
+                        if (isNaN(date.getTime())) return;
+                        const month = date.toLocaleString('default', { month: 'short' });
                         monthlyData[month] = (monthlyData[month] || 0) + 1;
                       });
                       return Object.entries(monthlyData).map(([name, count]) => ({ name, count }));
