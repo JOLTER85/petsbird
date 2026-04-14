@@ -325,13 +325,20 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
       )}
     </div>
     <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
-      <img 
-        src={imageUrl || `https://picsum.photos/seed/${id}/400/400`} 
-        alt={name} 
-        loading="lazy"
-        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-        referrerPolicy="no-referrer"
-      />
+      {imageUrl ? (
+        <img 
+          src={imageUrl} 
+          alt={name} 
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center text-slate-300">
+          <Bird className="w-16 h-16 mb-2 opacity-20" />
+          <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">No Image</span>
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider z-10 ${
         gender === 'Female' ? 'bg-female text-female-text' : 
@@ -1332,6 +1339,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [eggs, setEggs] = useState<EggData[]>([]);
   const [searchEgg, setSearchEgg] = useState("");
   const [filterEggStatus, setFilterEggStatus] = useState<string>("All");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const exportPedigreePDF = async (birdId: string) => {
     const bird = birds.find(b => b.id === birdId);
@@ -1600,30 +1609,52 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const handleAddBird = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const id = Date.now().toString();
-    const birdData = { ...newBird, id, userId: user.uid };
-    const path = `users_data/${user.uid}/birds/${id}`;
+    setIsUploading(true);
     try {
+      let imageUrl = newBird.imageUrl;
+      if (selectedFile) {
+        const storageRef = ref(storage, `birds/${user.uid}/${Date.now()}_${selectedFile.name}`);
+        const uploadResult = await uploadBytes(storageRef, selectedFile);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      }
+
+      const id = Date.now().toString();
+      const birdData = { ...newBird, id, imageUrl, userId: user.uid };
+      const path = `users_data/${user.uid}/birds/${id}`;
       await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
       setIsModalOpen(false);
+      setSelectedFile(null);
       localStorage.removeItem('petsbird_draft_bird');
-      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "" });
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, path);
+      handleFirestoreError(error, OperationType.WRITE, `users_data/${user.uid}/birds`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleUpdateBird = async (e: FormEvent) => {
     e.preventDefault();
     if (!editingBirdId || !user) return;
-    const path = `users_data/${user.uid}/birds/${editingBirdId}`;
+    setIsUploading(true);
     try {
-      await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird });
+      let imageUrl = newBird.imageUrl;
+      if (selectedFile) {
+        const storageRef = ref(storage, `birds/${user.uid}/${Date.now()}_${selectedFile.name}`);
+        const uploadResult = await uploadBytes(storageRef, selectedFile);
+        imageUrl = await getDownloadURL(uploadResult.ref);
+      }
+
+      const path = `users_data/${user.uid}/birds/${editingBirdId}`;
+      await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird, imageUrl });
       setIsModalOpen(false);
       setEditingBirdId(null);
-      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "" });
+      setSelectedFile(null);
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, path);
+      handleFirestoreError(error, OperationType.UPDATE, `users_data/${user.uid}/birds/${editingBirdId}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -1665,7 +1696,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         birthYear: bird.birthYear || new Date().getFullYear().toString(),
         date: bird.date || new Date().toLocaleDateString(),
         cage: bird.cage || "1",
-        mutation: bird.mutation || ""
+        mutation: bird.mutation || "",
+        imageUrl: bird.imageUrl || ""
       });
     } else {
       setEditingBirdId(null);
@@ -1678,7 +1710,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         birthYear: new Date().getFullYear().toString(),
         date: new Date().toLocaleDateString(),
         cage: "1",
-        mutation: ""
+        mutation: "",
+        imageUrl: ""
       });
     }
     setIsModalOpen(true);
@@ -4008,11 +4041,11 @@ This update is now live for all Premium users. We continue to push the boundarie
 
                     {/* Egg Shape Container */}
                     <div className={`relative w-full aspect-[4/5] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border-t border-white/60 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center overflow-hidden
-                      ${isHatchingToday ? 'bg-gradient-to-b from-orange-100 to-amber-200 border-orange-300 ring-8 ring-orange-400/10' : 
+                      ${egg.status === 'Completed' || egg.status === 'Hatched' ? 'bg-gradient-to-b from-green-50 to-emerald-100 border-green-200' :
+                        isHatchingToday ? 'bg-gradient-to-b from-orange-100 to-amber-200 border-orange-300 ring-8 ring-orange-400/10' : 
                         isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-100 border-amber-200 animate-pulse' : 
                         'bg-gradient-to-b from-white to-slate-100 border-slate-100'}
-                      ${egg.status === 'Broken' ? 'opacity-60 grayscale' : ''}
-                      ${egg.status === 'Hatched' ? 'bg-gradient-to-b from-green-50 to-emerald-100 border-green-200' : ''}
+                      ${egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-gradient-to-b from-red-50 to-rose-100 border-red-200 opacity-80' : ''}
                     `}>
                       {/* Depth Shadow */}
                       <div className="absolute inset-0 bg-gradient-to-tr from-black/5 via-transparent to-white/10 pointer-events-none" />
@@ -4041,10 +4074,12 @@ This update is now live for all Premium users. We continue to push the boundarie
 
                       {/* Egg Content */}
                       <div className="space-y-4 relative z-10 w-full">
-                        <div className="relative w-20 h-20 mx-auto mb-4">
+                        <div className="relative w-20 h-20 mx-auto mb-2">
                           <div className={`w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center border-2 ${isHatchingToday ? 'border-orange-300' : 'border-slate-100'}`}>
-                            {egg.status === 'Hatched' ? (
+                            {egg.status === 'Hatched' || egg.status === 'Completed' ? (
                               <Bird className="w-10 h-10 text-green-600 animate-pulse" />
+                            ) : egg.status === 'Broken' || egg.status === 'Failed' ? (
+                              <X className="w-10 h-10 text-red-400" />
                             ) : (
                               <EggIcon className={`w-10 h-10 ${isHatchingToday ? 'text-orange-600' : 'text-accent-orange'}`} />
                             )}
@@ -4058,16 +4093,16 @@ This update is now live for all Premium users. We continue to push the boundarie
                         
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Breeding Pair</p>
-                          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-slate-200 shadow-sm">
-                            <p className="text-xs font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
+                          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-2 border border-slate-200 shadow-sm">
+                            <p className="text-[10px] font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
                               <span className="text-blue-500">♂</span> {male ? male.name : 'N/A'}
                             </p>
-                            <div className="flex items-center justify-center my-1.5">
+                            <div className="flex items-center justify-center my-1">
                               <div className="h-[1px] flex-1 bg-slate-200" />
                               <Heart className="w-2 h-2 text-red-400 mx-2 fill-red-400" />
                               <div className="h-[1px] flex-1 bg-slate-200" />
                             </div>
-                            <p className="text-xs font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
+                            <p className="text-[10px] font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
                               <span className="text-pink-500">♀</span> {female ? female.name : 'N/A'}
                             </p>
                           </div>
@@ -4075,17 +4110,17 @@ This update is now live for all Premium users. We continue to push the boundarie
 
                         <div className="space-y-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Identification</p>
-                          <p className="text-3xl font-black font-display text-primary drop-shadow-sm">#{egg.eggNumber || egg.id.slice(-3)}</p>
+                          <p className="text-2xl font-black font-display text-primary drop-shadow-sm">#{egg.eggNumber || egg.id.slice(-3)}</p>
                         </div>
 
                         {/* Progress Bar */}
                         {egg.status === 'Intact' && (
-                          <div className="space-y-2.5 pt-2">
-                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-500">
-                              <span>Incubation Progress</span>
+                          <div className="space-y-1.5 pt-1">
+                            <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-slate-500">
+                              <span>Incubation</span>
                               <span className={progress > 80 ? 'text-orange-600' : ''}>{progress}%</span>
                             </div>
-                            <div className="h-2.5 w-full bg-slate-200/50 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                            <div className="h-2 w-full bg-slate-200/50 rounded-full overflow-hidden p-0.5 border border-slate-100">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
@@ -4095,14 +4130,14 @@ This update is now live for all Premium users. We continue to push the boundarie
                           </div>
                         )}
 
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100/50">
-                          <div className="flex flex-col items-center">
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Laid</span>
-                            <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg">{egg.laidDate}</span>
+                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100/50">
+                          <div className="flex flex-col items-center p-2 bg-white/40 backdrop-blur-sm rounded-xl border border-white/60">
+                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Eggs Laid</span>
+                            <span className="text-[11px] font-black text-slate-800">{egg.laidDate}</span>
                           </div>
-                          <div className="flex flex-col items-center">
-                            <span className="text-[8px] font-black text-accent-orange uppercase tracking-widest mb-1">Hatch</span>
-                            <span className="text-[10px] font-bold text-white bg-accent-orange px-2 py-1 rounded-lg shadow-sm shadow-accent-orange/20">{egg.hatchDate || "TBD"}</span>
+                          <div className="flex flex-col items-center p-2 bg-accent-orange/10 backdrop-blur-sm rounded-xl border border-accent-orange/20">
+                            <span className="text-[9px] font-black text-accent-orange uppercase tracking-widest mb-1">Hatch Date</span>
+                            <span className="text-[11px] font-black text-accent-orange">{egg.hatchDate || "TBD"}</span>
                           </div>
                         </div>
 
@@ -4691,11 +4726,61 @@ This update is now live for all Premium users. We continue to push the boundarie
                     />
                   </div>
                 </div>
+
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Bird Image (صورة الطائر)</label>
+                  <div className="flex items-center gap-6">
+                    <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden relative group">
+                      {selectedFile ? (
+                        <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
+                      ) : newBird.imageUrl ? (
+                        <img src={newBird.imageUrl} alt="Current" className="w-full h-full object-cover" />
+                      ) : (
+                        <Camera className="w-8 h-8 text-slate-300" />
+                      )}
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Upload className="w-6 h-6 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-slate-500 mb-2">Upload a photo of your bird from your phone or computer.</p>
+                      <button 
+                        type="button"
+                        onClick={() => document.getElementById('bird-image-input')?.click()}
+                        className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all"
+                      >
+                        Choose Photo
+                      </button>
+                      <input 
+                        id="bird-image-input"
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        className="hidden"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <button 
                   type="submit"
-                  className="w-full py-5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all mt-4"
+                  disabled={isUploading}
+                  className="w-full py-5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all mt-4 flex items-center justify-center gap-3 disabled:opacity-50"
                 >
-                  {editingBirdId ? 'Update Bird Profile' : 'Create Bird Profile'}
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    editingBirdId ? 'Update Bird Profile' : 'Create Bird Profile'
+                  )}
                 </button>
               </form>
             </motion.div>
