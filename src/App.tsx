@@ -2015,8 +2015,38 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
     try {
       const apiKey = process.env.GEMINI_API_KEY;
+      
+      // Simulation Fallback if API Key is missing
       if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
-        throw new Error("API_KEY_MISSING");
+        console.warn("API Key missing, running in Simulation Mode");
+        
+        // Simulate a delay for realism
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const simulationResult = {
+          possibleMutations: [
+            { 
+              name: `${male.mutation || "Normal"} (Visual)`, 
+              probability: "50%", 
+              description: "Offspring inheriting the visual characteristics of the father." 
+            },
+            { 
+              name: `${female.mutation || "Normal"} (Visual)`, 
+              probability: "25%", 
+              description: "Offspring inheriting the visual characteristics of the mother." 
+            },
+            { 
+              name: `Split ${male.mutation || "Mutation"}`, 
+              probability: "25%", 
+              description: "Offspring carrying the gene but not showing it visually." 
+            }
+          ],
+          advice: "This is a simulated result because the Gemini API key is not configured. For accurate genetic predictions based on real avian science, please add your Gemini API key in the app settings.",
+          difficulty: 2
+        };
+        
+        setGeneticsResult(simulationResult);
+        return;
       }
 
       const ai = new GoogleGenAI({ apiKey });
@@ -2069,16 +2099,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setGeneticsResult(parsedResult);
     } catch (error: any) {
       console.error("Genetics Prediction Error:", error);
-      let errorMessage = "حدث خطأ أثناء التنبؤ بالوراثة. يرجى المحاولة مرة أخرى.";
-      
-      if (error.message === "API_KEY_MISSING") {
-        errorMessage = "يرجى إعداد مفتاح API الخاص بـ Gemini في الإعدادات لتفعيل هذه الميزة.";
-      }
-
       setConfirmModal({
         isOpen: true,
         title: "Prediction Error",
-        message: errorMessage,
+        message: "حدث خطأ أثناء التنبؤ بالوراثة. يرجى المحاولة مرة أخرى.",
         onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
       });
     } finally {
