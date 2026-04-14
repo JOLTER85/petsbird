@@ -3489,34 +3489,77 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         )}
 
         {landingTab === "About" && (
-          <section className="pt-40 pb-20 px-8 max-w-5xl mx-auto min-h-screen text-center">
-            <div className="w-32 h-32 bg-white rounded-[48px] flex items-center justify-center mx-auto mb-10 shadow-2xl shadow-primary/10 border border-slate-100">
-              <Logo variant="icon" className="w-16 h-16" />
+          <section className="pt-40 pb-20 px-8 max-w-5xl mx-auto min-h-screen">
+            <div className="text-center mb-16">
+              <div className="w-24 h-24 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/10 border border-slate-100">
+                <Logo variant="icon" className="w-12 h-12" />
+              </div>
+              <h2 className="text-5xl font-black font-display text-slate-900 mb-4 tracking-tight">About <span className="text-primary italic">PetsBird</span></h2>
+              <p className="text-xs font-black text-primary uppercase tracking-[0.3em]">A passion for aviculture, powered by technology</p>
             </div>
-            <h2 className="text-6xl font-black font-display text-slate-900 mb-8 tracking-tight">PASSION FOR <br /> <span className="text-primary italic">AVICULTURE</span></h2>
-            <p className="text-2xl text-slate-500 leading-relaxed mb-16 font-medium">
-              Founded in 2024, PetsBird was born from a simple idea: that technology should empower breeders, not complicate their lives. Today, we serve thousands of breeders across 40 countries, helping them preserve rare species and advance genetic research.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              {[
-                { label: "Our Vision", desc: "To create a world where every breeder has access to professional-grade tools." },
-                { label: "Our Values", desc: "Integrity, innovation, and a deep respect for the welfare of every bird." },
-                { label: "Our Community", desc: "A global network of experts sharing knowledge and rare mutations." }
-              ].map((v, i) => (
-                <div key={i} className="text-left">
-                  <h5 className="text-xl font-black text-slate-800 mb-4 uppercase tracking-widest">{v.label}</h5>
-                  <p className="text-slate-500 leading-relaxed">{v.desc}</p>
+
+            <div className="space-y-20">
+              <div className="glass p-12 rounded-[48px] border-white/20">
+                <p className="text-xl text-slate-600 leading-relaxed font-medium">
+                  Founded in 2024, PetsBird was born from a simple idea: that technology should empower breeders, not complicate their lives. We bridge the gap between traditional bird breeding and modern digital management, providing tools and insights that make a real difference in the aviary.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div className="space-y-6">
+                  <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Why PetsBird is Different? <br /><span className="text-primary text-xl">(Our Expertise)</span></h3>
+                  <p className="text-slate-500 leading-relaxed text-lg">
+                    Unlike generic advice websites, PetsBird is built on real-world experience. We operate a professional 70-square-meter breeding facility where we test every technique, diet, and supplement we recommend.
+                  </p>
+                  <p className="text-slate-500 leading-relaxed text-lg">
+                    Our content is rooted in practical success—from managing complex genetic mutations to achieving high-productivity cycles, such as our recent milestone of successfully raising 10 healthy chicks in a single month.
+                  </p>
                 </div>
-              ))}
-            </div>
-            <div className="mt-20 text-center">
-              <button 
-                onClick={() => navigateToTab("Home")}
-                className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Home
-              </button>
+                <div className="aspect-square rounded-[48px] overflow-hidden shadow-2xl">
+                  <img 
+                    src="https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=1000" 
+                    alt="Breeding Facility" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-900 rounded-[64px] p-16 text-white text-center">
+                <h3 className="text-xs font-black text-primary uppercase tracking-[0.4em] mb-6">Our Vision</h3>
+                <p className="text-3xl font-bold leading-tight max-w-3xl mx-auto">
+                  To create a world where every breeder, from hobbyists to professionals, has access to professional-grade management tools and scientifically backed avian knowledge.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  { title: "Integrity", desc: "We only share advice that has been tried and tested in our own breeding rooms." },
+                  { title: "Innovation", desc: "We continuously develop digital solutions to simplify tracking, breeding cycles, and genetic mapping." },
+                  { title: "Bird Welfare", desc: "We place the health and well-being of every bird at the core of everything we do." }
+                ].map((v, i) => (
+                  <div key={i} className="glass p-10 rounded-[40px] border-white/10 hover:bg-white/10 transition-colors">
+                    <h5 className="text-xl font-black text-slate-900 mb-4 uppercase tracking-widest">{v.title}</h5>
+                    <p className="text-slate-500 leading-relaxed">{v.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-center space-y-6 pb-20">
+                <h3 className="text-4xl font-black text-slate-900">A Global Community</h3>
+                <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                  Today, PetsBird serves a dedicated community of breeders across 40 countries. We are more than just a platform; we are a global network of experts sharing vital knowledge to ensure the future of aviculture worldwide.
+                </p>
+                <div className="pt-10">
+                  <button 
+                    onClick={() => navigateToTab("Home")}
+                    className="inline-flex items-center gap-2 text-primary font-bold uppercase tracking-widest hover:gap-4 transition-all"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    Back to Home
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
         )}
