@@ -1968,27 +1968,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     setGeneticsResult(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
-      
-      const prompt = `
-        You are an expert avian genetics consultant. 
-        Predict the possible offspring (chicks) mutations for a pair of birds with the following details:
-        Species: ${male.species}
-        Male Mutation: ${male.mutation || "Normal/Classic"}
-        Female Mutation: ${female.mutation || "Normal/Classic"}
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+        throw new Error("API_KEY_MISSING");
+      }
 
-        Please provide the results in a structured JSON format with the following fields:
-        - possibleMutations: An array of objects, each with 'name' (mutation name), 'probability' (percentage), and 'description' (brief explanation).
-        - advice: A short expert advice for breeding this specific pair.
-        - difficulty: A rating from 1 to 5 (1 easy, 5 expert).
-
-        Respond ONLY with the JSON.
-      `;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
-        config: {
+      const ai = new GoogleGenAI(apiKey);
+      const model = ai.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        generationConfig: {
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -2012,16 +2000,39 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           }
         }
       });
+      
+      const prompt = `
+        You are an expert avian genetics consultant. 
+        Predict the possible offspring (chicks) mutations for a pair of birds with the following details:
+        Species: ${male.species}
+        Male Mutation: ${male.mutation || "Normal/Classic"}
+        Female Mutation: ${female.mutation || "Normal/Classic"}
 
-      const text = response.text || "{}";
+        Please provide the results in a structured JSON format with the following fields:
+        - possibleMutations: An array of objects, each with 'name' (mutation name), 'probability' (percentage), and 'description' (brief explanation).
+        - advice: A short expert advice for breeding this specific pair.
+        - difficulty: A rating from 1 to 5 (1 easy, 5 expert).
+
+        Respond ONLY with the JSON.
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
       const parsedResult = JSON.parse(text);
       setGeneticsResult(parsedResult);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Genetics Prediction Error:", error);
+      let errorMessage = "حدث خطأ أثناء التنبؤ بالوراثة. يرجى المحاولة مرة أخرى.";
+      
+      if (error.message === "API_KEY_MISSING") {
+        errorMessage = "يرجى إعداد مفتاح API الخاص بـ Gemini في الإعدادات لتفعيل هذه الميزة.";
+      }
+
       setConfirmModal({
         isOpen: true,
         title: "Prediction Error",
-        message: "حدث خطأ أثناء التنبؤ بالوراثة. يرجى المحاولة مرة أخرى.",
+        message: errorMessage,
         onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
       });
     } finally {
