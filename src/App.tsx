@@ -312,13 +312,16 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
 
   // Status Indicator Config
   const getStatusConfig = (status: string) => {
-    switch (status) {
-      case 'Ready':
+    const s = status?.toLowerCase() || '';
+    switch (s) {
+      case 'ready':
         return { icon: <CheckCircle2 className="w-3 h-3" />, color: 'bg-green-500', text: 'Ready', label: 'For breeding' };
-      case 'Resting':
+      case 'resting':
         return { icon: <Moon className="w-3 h-3" />, color: 'bg-blue-500', text: 'Resting', label: 'Non-breeding' };
-      case 'Paired':
+      case 'paired':
         return { icon: <Heart className="w-3 h-3" />, color: 'bg-orange-500', text: 'Paired', label: 'Linked' };
+      case 'chick':
+        return { icon: <Sparkles className="w-3 h-3" />, color: 'bg-purple-500', text: 'Chick', label: 'Young bird' };
       default:
         return { icon: <Info className="w-3 h-3" />, color: 'bg-slate-400', text: status || 'Unknown', label: '' };
     }
@@ -1634,6 +1637,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     date: new Date().toISOString().split('T')[0],
     cage: "1",
     mutation: "",
+    status: "Ready",
     imageUrl: ""
   });
 
@@ -1826,6 +1830,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         date: bird.date || new Date().toLocaleDateString(),
         cage: bird.cage || "1",
         mutation: bird.mutation || "",
+        status: bird.status || "Ready",
         imageUrl: bird.imageUrl || ""
       });
     } else {
@@ -1840,6 +1845,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         date: new Date().toLocaleDateString(),
         cage: "1",
         mutation: "",
+        status: "Ready",
         imageUrl: ""
       });
     }
@@ -3905,24 +3911,34 @@ This update is now live for all Premium users. We continue to push the boundarie
 
         {activeTab === "My Birds" && (
           <section>
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div className="flex items-center gap-4">
-                <h3 className="text-2xl font-bold font-display text-slate-800">All Birds</h3>
+                <h3 className="text-3xl font-black font-display text-slate-900">All Birds</h3>
                 {cageFilter && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
-                    <MapPin className="w-3 h-3" />
+                  <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-2xl text-xs font-bold border border-primary/20 shadow-sm">
+                    <MapPin className="w-3.5 h-3.5" />
                     Cage: {cageFilter}
-                    <button onClick={() => setCageFilter(null)} className="ml-1 hover:text-red-500">
+                    <button 
+                      onClick={() => setCageFilter(null)} 
+                      className="ml-2 p-1 hover:bg-primary/20 rounded-lg transition-colors"
+                      title="Clear Filter"
+                    >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 )}
               </div>
-              {selectedBirds.length > 0 && (
-                <span className="text-sm font-bold text-primary">{selectedBirds.length}/2 birds selected for coupling</span>
-              )}
+              
+              <div className="flex items-center gap-4">
+                {selectedBirds.length > 0 && (
+                  <span className="text-sm font-bold text-primary bg-primary/5 px-4 py-2 rounded-2xl border border-primary/10">
+                    {selectedBirds.length}/2 birds selected for coupling
+                  </span>
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-8">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {birds
                 .filter(b => !cageFilter || b.cage === cageFilter)
                 .map((bird) => (
@@ -4800,15 +4816,16 @@ This update is now live for all Premium users. We continue to push the boundarie
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg bg-white rounded-[40px] shadow-2xl overflow-hidden"
+              className="relative w-full max-w-lg bg-white rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0">
                 <h3 className="text-2xl font-bold font-display">{editingBirdId ? 'Edit Bird' : 'Add New Bird'}</h3>
                 <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-colors">
                   <X className="w-6 h-6 text-slate-400" />
                 </button>
               </div>
-              <form onSubmit={editingBirdId ? handleUpdateBird : handleAddBird} className="p-8 space-y-6">
+              <div className="overflow-y-auto flex-1 p-8 pt-4">
+                <form onSubmit={editingBirdId ? handleUpdateBird : handleAddBird} className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Bird Name (اسم الطائر)</label>
@@ -4981,14 +4998,27 @@ This update is now live for all Premium users. We continue to push the boundarie
                   </div>
                 </div>
 
-                <button 
-                  type="submit"
-                  className="w-full py-5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all mt-4 flex items-center justify-center gap-3"
-                >
-                  {editingBirdId ? 'Update Bird Profile' : 'Create Bird Profile'}
-                </button>
+                <div className="sticky bottom-0 pt-6 pb-2 bg-white mt-4">
+                  <button 
+                    type="submit"
+                    className="w-full py-5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all flex items-center justify-center gap-3"
+                  >
+                    {isUploading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span>{editingBirdId ? 'Update Bird Profile' : 'Create Bird Profile'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
-            </motion.div>
+            </div>
+          </motion.div>
           </div>
         )}
       </AnimatePresence>
