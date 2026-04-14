@@ -4040,7 +4040,7 @@ This update is now live for all Premium users. We continue to push the boundarie
                     </div>
 
                     {/* Egg Shape Container */}
-                    <div className={`relative w-full aspect-[4/5] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border-t border-white/60 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center overflow-hidden
+                    <div className={`relative w-full min-h-[580px] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border-t border-white/60 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center
                       ${egg.status === 'Completed' || egg.status === 'Hatched' ? 'bg-gradient-to-b from-green-50 to-emerald-100 border-green-200' :
                         isHatchingToday ? 'bg-gradient-to-b from-orange-100 to-amber-200 border-orange-300 ring-8 ring-orange-400/10' : 
                         isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-100 border-amber-200 animate-pulse' : 
@@ -4135,14 +4135,14 @@ This update is now live for all Premium users. We continue to push the boundarie
                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Eggs Laid</span>
                             <span className="text-[11px] font-black text-slate-800">{egg.laidDate}</span>
                           </div>
-                          <div className="flex flex-col items-center p-2 bg-accent-orange/10 backdrop-blur-sm rounded-xl border border-accent-orange/20">
-                            <span className="text-[9px] font-black text-accent-orange uppercase tracking-widest mb-1">Hatch Date</span>
-                            <span className="text-[11px] font-black text-accent-orange">{egg.hatchDate || "TBD"}</span>
+                          <div className={`flex flex-col items-center p-2 backdrop-blur-sm rounded-xl border ${isHatchingToday || (daysToHatch !== null && daysToHatch < 0) ? 'bg-orange-500 text-white border-orange-400 shadow-lg shadow-orange-200' : 'bg-accent-orange/10 text-accent-orange border-accent-orange/20'}`}>
+                            <span className={`text-[9px] font-black uppercase tracking-widest mb-1 ${isHatchingToday || (daysToHatch !== null && daysToHatch < 0) ? 'text-white/80' : 'text-accent-orange'}`}>Hatch Date</span>
+                            <span className="text-[11px] font-black">{egg.hatchDate || "TBD"}</span>
                           </div>
                         </div>
 
                         {/* Fertility Check Date & Buttons */}
-                        {egg.status === 'Intact' && (
+                        {egg.status === 'Intact' && !isHatchingToday && (daysToHatch === null || daysToHatch > 0) && (
                           <div className="pt-4 space-y-3">
                             <div className="flex flex-col items-center">
                               <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Fertility Check</span>
@@ -4174,20 +4174,21 @@ This update is now live for all Premium users. We continue to push the boundarie
                           </div>
                         )}
 
-                        {/* Hatch Confirmation Buttons */}
-                        {egg.status === 'Intact' && (
-                          <div className="pt-6 space-y-2">
+                        {/* Hatch Confirmation Buttons - ONLY SHOW WHEN TIME ARRIVES */}
+                        {egg.status === 'Intact' && (isHatchingToday || (daysToHatch !== null && daysToHatch <= 0)) && (
+                          <div className="pt-6 space-y-3 bg-white/50 p-4 rounded-3xl border border-orange-100 shadow-inner mt-2">
+                            <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2">Hatching Decision</p>
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleHatchSuccess(egg); }}
-                              className="w-full py-2.5 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all flex items-center justify-center gap-2"
+                              className="w-full py-3 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all flex items-center justify-center gap-2"
                             >
                               <Sparkles className="w-3 h-3" /> Hatched Successfully
                             </button>
                             <button 
                               onClick={(e) => { e.stopPropagation(); setHatchFailureEgg(egg); }}
-                              className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-all"
+                              className="w-full py-3 bg-white text-red-500 border border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-all"
                             >
-                              Failed to Hatch
+                              Failed to Hatch (Delete)
                             </button>
                           </div>
                         )}
