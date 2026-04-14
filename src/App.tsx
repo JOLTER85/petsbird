@@ -293,66 +293,78 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void }) => (
-  <motion.div
-    whileHover={{ y: -8, scale: 1.02 }}
-    onClick={onSelect}
-    className={`bg-white p-5 rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
-  >
-    <div className="absolute top-4 left-4 flex gap-2 z-10">
-      {onEdit && (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit(e);
-          }}
-          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
-        >
-          <Edit2 className="w-4 h-4" />
-        </button>
-      )}
-      {onExportCertificate && (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onExportCertificate(id);
-          }}
-          className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
-          title="Export Pedigree PDF"
-        >
-          <Download className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-    <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
-      {imageUrl ? (
-        <img 
-          src={imageUrl} 
-          alt={name} 
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-          referrerPolicy="no-referrer"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.onerror = null;
-            target.src = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
-          }}
-        />
-      ) : (
-        <div className="flex flex-col items-center justify-center text-slate-300">
-          <Bird className="w-16 h-16 mb-2 opacity-20" />
-          <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">No Image</span>
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider z-10 ${
-        gender === 'Female' ? 'bg-female text-female-text' : 
-        gender === 'Male' ? 'bg-male text-male-text' : 
-        'bg-slate-100 text-slate-500'
-      }`}>
-        {gender}
+const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void }) => {
+  // Debugging log to check URL validity
+  useEffect(() => {
+    if (imageUrl) {
+      console.log(`Bird [${name}] Image URL:`, imageUrl);
+    }
+  }, [imageUrl, name]);
+
+  const cleanImageUrl = imageUrl?.trim();
+
+  return (
+    <motion.div
+      whileHover={{ y: -8, scale: 1.02 }}
+      onClick={onSelect}
+      className={`bg-white p-5 rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
+    >
+      <div className="absolute top-4 left-4 flex gap-2 z-10">
+        {onEdit && (
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(e);
+            }}
+            className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+        )}
+        {onExportCertificate && (
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onExportCertificate(id);
+            }}
+            className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+            title="Export Pedigree PDF"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+        )}
       </div>
-      {status && (
+      <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
+        {cleanImageUrl ? (
+          <img 
+            src={cleanImageUrl} 
+            alt={name} 
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              console.error(`Failed to load image for bird [${name}]:`, cleanImageUrl);
+              target.onerror = null;
+              // Static fallback test image
+              target.src = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
+            }}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center text-slate-300">
+            <Bird className="w-16 h-16 mb-2 opacity-20" />
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">No Image</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider z-10 ${
+          gender === 'Female' ? 'bg-female text-female-text' : 
+          gender === 'Male' ? 'bg-male text-male-text' : 
+          'bg-slate-100 text-slate-500'
+        }`}>
+          {gender}
+        </div>
+        {status && (
         <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white shadow-lg shadow-amber-500/20">
           {status}
         </div>
@@ -418,6 +430,7 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
     </div>
   </motion.div>
 );
+};
 
 const PedigreeNode = ({ bird, label, gender, onClick }: { bird?: BirdData, label: string, gender?: 'Male' | 'Female', onClick?: (id: string) => void }) => (
   <div className="flex flex-col items-center gap-2 w-full">
