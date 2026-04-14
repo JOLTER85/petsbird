@@ -18,7 +18,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-slate-900 font-sans;
+    @apply bg-background text-slate-900 font-sans overflow-x-hidden;
   }
 }
 
@@ -34,4 +34,21 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }

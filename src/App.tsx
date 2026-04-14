@@ -263,17 +263,32 @@ const Logo = ({ variant = 'full', className = "", theme = 'light' }: { variant?:
   </div>
 );
 
-const SidebarItem = ({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) => (
+const SidebarItem = ({ icon: Icon, label, active = false, onClick, collapsed = false }: { icon: any, label: string, active?: boolean, onClick?: () => void, collapsed?: boolean }) => (
   <motion.div
-    whileHover={{ x: 4 }}
+    whileHover={{ x: collapsed ? 0 : 4 }}
     onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${
       active ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-slate-400 hover:text-white hover:bg-white/5"
-    }`}
+    } ${collapsed ? 'justify-center px-0' : ''}`}
+    title={collapsed ? label : ""}
   >
     <Icon className="w-5 h-5" />
-    <span className="font-medium text-sm">{label}</span>
+    {!collapsed && <span className="font-medium text-sm">{label}</span>}
   </motion.div>
+);
+
+const BottomNavItem = ({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) => (
+  <button
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all ${
+      active ? "text-primary" : "text-slate-400"
+    }`}
+  >
+    <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-primary/10' : ''}`}>
+      <Icon className="w-6 h-6" />
+    </div>
+    <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+  </button>
 );
 
 const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any, value: string | number, label: string, colorClass: string, onClick?: () => void }) => (
@@ -470,13 +485,13 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
       </div>
       
       {/* Content Area */}
-      <div className="space-y-4">
+      <div className="p-4 md:p-8 space-y-4">
         <div>
-          <h3 className="text-xl font-bold font-display text-slate-800 truncate">{name}</h3>
+          <h3 className="text-lg md:text-xl font-bold font-display text-slate-800 truncate">{name}</h3>
           <div className="flex flex-col">
-            <p className="text-sm text-slate-500 font-bold">{species}</p>
+            <p className="text-xs md:text-sm text-slate-500 font-bold">{species}</p>
             {mutation && (
-              <p className="text-[11px] text-primary/60 font-medium italic">{mutation}</p>
+              <p className="text-[10px] md:text-[11px] text-primary/60 font-medium italic">{mutation}</p>
             )}
           </div>
         </div>
@@ -487,7 +502,7 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
               <span className="text-xs">🏷️</span>
-              <span className="text-[11px] font-black text-accent-gold uppercase tracking-tight">
+              <span className="text-[10px] md:text-[11px] font-black text-accent-gold uppercase tracking-tight">
                 Ring: {ring || 'N/A'}
               </span>
             </div>
@@ -495,7 +510,7 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
 
           {/* Right: Status */}
           <div className="flex flex-col gap-0.5">
-            <div className={`flex items-center gap-1.5 text-[11px] font-bold ${statusConfig.color.replace('bg-', 'text-')}`}>
+            <div className={`flex items-center gap-1.5 text-[10px] md:text-[11px] font-bold ${statusConfig.color.replace('bg-', 'text-')}`}>
               {statusConfig.icon}
               <span>{statusConfig.text}</span>
             </div>
@@ -505,9 +520,9 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5 text-slate-500">
               <Calendar className="w-3.5 h-3.5" />
-              <span className="text-[11px] font-bold">{ageDisplay}</span>
+              <span className="text-[10px] md:text-[11px] font-bold">{ageDisplay}</span>
             </div>
-            <span className="text-[9px] text-slate-400 ml-5">DOB: {date}</span>
+            <span className="text-[8px] md:text-[9px] text-slate-400 ml-5">DOB: {date}</span>
           </div>
 
           {/* Right: Cage */}
@@ -517,10 +532,10 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
                 e.stopPropagation();
                 onCageClick?.(cage);
               }}
-              className="flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors group/cage"
+              className="flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors group/cage min-h-[32px]"
             >
               <MapPin className="w-3.5 h-3.5 group-hover/cage:scale-110 transition-transform" />
-              <span className="text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
+              <span className="text-[10px] md:text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
             </button>
           </div>
         </div>
@@ -3599,113 +3614,141 @@ This update is now live for all Premium users. We continue to push the boundarie
     );
   }
 
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
   return (
-    <div className="flex min-h-screen bg-background font-sans selection:bg-primary/10">
-      {/* Sidebar */}
-      <aside className="w-72 bg-sidebar text-white flex flex-col p-6 fixed h-screen z-50 overflow-y-auto custom-scrollbar">
-        <div 
-          onClick={() => setShowApp(false)}
-          className="mb-10 px-2 cursor-pointer group"
-        >
-          <Logo theme="dark" className="group-hover:scale-105 transition-transform" />
+    <div className="flex min-h-screen bg-background font-sans selection:bg-primary/10 overflow-x-hidden">
+      {/* Sidebar - Desktop/Tablet */}
+      <aside className={`hidden md:flex flex-col bg-sidebar text-white fixed h-screen z-50 transition-all duration-300 overflow-y-auto custom-scrollbar ${isSidebarCollapsed ? 'w-20 p-4' : 'w-72 p-6'}`}>
+        <div className="flex items-center justify-between mb-10 px-2">
+          {!isSidebarCollapsed && (
+            <div onClick={() => setShowApp(false)} className="cursor-pointer group">
+              <Logo theme="dark" className="group-hover:scale-105 transition-transform" />
+            </div>
+          )}
+          {isSidebarCollapsed && (
+            <div onClick={() => setShowApp(false)} className="cursor-pointer mx-auto">
+              <Logo variant="icon" className="w-8 h-8" />
+            </div>
+          )}
+          <button 
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className="hidden lg:flex p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-400"
+          >
+            {isSidebarCollapsed ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          </button>
         </div>
 
-        <div 
-          onClick={() => setIsProfileModalOpen(true)}
-          className="glass-dark p-4 rounded-2xl mb-8 flex items-center gap-3 border-white/5 cursor-pointer hover:bg-white/10 transition-all"
-        >
-          <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10">
-            <img 
-              src={user?.photoURL || "https://picsum.photos/seed/user/200/200"} 
-              alt="Profile" 
-              className="w-full h-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold truncate">{user?.displayName || "Breeder"}</span>
-              <span className="text-[9px] bg-accent-gold/20 text-accent-gold px-1.5 py-0.5 rounded-md font-bold uppercase">Admin</span>
+        {!isSidebarCollapsed && (
+          <div 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="glass-dark p-4 rounded-2xl mb-8 flex items-center gap-3 border-white/5 cursor-pointer hover:bg-white/10 transition-all"
+          >
+            <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10">
+              <img 
+                src={user?.photoURL || "https://picsum.photos/seed/user/200/200"} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
             </div>
-            <div className="flex items-center gap-1 text-slate-500 text-[10px] mt-0.5">
-              <MapPin className="w-3 h-3" />
-              <span className="truncate">{userProfile.location}</span>
-              <ChevronDown className="w-3 h-3" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold truncate">{user?.displayName || "Breeder"}</span>
+                <span className="text-[9px] bg-accent-gold/20 text-accent-gold px-1.5 py-0.5 rounded-md font-bold uppercase">Admin</span>
+              </div>
+              <div className="flex items-center gap-1 text-slate-500 text-[10px] mt-0.5">
+                <MapPin className="w-3 h-3" />
+                <span className="truncate">{userProfile.location}</span>
+                <ChevronDown className="w-3 h-3" />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <nav className="flex-1 space-y-2">
-          <div className="flex items-center gap-2 px-4 mb-4">
-            <div className="w-1 h-4 bg-primary rounded-full" />
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Main Menu</span>
-          </div>
-          <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === "Dashboard"} onClick={() => setActiveTab("Dashboard")} />
-          <SidebarItem icon={Users} label="My Birds" active={activeTab === "My Birds"} onClick={() => setActiveTab("My Birds")} />
-          <SidebarItem icon={Heart} label="Couples" active={activeTab === "Couples"} onClick={() => setActiveTab("Couples")} />
-          <SidebarItem icon={GitBranch} label="Pedigree Tree" active={activeTab === "Pedigree Tree"} onClick={() => setActiveTab("Pedigree Tree")} />
-          <SidebarItem icon={EggIcon} label="Eggs" active={activeTab === "Eggs"} onClick={() => setActiveTab("Eggs")} />
-          <SidebarItem icon={Sparkles} label="AI Genetics" active={activeTab === "AI Genetics"} onClick={() => setActiveTab("AI Genetics")} />
-          <SidebarItem icon={ShoppingBag} label="Marketplace" active={activeTab === "Marketplace"} onClick={() => setActiveTab("Marketplace")} />
+          {!isSidebarCollapsed && (
+            <div className="flex items-center gap-2 px-4 mb-4">
+              <div className="w-1 h-4 bg-primary rounded-full" />
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Main Menu</span>
+            </div>
+          )}
+          <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === "Dashboard"} onClick={() => setActiveTab("Dashboard")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={Users} label="My Birds" active={activeTab === "My Birds"} onClick={() => setActiveTab("My Birds")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={Heart} label="Couples" active={activeTab === "Couples"} onClick={() => setActiveTab("Couples")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={GitBranch} label="Pedigree Tree" active={activeTab === "Pedigree Tree"} onClick={() => setActiveTab("Pedigree Tree")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={EggIcon} label="Eggs" active={activeTab === "Eggs"} onClick={() => setActiveTab("Eggs")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={Sparkles} label="AI Genetics" active={activeTab === "AI Genetics"} onClick={() => setActiveTab("AI Genetics")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={ShoppingBag} label="Marketplace" active={activeTab === "Marketplace"} onClick={() => setActiveTab("Marketplace")} collapsed={isSidebarCollapsed} />
           
-          <div className="pt-8 pb-4 px-4">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Resources</span>
+          <div className={`pt-8 pb-4 ${isSidebarCollapsed ? 'px-0 text-center' : 'px-4'}`}>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{isSidebarCollapsed ? "..." : "Resources"}</span>
           </div>
-          <SidebarItem icon={BookOpen} label="Advice" active={activeTab === "Advice"} onClick={() => setActiveTab("Advice")} />
-          <SidebarItem icon={Newspaper} label="News" active={activeTab === "News"} onClick={() => setActiveTab("News")} />
-          <SidebarItem icon={Info} label="About Us" active={activeTab === "About Us"} onClick={() => setActiveTab("About Us")} />
-          <SidebarItem icon={Mail} label="Contact Us" active={activeTab === "Contact Us"} onClick={() => setActiveTab("Contact Us")} />
+          <SidebarItem icon={BookOpen} label="Advice" active={activeTab === "Advice"} onClick={() => setActiveTab("Advice")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={Newspaper} label="News" active={activeTab === "News"} onClick={() => setActiveTab("News")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={Info} label="About Us" active={activeTab === "About Us"} onClick={() => setActiveTab("About Us")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={Mail} label="Contact Us" active={activeTab === "Contact Us"} onClick={() => setActiveTab("Contact Us")} collapsed={isSidebarCollapsed} />
 
-          <div className="pt-8 pb-4 px-4">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">System</span>
+          <div className={`pt-8 pb-4 ${isSidebarCollapsed ? 'px-0 text-center' : 'px-4'}`}>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{isSidebarCollapsed ? "..." : "System"}</span>
           </div>
-          <SidebarItem icon={Download} label="Download App" onClick={handleInstallClick} />
-          <SidebarItem icon={LayoutDashboard} label="Back to Home" onClick={() => setShowApp(false)} />
-          <SidebarItem icon={Settings} label="Settings" active={activeTab === "Settings"} onClick={() => setActiveTab("Settings")} />
-          <SidebarItem icon={LogOut} label="Logout" onClick={handleLogout} />
+          <SidebarItem icon={Download} label="Download App" onClick={handleInstallClick} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={LayoutDashboard} label="Back to Home" onClick={() => setShowApp(false)} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={Settings} label="Settings" active={activeTab === "Settings"} onClick={() => setActiveTab("Settings")} collapsed={isSidebarCollapsed} />
+          <SidebarItem icon={LogOut} label="Logout" onClick={handleLogout} collapsed={isSidebarCollapsed} />
         </nav>
 
-        <div className="mt-auto pt-6 border-t border-white/5 flex flex-col items-center gap-4">
-          <div className="flex gap-4">
-            <a 
-              href="https://web.facebook.com/PetsBirdOfficial/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer"
-            >
-              <Facebook className="w-4 h-4" />
-            </a>
-            <a 
-              href="https://www.instagram.com/petsbirdofficial/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer"
-            >
-              <Instagram className="w-4 h-4" />
-            </a>
+        {!isSidebarCollapsed && (
+          <div className="mt-auto pt-6 border-t border-white/5 flex flex-col items-center gap-4">
+            <div className="flex gap-4">
+              <a 
+                href="https://web.facebook.com/PetsBirdOfficial/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a 
+                href="https://www.instagram.com/petsbirdofficial/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
+            </div>
+            <span className="text-[10px] text-slate-600 font-medium">v2.1.0</span>
           </div>
-          <span className="text-[10px] text-slate-600 font-medium">v2.1.0</span>
-        </div>
+        )}
       </aside>
 
+      {/* Bottom Navigation - Mobile Only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center justify-around z-[100] safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <BottomNavItem icon={LayoutDashboard} label="Home" active={activeTab === "Dashboard"} onClick={() => setActiveTab("Dashboard")} />
+        <BottomNavItem icon={Users} label="Birds" active={activeTab === "My Birds"} onClick={() => setActiveTab("My Birds")} />
+        <BottomNavItem icon={Heart} label="Nests" active={activeTab === "Couples"} onClick={() => setActiveTab("Couples")} />
+        <BottomNavItem icon={Settings} label="System" active={activeTab === "Settings"} onClick={() => setActiveTab("Settings")} />
+      </nav>
+
       {/* Main Content */}
-      <main className="flex-1 ml-72 p-10">
-        <header className="flex items-center justify-between mb-12">
+      <main className={`flex-1 transition-all duration-300 p-4 md:p-10 pb-24 md:pb-10 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
+        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-12">
           <div className="flex items-center gap-4">
-            <div className="lg:hidden">
+            <div className="md:hidden">
               <Logo variant="icon" className="w-10 h-10" />
             </div>
             <div>
-              <h2 className="text-4xl font-bold font-display text-slate-800 mb-2">{activeTab}</h2>
-              <p className="text-slate-500 font-medium">Welcome back <span className="text-primary font-bold">{user?.displayName?.split(' ')[0] || "Breeder"}</span>! Here's an overview of your aviary.</p>
+              <h2 className="text-2xl md:text-4xl font-bold font-display text-slate-800 mb-1 md:mb-2">{activeTab}</h2>
+              <p className="text-xs md:text-base text-slate-500 font-medium">Welcome back <span className="text-primary font-bold">{user?.displayName?.split(' ')[0] || "Breeder"}</span>!</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
             <motion.button 
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleInstallClick}
-              className="hidden lg:flex items-center gap-2 bg-slate-100 text-slate-600 px-4 py-3 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white transition-all"
+              className="hidden lg:flex items-center gap-2 bg-slate-100 text-slate-600 px-4 py-3 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white transition-all shrink-0"
             >
               <Download className="w-4 h-4" /> Download App
             </motion.button>
@@ -3714,21 +3757,21 @@ This update is now live for all Premium users. We continue to push the boundarie
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 onClick={handleCreateCouple}
-                className="bg-accent-gold text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-accent-gold/20 flex items-center gap-2"
+                className="bg-accent-gold text-white px-4 md:px-6 py-2.5 md:py-3 rounded-2xl font-bold text-xs md:text-sm shadow-lg shadow-accent-gold/20 flex items-center gap-2 shrink-0"
               >
                 <LinkIcon className="w-4 h-4" /> Create Couple
               </motion.button>
             )}
-            <div className="relative">
+            <div className="relative shrink-0">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-slate-600 relative"
+                className="w-10 h-10 md:w-12 md:h-12 glass rounded-2xl flex items-center justify-center text-slate-600 relative"
               >
                 <Bell className="w-5 h-5" />
                 {notifications.some(n => !n.read) && (
-                  <span className="absolute top-3 right-3 w-2 h-2 bg-accent-orange rounded-full border-2 border-white" />
+                  <span className="absolute top-2.5 right-2.5 md:top-3 md:right-3 w-2 h-2 bg-accent-orange rounded-full border-2 border-white" />
                 )}
               </motion.button>
 
@@ -3797,7 +3840,7 @@ This update is now live for all Premium users. We continue to push the boundarie
                 Share My Stats
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <StatCard 
                 icon={Bird} 
                 value={birds.length} 
@@ -3937,10 +3980,10 @@ This update is now live for all Premium users. We continue to push the boundarie
             </div>
 
             <section>
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-bold font-display text-slate-800">Recent Birds</h3>
+              <div className="flex items-center justify-between mb-6 md:mb-8">
+                <h3 className="text-xl md:text-2xl font-bold font-display text-slate-800">Recent Birds</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {birds.slice(-3).map((bird) => (
                   <BirdCard 
                     key={bird.id} 
@@ -3986,7 +4029,7 @@ This update is now live for all Premium users. We continue to push the boundarie
               </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {birds
                 .filter(b => !cageFilter || b.cage === cageFilter)
                 .map((bird) => (
@@ -4025,7 +4068,7 @@ This update is now live for all Premium users. We continue to push the boundarie
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-2xl font-bold font-display text-slate-800">Breeding Couples</h3>
             </div>
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
               {couples.map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
@@ -4050,60 +4093,60 @@ This update is now live for all Premium users. We continue to push the boundarie
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                       <div className="flex items-center gap-4">
-                        <div className="flex -space-x-4">
-                          <div className="w-14 h-14 rounded-2xl bg-male flex items-center justify-center border-4 border-white shadow-md rotate-[-6deg] hover:rotate-0 transition-transform overflow-hidden">
+                        <div className="flex -space-x-4 shrink-0">
+                          <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-male flex items-center justify-center border-4 border-white shadow-md rotate-[-6deg] hover:rotate-0 transition-transform overflow-hidden">
                             {male?.imageUrl ? (
                               <img src={male.imageUrl} alt={male.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                              <Bird className="w-7 h-7 text-male-text" />
+                              <Bird className="w-6 h-6 md:w-7 md:h-7 text-male-text" />
                             )}
                           </div>
-                          <div className="w-14 h-14 rounded-2xl bg-female flex items-center justify-center border-4 border-white shadow-md rotate-[6deg] hover:rotate-0 transition-transform overflow-hidden">
+                          <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-female flex items-center justify-center border-4 border-white shadow-md rotate-[6deg] hover:rotate-0 transition-transform overflow-hidden">
                             {female?.imageUrl ? (
                               <img src={female.imageUrl} alt={female.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                              <Bird className="w-7 h-7 text-female-text" />
+                              <Bird className="w-6 h-6 md:w-7 md:h-7 text-female-text" />
                             )}
                           </div>
                         </div>
-                        <div>
-                          <h4 className="font-bold font-display text-xl text-slate-800">
+                        <div className="min-w-0">
+                          <h4 className="font-bold font-display text-lg md:text-xl text-slate-800 truncate">
                             {male ? `${male.name}` : 'N/A'} 
-                            <span className="text-slate-300 mx-2">×</span> 
+                            <span className="text-slate-300 mx-1 md:mx-2">×</span> 
                             {female ? `${female.name}` : 'N/A'}
                           </h4>
                           <div className="flex items-center gap-2">
                             <Calendar className="w-3 h-3 text-slate-400" />
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Started {couple.startDate}</p>
+                            <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest">Started {couple.startDate}</p>
                           </div>
                         </div>
                       </div>
-                      <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${
+                      <div className={`self-start md:self-center px-3 md:px-4 py-1.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest ${
                         couple.status === 'Active' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-slate-50 text-slate-500 border border-slate-100'
                       }`}>
                         {couple.status}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-8">
-                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/male flex gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-male/20 shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                      <div className="p-4 md:p-5 rounded-[24px] md:rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/male flex gap-3 md:gap-4">
+                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-male/20 shrink-0 overflow-hidden border-2 border-white shadow-sm">
                           {male?.imageUrl ? (
                             <img src={male.imageUrl} alt={male.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Bird className="w-8 h-8 text-male-text opacity-40" />
+                              <Bird className="w-6 h-6 md:w-8 md:h-8 text-male-text opacity-40" />
                             </div>
                           )}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Male (الذكر)</span>
+                            <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Male (الذكر)</span>
                           </div>
-                          <div className="space-y-2">
-                            <span className="font-bold text-slate-800 block text-sm truncate max-w-[120px]">{male?.name} <span className="text-slate-400 font-medium">#{male?.ring}</span></span>
+                          <div className="space-y-1 md:space-y-2">
+                            <span className="font-bold text-slate-800 block text-xs md:text-sm truncate">{male?.name} <span className="text-slate-400 font-medium">#{male?.ring}</span></span>
                             <div className="flex flex-wrap gap-1">
                               <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(male?.birthYear || '')}</span>
                               <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100 truncate max-w-[60px]">{male?.mutation || 'Normal'}</span>
@@ -4111,22 +4154,22 @@ This update is now live for all Premium users. We continue to push the boundarie
                           </div>
                         </div>
                       </div>
-                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/female flex gap-4">
-                        <div className="w-16 h-16 rounded-2xl bg-female/20 shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                      <div className="p-4 md:p-5 rounded-[24px] md:rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/female flex gap-3 md:gap-4">
+                        <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl bg-female/20 shrink-0 overflow-hidden border-2 border-white shadow-sm">
                           {female?.imageUrl ? (
                             <img src={female.imageUrl} alt={female.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Bird className="w-8 h-8 text-female-text opacity-40" />
+                              <Bird className="w-6 h-6 md:w-8 md:h-8 text-female-text opacity-40" />
                             </div>
                           )}
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Female (الأنثى)</span>
+                            <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Female (الأنثى)</span>
                           </div>
-                          <div className="space-y-2">
-                            <span className="font-bold text-slate-800 block text-sm truncate max-w-[120px]">{female?.name} <span className="text-slate-400 font-medium">#{female?.ring}</span></span>
+                          <div className="space-y-1 md:space-y-2">
+                            <span className="font-bold text-slate-800 block text-xs md:text-sm truncate">{female?.name} <span className="text-slate-400 font-medium">#{female?.ring}</span></span>
                             <div className="flex flex-wrap gap-1">
                               <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(female?.birthYear || '')}</span>
                               <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100 truncate max-w-[60px]">{female?.mutation || 'Normal'}</span>
