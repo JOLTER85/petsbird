@@ -1330,6 +1330,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [birds, setBirds] = useState<BirdData[]>([]);
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
+  const [searchEgg, setSearchEgg] = useState("");
+  const [filterEggStatus, setFilterEggStatus] = useState<string>("All");
 
   const exportPedigreePDF = async (birdId: string) => {
     const bird = birds.find(b => b.id === birdId);
@@ -3557,23 +3559,29 @@ This update is now live for all Premium users. We continue to push the boundarie
                 value={`${eggs.length > 0 ? Math.round((eggs.filter(e => e.isFertile).length / eggs.length) * 100) : 0}%`} 
                 label="Fertility Rate" 
                 colorClass="bg-accent-gold/10 text-accent-gold" 
+                onClick={() => setActiveTab("Eggs")}
               />
               <StatCard 
                 icon={TrendingUp} 
                 value={`${eggs.filter(e => e.isFertile).length > 0 ? Math.round((eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.isFertile).length) * 100) : 0}%`} 
                 label="Hatch Rate" 
                 colorClass="bg-green-500/10 text-green-500" 
+                onClick={() => setActiveTab("Eggs")}
               />
               <StatCard 
                 icon={Activity} 
                 value={Math.round((eggs.filter(e => e.status === 'Completed').length / (eggs.length || 1)) * 100)} 
                 label="Success Score" 
                 colorClass="bg-purple-500/10 text-purple-500" 
+                onClick={() => {
+                  const chartsSection = document.getElementById('charts-section');
+                  if (chartsSection) chartsSection.scrollIntoView({ behavior: 'smooth' });
+                }}
               />
             </div>
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div id="charts-section" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="glass p-8 rounded-[40px] border-white/20 shadow-xl">
                 <h3 className="text-xl font-bold font-display text-slate-800 mb-8">Production Chart</h3>
                 <div className="h-[300px]">
@@ -3884,11 +3892,57 @@ This update is now live for all Premium users. We continue to push the boundarie
 
         {activeTab === "Eggs" && (
           <section>
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold font-display text-slate-800">Egg Tracking</h3>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+              <div>
+                <h3 className="text-3xl font-black font-display text-slate-900">Egg Tracking</h3>
+                <p className="text-slate-500 text-sm font-medium mt-1">Monitor your aviary's productivity in real-time</p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Search Egg ID or Couple..." 
+                    value={searchEgg}
+                    onChange={(e) => setSearchEgg(e.target.value)}
+                    className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-full sm:w-64"
+                  />
+                  <Box className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                </div>
+                
+                <select 
+                  value={filterEggStatus}
+                  onChange={(e) => setFilterEggStatus(e.target.value)}
+                  className="px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-primary/20 transition-all"
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Intact">Intact (Incubating)</option>
+                  <option value="Hatched">Hatched</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Broken">Broken</option>
+                  <option value="Failed">Failed</option>
+                </select>
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {eggs.filter(e => e.status === 'Intact').map((egg) => {
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {eggs
+                .filter(e => {
+                  const statusMatch = filterEggStatus === "All" || e.status === filterEggStatus;
+                  const couple = couples.find(c => c.id === e.coupleId);
+                  const male = birds.find(b => b.id === couple?.maleId);
+                  const female = birds.find(b => b.id === couple?.femaleId);
+                  const searchLower = searchEgg.toLowerCase();
+                  const searchMatch = 
+                    e.eggNumber?.toLowerCase().includes(searchLower) || 
+                    e.id.toLowerCase().includes(searchLower) ||
+                    male?.name.toLowerCase().includes(searchLower) ||
+                    female?.name.toLowerCase().includes(searchLower) ||
+                    male?.ring.toLowerCase().includes(searchLower) ||
+                    female?.ring.toLowerCase().includes(searchLower);
+                  return statusMatch && searchMatch;
+                })
+                .map((egg) => {
                 const couple = couples.find(c => c.id === egg.coupleId);
                 const male = birds.find(b => b.id === couple?.maleId);
                 const female = birds.find(b => b.id === couple?.femaleId);
@@ -3953,83 +4007,89 @@ This update is now live for all Premium users. We continue to push the boundarie
                     </div>
 
                     {/* Egg Shape Container */}
-                    <div className={`relative w-full aspect-[4/5] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border-t border-white/40 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center overflow-hidden
-                      ${isHatchingToday ? 'bg-gradient-to-b from-orange-100 to-amber-100 border-orange-300 ring-4 ring-orange-400/20' : 
-                        isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-50 border-amber-200 animate-pulse' : 
-                        'bg-gradient-to-b from-white to-slate-50 border-slate-100'}
+                    <div className={`relative w-full aspect-[4/5] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border-t border-white/60 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center overflow-hidden
+                      ${isHatchingToday ? 'bg-gradient-to-b from-orange-100 to-amber-200 border-orange-300 ring-8 ring-orange-400/10' : 
+                        isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-100 border-amber-200 animate-pulse' : 
+                        'bg-gradient-to-b from-white to-slate-100 border-slate-100'}
                       ${egg.status === 'Broken' ? 'opacity-60 grayscale' : ''}
+                      ${egg.status === 'Hatched' ? 'bg-gradient-to-b from-green-50 to-emerald-100 border-green-200' : ''}
                     `}>
                       {/* Depth Shadow */}
-                      <div className="absolute inset-0 bg-gradient-to-tr from-black/5 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-black/5 via-transparent to-white/10 pointer-events-none" />
                       
                       {/* Cracking Effect */}
                       {(isNearHatching || isHatchingToday) && (
-                        <div className="absolute inset-0 pointer-events-none opacity-30">
-                          <svg viewBox="0 0 100 120" className="w-full h-full fill-none stroke-amber-900/20 stroke-[0.5]">
+                        <div className="absolute inset-0 pointer-events-none opacity-40">
+                          <svg viewBox="0 0 100 120" className="w-full h-full fill-none stroke-amber-900/30 stroke-[0.8]">
                             <path d="M30,40 L45,55 L35,70" />
                             <path d="M70,30 L60,50 L75,65" />
                             <path d="M50,80 L40,95 L60,110" />
+                            <path d="M20,60 L40,65 L30,80" />
                           </svg>
                         </div>
                       )}
 
                       {/* Status Badge */}
-                      <div className={`absolute top-6 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm z-20 ${
-                        egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-500 text-white' :
-                        egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-red-500 text-white' :
-                        isHatchingToday ? 'bg-orange-500 text-white animate-bounce' :
+                      <div className={`absolute top-6 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg z-20 ${
+                        egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-600 text-white' :
+                        egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-red-600 text-white' :
+                        isHatchingToday ? 'bg-orange-600 text-white animate-bounce' :
                         'bg-primary text-white'
                       }`}>
-                        {isHatchingToday ? 'Hatching Today! 🥚🐣' : egg.status}
+                        {isHatchingToday ? 'Hatching Now! 🐣' : egg.status}
                       </div>
 
                       {/* Egg Content */}
                       <div className="space-y-4 relative z-10 w-full">
-                        <div className="relative w-16 h-16 mx-auto mb-4">
-                          <div className={`w-16 h-16 rounded-2xl bg-white shadow-inner flex items-center justify-center border ${isHatchingToday ? 'border-orange-200' : 'border-slate-50'}`}>
-                            <EggIcon className={`w-8 h-8 ${isHatchingToday ? 'text-orange-500' : 'text-accent-orange'}`} />
+                        <div className="relative w-20 h-20 mx-auto mb-4">
+                          <div className={`w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center border-2 ${isHatchingToday ? 'border-orange-300' : 'border-slate-100'}`}>
+                            {egg.status === 'Hatched' ? (
+                              <Bird className="w-10 h-10 text-green-600 animate-pulse" />
+                            ) : (
+                              <EggIcon className={`w-10 h-10 ${isHatchingToday ? 'text-orange-600' : 'text-accent-orange'}`} />
+                            )}
                           </div>
                           {daysToHatch !== null && daysToHatch > 0 && (
-                            <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent-orange text-white rounded-full flex items-center justify-center text-[10px] font-black border-4 border-white shadow-lg animate-bounce">
-                              {daysToHatch}
+                            <div className="absolute -top-3 -right-3 w-10 h-10 bg-accent-orange text-white rounded-full flex items-center justify-center text-xs font-black border-4 border-white shadow-xl animate-bounce">
+                              {daysToHatch}d
                             </div>
                           )}
                         </div>
                         
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Couple</p>
-                          <div className="bg-slate-50 rounded-xl p-2 border border-slate-100">
-                            <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                              {male ? male.name : 'N/A'} <span className="text-slate-400 font-medium">({male?.ring})</span>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Breeding Pair</p>
+                          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-3 border border-slate-200 shadow-sm">
+                            <p className="text-xs font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
+                              <span className="text-blue-500">♂</span> {male ? male.name : 'N/A'}
                             </p>
-                            <div className="flex items-center justify-center my-1">
+                            <div className="flex items-center justify-center my-1.5">
                               <div className="h-[1px] flex-1 bg-slate-200" />
-                              <span className="text-[10px] text-slate-300 mx-2 font-black">×</span>
+                              <Heart className="w-2 h-2 text-red-400 mx-2 fill-red-400" />
                               <div className="h-[1px] flex-1 bg-slate-200" />
                             </div>
-                            <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                              {female ? female.name : 'N/A'} <span className="text-slate-400 font-medium">({female?.ring})</span>
+                            <p className="text-xs font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
+                              <span className="text-pink-500">♀</span> {female ? female.name : 'N/A'}
                             </p>
                           </div>
                         </div>
 
                         <div className="space-y-1">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Egg ID</p>
-                          <p className="text-2xl font-black font-display text-primary">#{egg.eggNumber || egg.id.slice(-3)}</p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Identification</p>
+                          <p className="text-3xl font-black font-display text-primary drop-shadow-sm">#{egg.eggNumber || egg.id.slice(-3)}</p>
                         </div>
 
                         {/* Progress Bar */}
                         {egg.status === 'Intact' && (
-                          <div className="space-y-2 pt-2">
-                            <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-slate-400">
-                              <span>Incubation</span>
-                              <span>{progress}%</span>
+                          <div className="space-y-2.5 pt-2">
+                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-500">
+                              <span>Incubation Progress</span>
+                              <span className={progress > 80 ? 'text-orange-600' : ''}>{progress}%</span>
                             </div>
-                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-2.5 w-full bg-slate-200/50 rounded-full overflow-hidden p-0.5 border border-slate-100">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${progress}%` }}
-                                className={`h-full ${isHatchingToday ? 'bg-orange-500' : 'bg-primary'}`}
+                                className={`h-full rounded-full ${isHatchingToday ? 'bg-gradient-to-r from-orange-500 to-amber-500' : 'bg-gradient-to-r from-primary to-blue-400'}`}
                               />
                             </div>
                           </div>
