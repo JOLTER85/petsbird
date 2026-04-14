@@ -869,6 +869,163 @@ function AppContent() {
   const [showApp, setShowApp] = useState(false);
   const [landingTab, setLandingTab] = useState("Home");
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
+
+  const NEWS_ARTICLES = [
+    { 
+      id: "new-mutation-canary",
+      title: "New Mutation Discovered in Canary Species", 
+      date: "April 5, 2026", 
+      desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
+      img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
+      content: `A groundbreaking discovery has been made in the world of aviculture. A previously undocumented color mutation has been identified in a population of Gloster Canaries in Western Europe.
+
+Experts describe the mutation as a unique 'iridescent frost' effect on the feathers, which appears to be inherited as a recessive trait. This discovery is expected to spark significant interest among high-end exhibitors.
+
+Breeding trials are currently underway to stabilize the mutation and understand its full genetic potential. PetsBird users will be the first to receive the updated genetic mapping for this new trait.`
+    },
+    { 
+      id: "global-bird-expo-2026",
+      title: "Global Bird Expo 2026 Announced", 
+      date: "March 28, 2026", 
+      desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
+      img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
+      content: `The International Avian Federation has officially announced the dates for the Global Bird Expo 2026. This year's event promises to be the largest in history, with Madrid serving as the host city.
+
+The expo will feature specialized pavilions for different bird families, workshops led by world-renowned geneticists, and a massive marketplace for rare species.
+
+PetsBird will have a dedicated booth at the event, showcasing our latest AI-driven management tools. We invite all our users to join us for exclusive live demonstrations and networking opportunities.`
+    },
+    { 
+      id: "ai-genetic-mapping-advances",
+      title: "Advances in AI Genetic Mapping", 
+      date: "March 15, 2026", 
+      desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
+      img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
+      content: `Our engineering team has achieved a major milestone in AI-driven genetics. The latest update to the PetsBird engine incorporates a new neural network architecture specifically optimized for complex parrot mutations.
+
+By analyzing over 500,000 successful breeding records, the AI can now predict offspring outcomes with 15% higher accuracy for species like the African Grey and various Macaw mutations.
+
+This update is now live for all Premium users. We continue to push the boundaries of what's possible in digital aviary management to help you breed with absolute confidence.`
+    }
+  ];
+
+  const ADVICE_ARTICLES = [
+    { 
+      id: "cockatiel-breeding-guide",
+      title: "Cockatiel Breeding Secrets: How I Successfully Raised 10 Chicks in One Month", 
+      category: "Breeding Guide", 
+      desc: "How I successfully raised 10 chicks in one month in my Morocco bird room.",
+      icon: "🦜",
+      img: "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=600",
+      content: `### Introduction
+In March 2026, my 70m² bird room in Morocco witnessed an extraordinary success. This guide shares the secrets behind raising 10 healthy cockatiel chicks in a single month.
+
+### The Breeding Environment
+Preparation is key. Ensure your bird room is optimized:
+- **Temperature:** Maintain a stable 22-25°C.
+- **Lighting:** 12-14 hours of full-spectrum light to simulate spring.
+- **Humidity:** 50-60% to prevent egg dehydration.
+
+### Nutrition Strategy
+Before laying, focus on high-quality fuel:
+- **Calcium:** Cuttlebone and mineral blocks are mandatory.
+- **Protein:** Egg food and sprouted seeds provide the building blocks for strong shells and healthy embryos.
+
+### Step-by-Step Success
+From the first egg to the 10th chick, monitoring is vital. Check nests daily but minimize disturbance. Ensure parents are feeding all chicks equally.
+
+### Conclusion
+Maintaining high productivity in large bird rooms requires discipline, hygiene, and a deep understanding of your birds' needs.`
+    },
+    { 
+      id: "feeding-15-day-old-chicks",
+      title: "The Ultimate Feeding Chart for 15-Day-Old Bird Chicks: Faster Growth & Stronger Immunity", 
+      category: "Nutrition", 
+      desc: "The ultimate feeding chart for faster growth and stronger immunity.",
+      icon: "🥣",
+      img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
+      content: `### Why 15 Days is Critical
+At 15 days, chicks enter a massive growth spurt. Their nutritional demands peak as feathers begin to emerge and their immune systems develop.
+
+### The Nutrition Mix
+Use a high-quality hand-rearing formula. Consider supplements like **Muta-Vit** to support feather development and overall vitality.
+
+### Feeding Frequency
+- **Frequency:** 4-5 times per day.
+- **Temperature:** The formula MUST be between 38°C and 40°C. Cold formula can cause crop stasis.
+
+### Monitoring Crops
+A healthy crop should empty almost completely between feedings. If it remains full, the chick may be having digestive issues.
+
+### Common Mistakes
+- **Overfeeding:** Can stretch the crop and cause permanent damage.
+- **Cold Formula:** Leads to slow digestion and potential bacterial growth.`
+    },
+    { 
+      id: "preventing-spring-chick-mortality",
+      title: "Troubleshooting Spring Breeding: How to Prevent Chick Mortality in the Nest", 
+      category: "Health", 
+      desc: "Troubleshooting spring breeding and keeping your nest healthy.",
+      icon: "🛡️",
+      img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
+      content: `### The Spring Challenge
+Spring brings fluctuating temperatures and increased bacterial activity. These factors can be deadly for vulnerable chicks.
+
+### Hygiene & Prevention
+Cleanliness is your first line of defense. Use products like **Teccox** to prevent Coccidiosis and other common parasites that thrive in nesting material.
+
+### The "Sweating Sickness" & Humidity
+Excessive humidity in the nest box can lead to "sweating sickness." Ensure proper ventilation to keep the nesting material dry but not brittle.
+
+### Parental Care Issues
+Watch for parents plucking feathers or stopping feeding. This often indicates stress or underlying health issues in the parents themselves.
+
+### Daily Checklist
+- Check all chicks for full crops.
+- Inspect nesting material for dampness.
+- Monitor parent behavior for signs of aggression or neglect.`
+    },
+    { 
+      id: "ultimate-breeding-guide",
+      title: "The Ultimate Breeding Guide", 
+      category: "Education", 
+      desc: "Ensure your birds get the right balance of seeds, greens, and calcium.",
+      icon: "🍎",
+      img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
+      content: `Successful breeding starts with preparation. This guide covers everything from selecting the right pairs based on genetic compatibility to preparing the ideal nesting environment.
+
+Key factors include maintaining a stable temperature, providing high-quality nesting materials, and ensuring your birds are in peak physical condition before the season begins.
+
+We also explore the importance of light cycles and how they trigger breeding instincts in different species like Canaries and Cockatiels.`
+    },
+    { 
+      id: "nutrition-peak-performance",
+      title: "Nutrition for Peak Performance", 
+      category: "Care", 
+      desc: "Diet is the foundation of a healthy aviary.",
+      icon: "🥗",
+      img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
+      content: `Diet is the foundation of a healthy aviary. During the breeding season, birds require increased protein, calcium, and essential vitamins to produce healthy eggs and strong chicks.
+
+Learn about the benefits of sprouted seeds, egg food, and fresh vegetables. We provide a seasonal feeding schedule that adapts to the specific needs of your birds throughout the year.
+
+Proper hydration and mineral supplements are also discussed to prevent common issues like egg binding.`
+    },
+    { 
+      id: "mastering-market-trends",
+      title: "Mastering Market Trends", 
+      category: "Business", 
+      desc: "The world of rare bird mutations is constantly evolving.",
+      icon: "📈",
+      img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
+      content: `The world of rare bird mutations is constantly evolving. To succeed as a professional breeder, you must understand which mutations are currently in high demand and how to price your birds competitively.
+
+This article analyzes global market data to identify emerging trends in the Cockatiel and Lovebird markets. We also provide tips on how to build a reputable brand as a breeder.
+
+Networking with other professionals and maintaining detailed lineage records are key to increasing the value of your aviary.`
+    }
+  ];
+
   const t = TRANSLATIONS[language];
 
   useEffect(() => {
@@ -885,82 +1042,9 @@ function AppContent() {
         let article = null;
         
         if (type === 'News') {
-          const news = [
-            { 
-              id: "new-mutation-canary",
-              title: "New Mutation Discovered in Canary Species", 
-              date: "April 5, 2026", 
-              desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
-              img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
-              content: `A groundbreaking discovery has been made in the world of aviculture. A previously undocumented color mutation has been identified in a population of Gloster Canaries in Western Europe.
-
-Experts describe the mutation as a unique 'iridescent frost' effect on the feathers, which appears to be inherited as a recessive trait. This discovery is expected to spark significant interest among high-end exhibitors.
-
-Breeding trials are currently underway to stabilize the mutation and understand its full genetic potential. PetsBird users will be the first to receive the updated genetic mapping for this new trait.`
-            },
-            { 
-              id: "global-bird-expo-2026",
-              title: "Global Bird Expo 2026 Announced", 
-              date: "March 28, 2026", 
-              desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
-              img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
-              content: `The International Avian Federation has officially announced the dates for the Global Bird Expo 2026. This year's event promises to be the largest in history, with Madrid serving as the host city.
-
-The expo will feature specialized pavilions for different bird families, workshops led by world-renowned geneticists, and a massive marketplace for rare species.
-
-PetsBird will have a dedicated booth at the event, showcasing our latest AI-driven management tools. We invite all our users to join us for exclusive live demonstrations and networking opportunities.`
-            },
-            { 
-              id: "ai-genetic-mapping-advances",
-              title: "Advances in AI Genetic Mapping", 
-              date: "March 15, 2026", 
-              desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
-              img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
-              content: `Our engineering team has achieved a major milestone in AI-driven genetics. The latest update to the PetsBird engine incorporates a new neural network architecture specifically optimized for complex parrot mutations.
-
-By analyzing over 500,000 successful breeding records, the AI can now predict offspring outcomes with 15% higher accuracy for species like the African Grey and various Macaw mutations.
-
-This update is now live for all Premium users. We continue to push the boundaries of what's possible in digital aviary management to help you breed with absolute confidence.`
-            }
-          ];
-          article = news.find(a => a.id === id);
+          article = NEWS_ARTICLES.find(a => a.id === id);
         } else if (type === 'Advice') {
-          const advice = [
-            { 
-              id: "ultimate-breeding-guide",
-              title: "The Ultimate Breeding Guide", 
-              category: "Education", 
-              img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
-              content: `Successful breeding starts with preparation. This guide covers everything from selecting the right pairs based on genetic compatibility to preparing the ideal nesting environment.
-
-Key factors include maintaining a stable temperature, providing high-quality nesting materials, and ensuring your birds are in peak physical condition before the season begins.
-
-We also explore the importance of light cycles and how they trigger breeding instincts in different species like Canaries and Cockatiels.`
-            },
-            { 
-              id: "nutrition-peak-performance",
-              title: "Nutrition for Peak Performance", 
-              category: "Care", 
-              img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
-              content: `Diet is the foundation of a healthy aviary. During the breeding season, birds require increased protein, calcium, and essential vitamins to produce healthy eggs and strong chicks.
-
-Learn about the benefits of sprouted seeds, egg food, and fresh vegetables. We provide a seasonal feeding schedule that adapts to the specific needs of your birds throughout the year.
-
-Proper hydration and mineral supplements are also discussed to prevent common issues like egg binding.`
-            },
-            { 
-              id: "mastering-market-trends",
-              title: "Mastering Market Trends", 
-              category: "Business", 
-              img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
-              content: `The world of rare bird mutations is constantly evolving. To succeed as a professional breeder, you must understand which mutations are currently in high demand and how to price your birds competitively.
-
-This article analyzes global market data to identify emerging trends in the Cockatiel and Lovebird markets. We also provide tips on how to build a reputable brand as a breeder.
-
-Networking with other professionals and maintaining detailed lineage records are key to increasing the value of your aviary.`
-            }
-          ];
-          article = advice.find(a => a.id === id);
+          article = ADVICE_ARTICLES.find(a => a.id === id);
         } else if (type === 'Features') {
           const features = [
             {
@@ -1094,9 +1178,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       window.open(window.location.origin + path, '_blank');
     } else {
       window.history.pushState({}, '', path);
-      const validTabs = ["Home", "Features", "Genetics", "Advice", "About", "News", "Terms", "Privacy", "Contact", "Marketplace"];
-      setLandingTab(validTabs.includes(tab) ? tab : "Home");
-      window.scrollTo(0, 0);
+      // Trigger handleNavigation manually since pushState doesn't trigger popstate
+      const navEvent = new Event('popstate');
+      window.dispatchEvent(navEvent);
     }
   };
 
@@ -1104,7 +1188,11 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [activeTab, setActiveTab] = useState("Dashboard");
 
   const BottomNav = () => (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-3 flex items-center justify-between z-[100] md:hidden">
+    <motion.div 
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-3 flex items-center justify-between z-[100] md:hidden"
+    >
       {[
         { id: "Dashboard", icon: LayoutDashboard, label: t.home },
         { id: "My Birds", icon: Bird, label: t.birds },
@@ -1120,7 +1208,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
         </button>
       ))}
-    </div>
+    </motion.div>
   );
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -3300,48 +3388,11 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               <p className="text-xl text-slate-500 max-w-2xl mx-auto">Expert tips and professional advice to help you succeed in your breeding journey.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                { 
-                  id: "ultimate-breeding-guide",
-                  title: "The Ultimate Breeding Guide", 
-                  category: "Education", 
-                  img: "https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600",
-                  content: `Successful breeding starts with preparation. This guide covers everything from selecting the right pairs based on genetic compatibility to preparing the ideal nesting environment.
-
-Key factors include maintaining a stable temperature, providing high-quality nesting materials, and ensuring your birds are in peak physical condition before the season begins.
-
-We also explore the importance of light cycles and how they trigger breeding instincts in different species like Canaries and Cockatiels.`
-                },
-                { 
-                  id: "nutrition-peak-performance",
-                  title: "Nutrition for Peak Performance", 
-                  category: "Care", 
-                  img: "https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=600",
-                  content: `Diet is the foundation of a healthy aviary. During the breeding season, birds require increased protein, calcium, and essential vitamins to produce healthy eggs and strong chicks.
-
-Learn about the benefits of sprouted seeds, egg food, and fresh vegetables. We provide a seasonal feeding schedule that adapts to the specific needs of your birds throughout the year.
-
-Proper hydration and mineral supplements are also discussed to prevent common issues like egg binding.`
-                },
-                { 
-                  id: "mastering-market-trends",
-                  title: "Mastering Market Trends", 
-                  category: "Business", 
-                  img: "https://images.unsplash.com/photo-1520808663317-647b476a81b9?auto=format&fit=crop&q=80&w=600",
-                  content: `The world of rare bird mutations is constantly evolving. To succeed as a professional breeder, you must understand which mutations are currently in high demand and how to price your birds competitively.
-
-This article analyzes global market data to identify emerging trends in the Cockatiel and Lovebird markets. We also provide tips on how to build a reputable brand as a breeder.
-
-Networking with other professionals and maintaining detailed lineage records are key to increasing the value of your aviary.`
-                }
-              ].map((r, i) => (
+              {ADVICE_ARTICLES.map((r, i) => (
                 <div 
                   key={i} 
                   className="group cursor-pointer"
-                  onClick={() => {
-                    const articlePath = `/Advice/${r.id}`;
-                    window.open(window.location.origin + articlePath, '_blank');
-                  }}
+                  onClick={() => navigateToTab(`Advice/${r.id}`)}
                 >
                   <div className="aspect-[4/3] rounded-[40px] overflow-hidden mb-6 relative">
                     <img 
@@ -3378,51 +3429,11 @@ Networking with other professionals and maintaining detailed lineage records are
               <p className="text-xl text-slate-500 max-w-2xl mx-auto">Stay updated with the latest trends and discoveries in the world of birds.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                { 
-                  id: "new-mutation-canary",
-                  title: "New Mutation Discovered in Canary Species", 
-                  date: "April 5, 2026", 
-                  desc: "Researchers have identified a rare color mutation in the Gloster Canary, opening new possibilities for breeders.",
-                  img: "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600",
-                  content: `A groundbreaking discovery has been made in the world of aviculture. A previously undocumented color mutation has been identified in a population of Gloster Canaries in Western Europe.
-
-Experts describe the mutation as a unique 'iridescent frost' effect on the feathers, which appears to be inherited as a recessive trait. This discovery is expected to spark significant interest among high-end exhibitors.
-
-Breeding trials are currently underway to stabilize the mutation and understand its full genetic potential. PetsBird users will be the first to receive the updated genetic mapping for this new trait.`
-                },
-                { 
-                  id: "global-bird-expo-2026",
-                  title: "Global Bird Expo 2026 Announced", 
-                  date: "March 28, 2026", 
-                  desc: "The world's largest aviculture event will take place in Madrid this October, featuring over 500 exhibitors.",
-                  img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
-                  content: `The International Avian Federation has officially announced the dates for the Global Bird Expo 2026. This year's event promises to be the largest in history, with Madrid serving as the host city.
-
-The expo will feature specialized pavilions for different bird families, workshops led by world-renowned geneticists, and a massive marketplace for rare species.
-
-PetsBird will have a dedicated booth at the event, showcasing our latest AI-driven management tools. We invite all our users to join us for exclusive live demonstrations and networking opportunities.`
-                },
-                { 
-                  id: "ai-genetic-mapping-advances",
-                  title: "Advances in AI Genetic Mapping", 
-                  date: "March 15, 2026", 
-                  desc: "PetsBird's latest update improves mutation prediction accuracy for rare parrot species by 15%.",
-                  img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=600",
-                  content: `Our engineering team has achieved a major milestone in AI-driven genetics. The latest update to the PetsBird engine incorporates a new neural network architecture specifically optimized for complex parrot mutations.
-
-By analyzing over 500,000 successful breeding records, the AI can now predict offspring outcomes with 15% higher accuracy for species like the African Grey and various Macaw mutations.
-
-This update is now live for all Premium users. We continue to push the boundaries of what's possible in digital aviary management to help you breed with absolute confidence.`
-                }
-              ].map((n, i) => (
+              {NEWS_ARTICLES.map((n, i) => (
                 <div 
                   key={i} 
                   className="glass p-8 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group cursor-pointer"
-                  onClick={() => {
-                    const articlePath = `/News/${n.id}`;
-                    window.open(window.location.origin + articlePath, '_blank');
-                  }}
+                  onClick={() => navigateToTab(`News/${n.id}`)}
                 >
                   <div className="aspect-video rounded-3xl overflow-hidden mb-6">
                     <img src={n.img} alt={n.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
@@ -3654,7 +3665,7 @@ This update is now live for all Premium users. We continue to push the boundarie
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
                     <li onClick={() => navigateToTab("Features", true)} className="hover:text-primary cursor-pointer">Features</li>
                     <li onClick={() => navigateToTab("Genetics", true)} className="hover:text-primary cursor-pointer">AI Genetics</li>
-                    <li onClick={() => navigateToTab("Advice", true)} className="hover:text-primary cursor-pointer">Advice</li>
+                    <li onClick={() => navigateToTab("Advice", false)} className="hover:text-primary cursor-pointer">Advice</li>
                     <li onClick={() => navigateToTab("Marketplace", true)} className="hover:text-primary cursor-pointer">Marketplace</li>
                   </ul>
                 </div>
@@ -4849,15 +4860,14 @@ This update is now live for all Premium users. We continue to push the boundarie
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[
-                { title: "Nutrition Guide", desc: "Ensure your birds get the right balance of seeds, greens, and calcium.", icon: "🍎" },
-                { title: "Hygiene Protocol", desc: "Clean cages weekly to prevent respiratory infections and mites.", icon: "🧼" },
-                { title: "Breeding Season", desc: "How to prepare your couples for the best breeding results.", icon: "🥚" },
-                { title: "Stress Management", desc: "Keep noise levels low and provide a stable environment.", icon: "🧘" }
-              ].map((item, i) => (
-                <div key={i} className="glass p-8 rounded-[32px] border-white/20 hover:shadow-xl transition-all">
-                  <div className="text-4xl mb-4">{item.icon}</div>
-                  <h4 className="text-xl font-bold mb-2">{item.title}</h4>
+              {ADVICE_ARTICLES.map((item, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => navigateToTab(`Advice/${item.id}`)}
+                  className="glass p-8 rounded-[32px] border-white/20 hover:shadow-xl transition-all cursor-pointer group"
+                >
+                  <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{item.icon}</div>
+                  <h4 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{item.title}</h4>
                   <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
                 </div>
               ))}
