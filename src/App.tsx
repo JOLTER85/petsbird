@@ -1622,6 +1622,27 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       const birdData = { ...newBird, id, imageUrl, userId: user.uid };
       const path = `users_data/${user.uid}/birds/${id}`;
       await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
+      
+      setNotifications([
+        { 
+          id: Date.now(), 
+          title: "Bird Added", 
+          message: `تمت إضافة ${newBird.name} بنجاح!`, 
+          time: "Just now", 
+          read: false 
+        },
+        ...notifications
+      ]);
+
+      setConfirmModal({
+        isOpen: true,
+        title: "Success",
+        message: "تمت إضافة الطائر الجديد بنجاح!",
+        variant: 'success',
+        confirmText: "حسناً",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
+
       setIsModalOpen(false);
       setSelectedFile(null);
       localStorage.removeItem('petsbird_draft_bird');
@@ -1647,6 +1668,27 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
       const path = `users_data/${user.uid}/birds/${editingBirdId}`;
       await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird, imageUrl });
+      
+      setNotifications([
+        { 
+          id: Date.now(), 
+          title: "Bird Updated", 
+          message: `تم تحديث بيانات ${newBird.name} بنجاح!`, 
+          time: "Just now", 
+          read: false 
+        },
+        ...notifications
+      ]);
+
+      setConfirmModal({
+        isOpen: true,
+        title: "Success",
+        message: "تم تحديث بيانات الطائر بنجاح!",
+        variant: 'success',
+        confirmText: "حسناً",
+        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+      });
+
       setIsModalOpen(false);
       setEditingBirdId(null);
       setSelectedFile(null);
