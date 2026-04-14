@@ -295,6 +295,46 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
+const calculateDetailedAge = (birthDateStr: string) => {
+  if (!birthDateStr) return "N/A";
+  
+  const today = new Date();
+  
+  // Handle legacy year-only format (4 digits)
+  if (birthDateStr.length === 4 && !isNaN(parseInt(birthDateStr))) {
+    const years = today.getFullYear() - parseInt(birthDateStr);
+    return years > 0 ? `${years} Year${years > 1 ? 's' : ''}` : "0 Years";
+  }
+
+  const birthDate = new Date(birthDateStr);
+  if (isNaN(birthDate.getTime())) return birthDateStr;
+  
+  let years = today.getFullYear() - birthDate.getFullYear();
+  let months = today.getMonth() - birthDate.getMonth();
+  let days = today.getDate() - birthDate.getDate();
+  
+  if (days < 0) {
+    months--;
+    const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+  
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+  
+  if (years === 0 && months === 0) {
+    return `${days} Day${days !== 1 ? 's' : ''}`;
+  }
+  
+  let parts = [];
+  if (years > 0) parts.push(`${years} Year${years > 1 ? 's' : ''}`);
+  if (months > 0) parts.push(`${months} Month${months > 1 ? 's' : ''}`);
+  
+  return parts.join(" & ") || "Newborn";
+};
+
 const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void }) => {
   // Debugging log to check URL validity
   useEffect(() => {
@@ -306,9 +346,7 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
   const cleanImageUrl = imageUrl?.trim();
 
   // Refined Age Display
-  const currentYear = new Date().getFullYear();
-  const yearsOld = currentYear - parseInt(birthYear);
-  const ageDisplay = yearsOld > 0 ? `${yearsOld} Year${yearsOld > 1 ? 's' : ''}` : `${age} Days`;
+  const ageDisplay = calculateDetailedAge(birthYear);
 
   // Status Indicator Config
   const getStatusConfig = (status: string) => {
@@ -1486,7 +1524,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     doc.text(`Species: ${bird.species}`, 20, 78);
     doc.text(`Mutation: ${bird.mutation}`, 20, 86);
     doc.text(`Gender: ${bird.gender}`, 20, 94);
-    doc.text(`Birth Year: ${bird.birthYear}`, 20, 102);
+    doc.text(`Birth Date: ${bird.birthYear}`, 20, 102);
 
     // Family Tree Section
     doc.setDrawColor(primaryColor);
@@ -1633,7 +1671,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     species: SPECIES_LIST[0].name,
     gender: "Male" as "Male" | "Female",
     age: 0,
-    birthYear: new Date().getFullYear().toString(),
+    birthYear: new Date().toISOString().split('T')[0],
     date: new Date().toISOString().split('T')[0],
     cage: "1",
     mutation: "",
@@ -1749,7 +1787,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
         setSelectedFile(null);
         localStorage.removeItem('petsbird_draft_bird');
-        setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
+        setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `users_data/${user.uid}/birds`);
       } finally {
@@ -1826,7 +1864,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         species: bird.species || SPECIES_LIST[0].name,
         gender: bird.gender || "Male",
         age: bird.age || 0,
-        birthYear: bird.birthYear || new Date().getFullYear().toString(),
+        birthYear: bird.birthYear || new Date().toISOString().split('T')[0],
         date: bird.date || new Date().toLocaleDateString(),
         cage: bird.cage || "1",
         mutation: bird.mutation || "",
@@ -1841,7 +1879,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         species: SPECIES_LIST[0].name,
         gender: "Male",
         age: 0,
-        birthYear: new Date().getFullYear().toString(),
+        birthYear: new Date().toISOString().split('T')[0],
         date: new Date().toLocaleDateString(),
         cage: "1",
         mutation: "",
@@ -4040,7 +4078,7 @@ This update is now live for all Premium users. We continue to push the boundarie
                         <div className="space-y-2">
                           <span className="font-bold text-slate-800 block text-sm">{male?.name} <span className="text-slate-400 font-medium">#{male?.ring}</span></span>
                           <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.birthYear}</span>
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(male?.birthYear || '')}</span>
                             <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.mutation || 'Normal'}</span>
                             <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.species}</span>
                           </div>
@@ -4054,7 +4092,7 @@ This update is now live for all Premium users. We continue to push the boundarie
                         <div className="space-y-2">
                           <span className="font-bold text-slate-800 block text-sm">{female?.name} <span className="text-slate-400 font-medium">#{female?.ring}</span></span>
                           <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.birthYear}</span>
+                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(female?.birthYear || '')}</span>
                             <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.mutation || 'Normal'}</span>
                             <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.species}</span>
                           </div>
@@ -4879,12 +4917,11 @@ This update is now live for all Premium users. We continue to push the boundarie
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Birth Year (سنة الميلاد)</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Birth Date (تاريخ الميلاد)</label>
                     <input 
-                      type="text" 
+                      type="date" 
                       value={newBird.birthYear}
                       onChange={(e) => setNewBird({...newBird, birthYear: e.target.value})}
-                      placeholder="e.g. 2024"
                       className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
                     />
                   </div>
