@@ -332,6 +332,11 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
           loading="lazy"
           className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
+          }}
         />
       ) : (
         <div className="flex flex-col items-center justify-center text-slate-300">
@@ -654,8 +659,8 @@ const uploadImageWithTimeout = async (file: File, userId: string): Promise<strin
     const storageRef = ref(storage, `birds/${userId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`);
     
     uploadBytes(storageRef, file)
-      .then((snapshot) => getDownloadURL(snapshot.ref))
-      .then((url) => {
+      .then(async (snapshot) => {
+        const url = await getDownloadURL(snapshot.ref);
         clearTimeout(timeoutId);
         resolve(url);
       })
@@ -4804,7 +4809,16 @@ This update is now live for all Premium users. We continue to push the boundarie
                       {selectedFile ? (
                         <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
                       ) : newBird.imageUrl ? (
-                        <img src={newBird.imageUrl} alt="Current" className="w-full h-full object-cover" />
+                        <img 
+                          src={newBird.imageUrl} 
+                          alt="Current" 
+                          className="w-full h-full object-cover" 
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.onerror = null;
+                            target.src = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
+                          }}
+                        />
                       ) : (
                         <Camera className="w-8 h-8 text-slate-300" />
                       )}
