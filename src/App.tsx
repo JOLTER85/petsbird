@@ -76,7 +76,9 @@ import {
   ArrowRight,
   Share2,
   Facebook,
-  Instagram
+  Instagram,
+  CheckCircle2,
+  Moon
 } from "lucide-react";
 
 import { 
@@ -293,7 +295,7 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void }) => {
+const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void }) => {
   // Debugging log to check URL validity
   useEffect(() => {
     if (imageUrl) {
@@ -302,6 +304,27 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
   }, [imageUrl, name]);
 
   const cleanImageUrl = imageUrl?.trim();
+
+  // Refined Age Display
+  const currentYear = new Date().getFullYear();
+  const yearsOld = currentYear - parseInt(birthYear);
+  const ageDisplay = yearsOld > 0 ? `${yearsOld} Year${yearsOld > 1 ? 's' : ''}` : `${age} Days`;
+
+  // Status Indicator Config
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'Ready':
+        return { icon: <CheckCircle2 className="w-3 h-3" />, color: 'bg-green-500', text: 'Ready', label: 'For breeding' };
+      case 'Resting':
+        return { icon: <Moon className="w-3 h-3" />, color: 'bg-blue-500', text: 'Resting', label: 'Non-breeding' };
+      case 'Paired':
+        return { icon: <Heart className="w-3 h-3" />, color: 'bg-orange-500', text: 'Paired', label: 'Linked' };
+      default:
+        return { icon: <Info className="w-3 h-3" />, color: 'bg-slate-400', text: status || 'Unknown', label: '' };
+    }
+  };
+
+  const statusConfig = getStatusConfig(status || '');
 
   return (
     <motion.div
@@ -365,71 +388,79 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
           {gender}
         </div>
         {status && (
-        <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white shadow-lg shadow-amber-500/20">
-          {status}
-        </div>
-      )}
-      <button 
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete?.(id);
-        }}
-        className="absolute bottom-4 right-4 p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:text-red-500 hover:bg-white z-10 shadow-sm"
-      >
-        <X className="w-4 h-4" />
-      </button>
-      {isSelected && (
-        <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-          <div className="bg-primary text-white p-2 rounded-full">
-            <Plus className="w-6 h-6" />
+          <div className={`absolute bottom-4 left-4 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusConfig.color} text-white shadow-lg flex items-center gap-1.5`}>
+            {statusConfig.icon}
+            <span>{statusConfig.text}</span>
           </div>
-        </div>
-      )}
-    </div>
-    
-    <div className="space-y-4">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-xl font-bold font-display text-slate-800">{name}</h3>
-          <span className="text-xs font-bold text-primary/40 font-display">({ring})</span>
-        </div>
-        <p className="text-sm text-slate-500 font-medium">{species}</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-50">
-        <div className="flex items-center gap-2 text-slate-400">
-          <Tag className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-medium">No Tag</span>
-        </div>
-        <div className="flex items-center gap-2 text-slate-400">
-          <Clock className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-medium">{age} days</span>
-        </div>
-        <div className="flex items-center gap-2 text-slate-400">
-          <Calendar className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-medium">Age: {new Date().getFullYear() - parseInt(birthYear)} years</span>
-        </div>
-        <div className="flex items-center gap-2 text-slate-400">
-          <MapPin className="w-3.5 h-3.5" />
-          <span className="text-[11px] font-medium">Cage {cage}</span>
-        </div>
-      </div>
-
-      <div className="pt-4 mt-2 border-t border-slate-50">
+        )}
         <button 
           onClick={(e) => {
             e.stopPropagation();
-            onViewPedigree?.(id);
+            onDelete?.(id);
           }}
-          className="w-full py-3 bg-accent-gold/10 text-accent-gold rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent-gold hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm"
+          className="absolute bottom-4 right-4 p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:text-red-500 hover:bg-white z-10 shadow-sm"
         >
-          <GitBranch className="w-4 h-4" />
-          View Pedigree Tree
+          <X className="w-4 h-4" />
         </button>
+        {isSelected && (
+          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+            <div className="bg-primary text-white p-2 rounded-full">
+              <Plus className="w-6 h-6" />
+            </div>
+          </div>
+        )}
       </div>
-    </div>
-  </motion.div>
-);
+      
+      <div className="space-y-4">
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-xl font-bold font-display text-slate-800 truncate max-w-[140px]">{name}</h3>
+            {ring && ring !== 'No Tag' && ring !== 'Pending' ? (
+              <span className="px-2 py-0.5 bg-[#0D2E2E] text-accent-gold text-[10px] font-black rounded-lg border border-accent-gold/20 shadow-sm">
+                {ring}
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No Tag</span>
+            )}
+          </div>
+          <p className="text-sm text-slate-500 font-medium">{species}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-50">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2 text-slate-400">
+              <Calendar className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-bold text-slate-600">{ageDisplay}</span>
+            </div>
+            <span className="text-[9px] text-slate-400 ml-5.5">DOB: {date}</span>
+          </div>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onCageClick?.(cage);
+            }}
+            className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors group/cage"
+          >
+            <MapPin className="w-3.5 h-3.5 group-hover/cage:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
+          </button>
+        </div>
+
+        <div className="pt-4 mt-2 border-t border-slate-50">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewPedigree?.(id);
+            }}
+            className="w-full py-3 bg-accent-gold/10 text-accent-gold rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent-gold hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm"
+          >
+            <GitBranch className="w-4 h-4" />
+            View Pedigree (3 Generations)
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 const PedigreeNode = ({ bird, label, gender, onClick }: { bird?: BirdData, label: string, gender?: 'Male' | 'Female', onClick?: (id: string) => void }) => (
@@ -1385,6 +1416,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   ]);
   
   const [birds, setBirds] = useState<BirdData[]>([]);
+  const [cageFilter, setCageFilter] = useState<string | null>(null);
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
   const [searchEgg, setSearchEgg] = useState("");
@@ -3831,6 +3863,10 @@ This update is now live for all Premium users. We continue to push the boundarie
                     key={bird.id} 
                     {...bird} 
                     onExportCertificate={exportPedigreePDF}
+                    onCageClick={(cage) => {
+                      setCageFilter(cage);
+                      setActiveTab("My Birds");
+                    }}
                   />
                 ))}
               </div>
@@ -3841,13 +3877,26 @@ This update is now live for all Premium users. We continue to push the boundarie
         {activeTab === "My Birds" && (
           <section>
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold font-display text-slate-800">All Birds</h3>
+              <div className="flex items-center gap-4">
+                <h3 className="text-2xl font-bold font-display text-slate-800">All Birds</h3>
+                {cageFilter && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold">
+                    <MapPin className="w-3 h-3" />
+                    Cage: {cageFilter}
+                    <button onClick={() => setCageFilter(null)} className="ml-1 hover:text-red-500">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
               {selectedBirds.length > 0 && (
                 <span className="text-sm font-bold text-primary">{selectedBirds.length}/2 birds selected for coupling</span>
               )}
             </div>
             <div className="grid grid-cols-3 gap-8">
-              {birds.map((bird) => (
+              {birds
+                .filter(b => !cageFilter || b.cage === cageFilter)
+                .map((bird) => (
                 <BirdCard 
                   key={bird.id} 
                   {...bird} 
@@ -3860,6 +3909,7 @@ This update is now live for all Premium users. We continue to push the boundarie
                     setIsPedigreeModalOpen(true);
                   }}
                   onExportCertificate={exportPedigreePDF}
+                  onCageClick={(cage) => setCageFilter(cage)}
                 />
               ))}
               <motion.div 
@@ -4828,6 +4878,19 @@ This update is now live for all Premium users. We continue to push the boundarie
                       />
                     </div>
                   )}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Status (الحالة)</label>
+                    <select 
+                      value={newBird.status}
+                      onChange={(e) => setNewBird({...newBird, status: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium appearance-none"
+                    >
+                      <option value="Ready">🟢 Ready (For breeding)</option>
+                      <option value="Resting">🔵 Resting (Non-breeding)</option>
+                      <option value="Paired">🟠 Paired (Linked)</option>
+                      <option value="Chick">🐣 Chick</option>
+                    </select>
+                  </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Date Added</label>
                     <input 
