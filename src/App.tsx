@@ -3980,14 +3980,26 @@ This update is now live for all Premium users. We continue to push the boundarie
                 const male = birds.find(b => b.id === couple?.maleId);
                 const female = birds.find(b => b.id === couple?.femaleId);
                 
+                const parseDate = (dStr: string) => {
+                  if (!dStr) return new Date();
+                  if (dStr.includes('-')) {
+                    const parts = dStr.split('-');
+                    if (parts[0].length === 4) return new Date(dStr); // YYYY-MM-DD
+                    const [d, m, y] = parts.map(Number);
+                    return new Date(y, m - 1, d); // DD-MM-YYYY
+                  }
+                  const [d, m, y] = dStr.split('/').map(Number);
+                  return new Date(y, m - 1, d);
+                };
+
                 const daysToHatch = (() => {
                   if (!egg.hatchDate || egg.status !== 'Intact') return null;
                   try {
-                    const [day, month, year] = egg.hatchDate.split('/').map(Number);
-                    const hatch = new Date(year, month - 1, day).getTime();
+                    const hatch = parseDate(egg.hatchDate);
+                    hatch.setHours(0, 0, 0, 0);
                     const now = new Date();
                     now.setHours(0, 0, 0, 0);
-                    const diffTime = hatch - now.getTime();
+                    const diffTime = hatch.getTime() - now.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     return diffDays;
                   } catch (e) { return null; }
@@ -3996,16 +4008,12 @@ This update is now live for all Premium users. We continue to push the boundarie
                 const progress = (() => {
                   if (!egg.laidDate || !egg.hatchDate || egg.status !== 'Intact') return 0;
                   try {
-                    const parseDate = (dStr: string) => {
-                      if (dStr.includes('-')) return new Date(dStr);
-                      const [d, m, y] = dStr.split('/').map(Number);
-                      return new Date(y, m - 1, d);
-                    };
                     const laid = parseDate(egg.laidDate).getTime();
                     const hatch = parseDate(egg.hatchDate).getTime();
                     const now = new Date().getTime();
                     const total = hatch - laid;
                     const elapsed = now - laid;
+                    if (total <= 0) return 100;
                     return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
                   } catch (e) { return 0; }
                 })();
