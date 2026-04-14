@@ -4053,11 +4053,19 @@ This update is now live for all Premium users. We continue to push the boundarie
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4">
                         <div className="flex -space-x-4">
-                          <div className="w-14 h-14 rounded-2xl bg-male flex items-center justify-center border-4 border-white shadow-md rotate-[-6deg] hover:rotate-0 transition-transform">
-                            <Bird className="w-7 h-7 text-male-text" />
+                          <div className="w-14 h-14 rounded-2xl bg-male flex items-center justify-center border-4 border-white shadow-md rotate-[-6deg] hover:rotate-0 transition-transform overflow-hidden">
+                            {male?.imageUrl ? (
+                              <img src={male.imageUrl} alt={male.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <Bird className="w-7 h-7 text-male-text" />
+                            )}
                           </div>
-                          <div className="w-14 h-14 rounded-2xl bg-female flex items-center justify-center border-4 border-white shadow-md rotate-[6deg] hover:rotate-0 transition-transform">
-                            <Bird className="w-7 h-7 text-female-text" />
+                          <div className="w-14 h-14 rounded-2xl bg-female flex items-center justify-center border-4 border-white shadow-md rotate-[6deg] hover:rotate-0 transition-transform overflow-hidden">
+                            {female?.imageUrl ? (
+                              <img src={female.imageUrl} alt={female.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <Bird className="w-7 h-7 text-female-text" />
+                            )}
                           </div>
                         </div>
                         <div>
@@ -4080,31 +4088,49 @@ This update is now live for all Premium users. We continue to push the boundarie
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mb-8">
-                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/male">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Male (الذكر)</span>
-                          <Bird className="w-3 h-3 text-male-text opacity-30" />
+                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/male flex gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-male/20 shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                          {male?.imageUrl ? (
+                            <img src={male.imageUrl} alt={male.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Bird className="w-8 h-8 text-male-text opacity-40" />
+                            </div>
+                          )}
                         </div>
-                        <div className="space-y-2">
-                          <span className="font-bold text-slate-800 block text-sm">{male?.name} <span className="text-slate-400 font-medium">#{male?.ring}</span></span>
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(male?.birthYear || '')}</span>
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.mutation || 'Normal'}</span>
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{male?.species}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Male (الذكر)</span>
+                          </div>
+                          <div className="space-y-2">
+                            <span className="font-bold text-slate-800 block text-sm truncate max-w-[120px]">{male?.name} <span className="text-slate-400 font-medium">#{male?.ring}</span></span>
+                            <div className="flex flex-wrap gap-1">
+                              <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(male?.birthYear || '')}</span>
+                              <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100 truncate max-w-[60px]">{male?.mutation || 'Normal'}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/female">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Female (الأنثى)</span>
-                          <Bird className="w-3 h-3 text-female-text opacity-30" />
+                      <div className="p-5 rounded-[32px] bg-slate-50 border border-slate-100/50 hover:bg-white hover:border-primary/20 transition-all group/female flex gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-female/20 shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                          {female?.imageUrl ? (
+                            <img src={female.imageUrl} alt={female.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Bird className="w-8 h-8 text-female-text opacity-40" />
+                            </div>
+                          )}
                         </div>
-                        <div className="space-y-2">
-                          <span className="font-bold text-slate-800 block text-sm">{female?.name} <span className="text-slate-400 font-medium">#{female?.ring}</span></span>
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(female?.birthYear || '')}</span>
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.mutation || 'Normal'}</span>
-                            <span className="text-[8px] bg-white px-2 py-1 rounded-lg text-slate-500 font-bold border border-slate-100">{female?.species}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Female (الأنثى)</span>
+                          </div>
+                          <div className="space-y-2">
+                            <span className="font-bold text-slate-800 block text-sm truncate max-w-[120px]">{female?.name} <span className="text-slate-400 font-medium">#{female?.ring}</span></span>
+                            <div className="flex flex-wrap gap-1">
+                              <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100">{calculateDetailedAge(female?.birthYear || '')}</span>
+                              <span className="text-[7px] bg-white px-1.5 py-0.5 rounded-lg text-slate-500 font-bold border border-slate-100 truncate max-w-[60px]">{female?.mutation || 'Normal'}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
