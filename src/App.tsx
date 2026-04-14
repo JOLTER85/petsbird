@@ -295,7 +295,7 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
   </motion.div>
 );
 
-const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void }) => {
+const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void }) => {
   // Debugging log to check URL validity
   useEffect(() => {
     if (imageUrl) {
@@ -332,6 +332,7 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
       onClick={onSelect}
       className={`bg-white p-5 rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
     >
+      {/* Top Actions */}
       <div className="absolute top-4 left-4 flex gap-2 z-10">
         {onEdit && (
           <button 
@@ -357,6 +358,25 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
           </button>
         )}
       </div>
+
+      {/* Top Right Badges */}
+      <div className="absolute top-4 right-4 flex flex-col items-end gap-2 z-10">
+        <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+          gender === 'Female' ? 'bg-female text-female-text' : 
+          gender === 'Male' ? 'bg-male text-male-text' : 
+          'bg-slate-100 text-slate-500'
+        }`}>
+          {gender}
+        </div>
+        {status && (
+          <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusConfig.color} text-white shadow-lg flex items-center gap-1.5`}>
+            {statusConfig.icon}
+            <span>{statusConfig.text}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Image Area */}
       <div className="relative aspect-square rounded-[24px] bg-slate-50 flex items-center justify-center mb-5 overflow-hidden">
         {cleanImageUrl ? (
           <img 
@@ -369,7 +389,6 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
               const target = e.target as HTMLImageElement;
               console.error(`Failed to load image for bird [${name}]:`, cleanImageUrl);
               target.onerror = null;
-              // Static fallback test image
               target.src = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
             }}
           />
@@ -380,19 +399,7 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider z-10 ${
-          gender === 'Female' ? 'bg-female text-female-text' : 
-          gender === 'Male' ? 'bg-male text-male-text' : 
-          'bg-slate-100 text-slate-500'
-        }`}>
-          {gender}
-        </div>
-        {status && (
-          <div className={`absolute bottom-4 left-4 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${statusConfig.color} text-white shadow-lg flex items-center gap-1.5`}>
-            {statusConfig.icon}
-            <span>{statusConfig.text}</span>
-          </div>
-        )}
+        
         <button 
           onClick={(e) => {
             e.stopPropagation();
@@ -411,41 +418,63 @@ const BirdCard = ({ id, name, ring, species, gender, age, birthYear, date, cage,
         )}
       </div>
       
+      {/* Content Area */}
       <div className="space-y-4">
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-xl font-bold font-display text-slate-800 truncate max-w-[140px]">{name}</h3>
-            {ring && ring !== 'No Tag' && ring !== 'Pending' ? (
-              <span className="px-2 py-0.5 bg-[#0D2E2E] text-accent-gold text-[10px] font-black rounded-lg border border-accent-gold/20 shadow-sm">
-                {ring}
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No Tag</span>
+          <h3 className="text-xl font-bold font-display text-slate-800 truncate">{name}</h3>
+          <div className="flex flex-col">
+            <p className="text-sm text-slate-500 font-bold">{species}</p>
+            {mutation && (
+              <p className="text-[11px] text-primary/60 font-medium italic">{mutation}</p>
             )}
           </div>
-          <p className="text-sm text-slate-500 font-medium">{species}</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-50">
+        {/* Info Grid (2 Columns) */}
+        <div className="grid grid-cols-2 gap-y-4 gap-x-2 pt-4 border-t border-slate-50">
+          {/* Left: Ring */}
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2 text-slate-400">
-              <Calendar className="w-3.5 h-3.5" />
-              <span className="text-[11px] font-bold text-slate-600">{ageDisplay}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs">🏷️</span>
+              <span className="text-[11px] font-black text-accent-gold uppercase tracking-tight">
+                Ring: {ring || 'N/A'}
+              </span>
             </div>
-            <span className="text-[9px] text-slate-400 ml-5.5">DOB: {date}</span>
           </div>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onCageClick?.(cage);
-            }}
-            className="flex items-center gap-2 text-slate-400 hover:text-primary transition-colors group/cage"
-          >
-            <MapPin className="w-3.5 h-3.5 group-hover/cage:scale-110 transition-transform" />
-            <span className="text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
-          </button>
+
+          {/* Right: Status */}
+          <div className="flex flex-col gap-0.5">
+            <div className={`flex items-center gap-1.5 text-[11px] font-bold ${statusConfig.color.replace('bg-', 'text-')}`}>
+              {statusConfig.icon}
+              <span>{statusConfig.text}</span>
+            </div>
+          </div>
+
+          {/* Left: Age & DOB */}
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <Calendar className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-bold">{ageDisplay}</span>
+            </div>
+            <span className="text-[9px] text-slate-400 ml-5">DOB: {date}</span>
+          </div>
+
+          {/* Right: Cage */}
+          <div className="flex flex-col gap-0.5">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onCageClick?.(cage);
+              }}
+              className="flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors group/cage"
+            >
+              <MapPin className="w-3.5 h-3.5 group-hover/cage:scale-110 transition-transform" />
+              <span className="text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
+            </button>
+          </div>
         </div>
 
+        {/* Footer Action */}
         <div className="pt-4 mt-2 border-t border-slate-50">
           <button 
             onClick={(e) => {
