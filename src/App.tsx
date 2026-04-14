@@ -1609,54 +1609,45 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const handleAddBird = async (e: FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setIsUploading(true);
-    try {
-      let imageUrl = newBird.imageUrl;
-      if (selectedFile) {
-        const storageRef = ref(storage, `birds/${user.uid}/${Date.now()}_${selectedFile.name}`);
-        const uploadResult = await uploadBytes(storageRef, selectedFile);
-        imageUrl = await getDownloadURL(uploadResult.ref);
-      }
-
-      const id = Date.now().toString();
-      const birdData = { ...newBird, id, imageUrl, userId: user.uid };
-      const path = `users_data/${user.uid}/birds/${id}`;
-      await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
-      
-      setNotifications([
-        { 
-          id: Date.now(), 
-          title: "Bird Added", 
-          message: `تمت إضافة ${newBird.name} بنجاح!`, 
-          time: "Just now", 
-          read: false 
-        },
-        ...notifications
-      ]);
-
-      setConfirmModal({
-        isOpen: true,
-        title: "Success",
-        message: "تمت إضافة الطائر الجديد بنجاح!",
-        variant: 'success',
-        confirmText: "حسناً",
-        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
-      });
-
       setIsModalOpen(false);
-      setSelectedFile(null);
-      localStorage.removeItem('petsbird_draft_bird');
-      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users_data/${user.uid}/birds`);
-    } finally {
-      setIsUploading(false);
-    }
+      setIsUploading(true);
+      try {
+        let imageUrl = newBird.imageUrl;
+        if (selectedFile) {
+          const storageRef = ref(storage, `birds/${user.uid}/${Date.now()}_${selectedFile.name}`);
+          const uploadResult = await uploadBytes(storageRef, selectedFile);
+          imageUrl = await getDownloadURL(uploadResult.ref);
+        }
+
+        const id = Date.now().toString();
+        const birdData = { ...newBird, id, imageUrl, userId: user.uid };
+        await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
+        
+        setNotifications([
+          { 
+            id: Date.now(), 
+            title: "Bird Added", 
+            message: `تمت إضافة ${newBird.name} بنجاح!`, 
+            time: "Just now", 
+            read: false 
+          },
+          ...notifications
+        ]);
+
+        setSelectedFile(null);
+        localStorage.removeItem('petsbird_draft_bird');
+        setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `users_data/${user.uid}/birds`);
+      } finally {
+        setIsUploading(false);
+      }
   };
 
   const handleUpdateBird = async (e: FormEvent) => {
     e.preventDefault();
     if (!editingBirdId || !user) return;
+    setIsModalOpen(false);
     setIsUploading(true);
     try {
       let imageUrl = newBird.imageUrl;
@@ -1666,7 +1657,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         imageUrl = await getDownloadURL(uploadResult.ref);
       }
 
-      const path = `users_data/${user.uid}/birds/${editingBirdId}`;
       await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird, imageUrl });
       
       setNotifications([
@@ -1680,16 +1670,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         ...notifications
       ]);
 
-      setConfirmModal({
-        isOpen: true,
-        title: "Success",
-        message: "تم تحديث بيانات الطائر بنجاح!",
-        variant: 'success',
-        confirmText: "حسناً",
-        onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
-      });
-
-      setIsModalOpen(false);
       setEditingBirdId(null);
       setSelectedFile(null);
       setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
@@ -4821,17 +4801,9 @@ This update is now live for all Premium users. We continue to push the boundarie
 
                 <button 
                   type="submit"
-                  disabled={isUploading}
-                  className="w-full py-5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all mt-4 flex items-center justify-center gap-3 disabled:opacity-50"
+                  className="w-full py-5 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all mt-4 flex items-center justify-center gap-3"
                 >
-                  {isUploading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    editingBirdId ? 'Update Bird Profile' : 'Create Bird Profile'
-                  )}
+                  {editingBirdId ? 'Update Bird Profile' : 'Create Bird Profile'}
                 </button>
               </form>
             </motion.div>
