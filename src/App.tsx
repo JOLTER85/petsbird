@@ -324,15 +324,25 @@ const calculateDetailedAge = (birthDateStr: string) => {
     months += 12;
   }
   
-  if (years === 0 && months === 0) {
+  // Precision Logic for Breeders
+  if (years >= 1) {
+    // For Adult Birds (1 Year+): Show Years and Months
+    let display = `${years} Year${years > 1 ? 's' : ''}`;
+    if (months > 0) {
+      display += `, ${months} Month${months > 1 ? 's' : ''}`;
+    }
+    return display;
+  } else if (months >= 1) {
+    // For Young Birds (1 Month to 1 Year): Show Months and Days
+    let display = `${months} Month${months > 1 ? 's' : ''}`;
+    if (days > 0) {
+      display += `, ${days} Day${days > 1 ? 's' : ''}`;
+    }
+    return display;
+  } else {
+    // For Chicks (Less than 1 Month): Show ONLY Days
     return `${days} Day${days !== 1 ? 's' : ''}`;
   }
-  
-  let parts = [];
-  if (years > 0) parts.push(`${years} Year${years > 1 ? 's' : ''}`);
-  if (months > 0) parts.push(`${months} Month${months > 1 ? 's' : ''}`);
-  
-  return parts.join(" & ") || "Newborn";
 };
 
 const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void }) => {
@@ -1393,8 +1403,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       mutation: "Normal", // User can edit this manually
       gender: "Unknown",
       age: 0,
-      birthYear: new Date().getFullYear().toString(),
-      date: new Date().toLocaleDateString(),
+      birthYear: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0],
       cage: female?.cage || "1",
       status: "Chick",
       fatherId: couple.maleId,
@@ -1821,7 +1831,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
       setEditingBirdId(null);
       setSelectedFile(null);
-      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().getFullYear().toString(), date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users_data/${user.uid}/birds/${editingBirdId}`);
     } finally {
@@ -1865,7 +1875,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         gender: bird.gender || "Male",
         age: bird.age || 0,
         birthYear: bird.birthYear || new Date().toISOString().split('T')[0],
-        date: bird.date || new Date().toLocaleDateString(),
+        date: bird.date || new Date().toISOString().split('T')[0],
         cage: bird.cage || "1",
         mutation: bird.mutation || "",
         status: bird.status || "Ready",
@@ -1880,7 +1890,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         gender: "Male",
         age: 0,
         birthYear: new Date().toISOString().split('T')[0],
-        date: new Date().toLocaleDateString(),
+        date: new Date().toISOString().split('T')[0],
         cage: "1",
         mutation: "",
         status: "Ready",
@@ -1947,7 +1957,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       id,
       maleId: male.id,
       femaleId: female.id,
-      startDate: new Date().toLocaleDateString(),
+      startDate: new Date().toISOString().split('T')[0],
       status: 'Active',
       userId: user.uid
     };
@@ -2002,7 +2012,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       id,
       maleId: selectedMaleId,
       femaleId: selectedFemaleId,
-      startDate: new Date().toLocaleDateString(),
+      startDate: new Date().toISOString().split('T')[0],
       status: 'Active',
       userId: user.uid
     };
@@ -2298,7 +2308,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setIsEggModalOpen(false);
       setEditingEggId(null);
       setSelectedCoupleId("");
-      setNewEgg({ laidDate: new Date().toLocaleDateString(), hatchDate: "", status: "Intact" });
+      setNewEgg({ laidDate: new Date().toISOString().split('T')[0], hatchDate: "", status: "Intact" });
     } catch (error) {
       console.error("Error updating egg:", error);
     }
@@ -2330,7 +2340,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setEditingEggId(egg.id);
       setSelectedCoupleId(egg.coupleId);
       setNewEgg({
-        laidDate: egg.laidDate || new Date().toLocaleDateString(),
+        laidDate: egg.laidDate || new Date().toISOString().split('T')[0],
         hatchDate: egg.hatchDate || "",
         status: egg.status || "Intact"
       });
