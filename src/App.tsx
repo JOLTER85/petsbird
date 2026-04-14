@@ -635,6 +635,38 @@ const PedigreeTree = ({ birdId, birds, onBirdClick }: { birdId: string, birds: B
   );
 };
 
+const uploadImageWithTimeout = async (file: File, userId: string): Promise<string> => {
+  const DEFAULT_BIRD_IMAGE = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
+  
+  // File type check
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+  if (!allowedTypes.includes(file.type.toLowerCase())) {
+    console.warn("Unsupported file type:", file.type, "using default image");
+    return DEFAULT_BIRD_IMAGE;
+  }
+
+  return new Promise((resolve) => {
+    const timeoutId = setTimeout(() => {
+      console.warn("Upload timed out (5s), using default image as fallback");
+      resolve(DEFAULT_BIRD_IMAGE);
+    }, 5000);
+
+    const storageRef = ref(storage, `birds/${userId}/${Date.now()}_${file.name.replace(/\s+/g, '_')}`);
+    
+    uploadBytes(storageRef, file)
+      .then((snapshot) => getDownloadURL(snapshot.ref))
+      .then((url) => {
+        clearTimeout(timeoutId);
+        resolve(url);
+      })
+      .catch((error) => {
+        console.error("Firebase Storage Upload failed:", error);
+        clearTimeout(timeoutId);
+        resolve(DEFAULT_BIRD_IMAGE);
+      });
+  });
+};
+
 export default function App() {
   const [showApp, setShowApp] = useState(false);
   const [landingTab, setLandingTab] = useState("Home");
@@ -1614,9 +1646,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       try {
         let imageUrl = newBird.imageUrl;
         if (selectedFile) {
-          const storageRef = ref(storage, `birds/${user.uid}/${Date.now()}_${selectedFile.name}`);
-          const uploadResult = await uploadBytes(storageRef, selectedFile);
-          imageUrl = await getDownloadURL(uploadResult.ref);
+          imageUrl = await uploadImageWithTimeout(selectedFile, user.uid);
         }
 
         const id = Date.now().toString();
@@ -1652,9 +1682,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     try {
       let imageUrl = newBird.imageUrl;
       if (selectedFile) {
-        const storageRef = ref(storage, `birds/${user.uid}/${Date.now()}_${selectedFile.name}`);
-        const uploadResult = await uploadBytes(storageRef, selectedFile);
-        imageUrl = await getDownloadURL(uploadResult.ref);
+        imageUrl = await uploadImageWithTimeout(selectedFile, user.uid);
       }
 
       await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird, imageUrl });
@@ -1973,10 +2001,27 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         throw new Error("API_KEY_MISSING");
       }
 
-      const ai = new GoogleGenAI(apiKey);
-      const model = ai.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        generationConfig: {
+      const ai = new GoogleGenAI({ apiKey });
+      
+      const prompt = `
+        You are an expert avian genetics consultant. 
+        Predict the possible offspring (chicks) mutations for a pair of birds with the following details:
+        Species: ${male.species}
+        Male Mutation: ${male.mutation || "Normal/Classic"}
+        Female Mutation: ${female.mutation || "Normal/Classic"}
+
+        Please provide the results in a structured JSON format with the following fields:
+        - possibleMutations: An array of objects, each with 'name' (mutation name), 'probability' (percentage), and 'description' (brief explanation).
+        - advice: A short expert advice for breeding this specific pair.
+        - difficulty: A rating from 1 to 5 (1 easy, 5 expert).
+
+        Respond ONLY with the JSON.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+        config: {
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -2000,25 +2045,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           }
         }
       });
-      
-      const prompt = `
-        You are an expert avian genetics consultant. 
-        Predict the possible offspring (chicks) mutations for a pair of birds with the following details:
-        Species: ${male.species}
-        Male Mutation: ${male.mutation || "Normal/Classic"}
-        Female Mutation: ${female.mutation || "Normal/Classic"}
 
-        Please provide the results in a structured JSON format with the following fields:
-        - possibleMutations: An array of objects, each with 'name' (mutation name), 'probability' (percentage), and 'description' (brief explanation).
-        - advice: A short expert advice for breeding this specific pair.
-        - difficulty: A rating from 1 to 5 (1 easy, 5 expert).
-
-        Respond ONLY with the JSON.
-      `;
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const text = response.text || "{}";
       const parsedResult = JSON.parse(text);
       setGeneticsResult(parsedResult);
     } catch (error: any) {
