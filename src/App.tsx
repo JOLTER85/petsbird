@@ -99,6 +99,26 @@ import {
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+  }
+}
+
 interface BirdData {
   id: string;
   name: string;
@@ -1036,7 +1056,29 @@ Networking with other professionals and maintaining detailed lineage records are
     }
   ];
 
-  const t = TRANSLATIONS[language];
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+
+  const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
+    const errInfo: FirestoreErrorInfo = {
+      error: error instanceof Error ? error.message : String(error),
+      authInfo: {
+        userId: user?.uid,
+        email: user?.email,
+        emailVerified: user?.emailVerified,
+      },
+      operationType,
+      path
+    };
+    console.error('Firestore Error: ', JSON.stringify(errInfo));
+    setConfirmModal({
+      isOpen: true,
+      title: "Database Error",
+      message: `خطأ في قاعدة البيانات: ${errInfo.error}\nيرجى التأكد من إعدادات Firebase وقواعد الحماية.`,
+      variant: 'danger',
+      confirmText: "حسناً",
+      onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+    });
+  };
 
   useEffect(() => {
     const handleNavigation = () => {
@@ -1808,48 +1850,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
     checkHatchingSoon();
   }, [user, eggs, couples, birds]);
-
-  enum OperationType {
-    CREATE = 'create',
-    UPDATE = 'update',
-    DELETE = 'delete',
-    LIST = 'list',
-    GET = 'get',
-    WRITE = 'write',
-  }
-
-  interface FirestoreErrorInfo {
-    error: string;
-    operationType: OperationType;
-    path: string | null;
-    authInfo: {
-      userId: string | undefined;
-      email: string | null | undefined;
-      emailVerified: boolean | undefined;
-    }
-  }
-
-  const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
-    const errInfo: FirestoreErrorInfo = {
-      error: error instanceof Error ? error.message : String(error),
-      authInfo: {
-        userId: user?.uid,
-        email: user?.email,
-        emailVerified: user?.emailVerified,
-      },
-      operationType,
-      path
-    };
-    console.error('Firestore Error: ', JSON.stringify(errInfo));
-    setConfirmModal({
-      isOpen: true,
-      title: "Database Error",
-      message: `خطأ في قاعدة البيانات: ${errInfo.error}\nيرجى التأكد من إعدادات Firebase وقواعد الحماية.`,
-      variant: 'danger',
-      confirmText: "حسناً",
-      onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
-    });
-  };
 
   const [newBird, setNewBird] = useState({
     name: "",
