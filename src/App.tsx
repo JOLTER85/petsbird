@@ -278,18 +278,28 @@ const SidebarItem = ({ icon: Icon, label, active = false, onClick, collapsed = f
   </motion.div>
 );
 
-const BottomNavItem = ({ icon: Icon, label, active = false, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) => (
-  <button
-    onClick={onClick}
-    className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 transition-all ${
-      active ? "text-primary" : "text-slate-400"
-    }`}
+const BottomNav = ({ activeTab, setActiveTab, t }: { activeTab: string, setActiveTab: (tab: string) => void, t: any }) => (
+  <motion.div 
+    initial={{ y: 100 }}
+    animate={{ y: 0 }}
+    className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-3 flex items-center justify-between z-[100] md:hidden"
   >
-    <div className={`p-1.5 rounded-xl transition-all ${active ? 'bg-primary/10' : ''}`}>
-      <Icon className="w-6 h-6" />
-    </div>
-    <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
-  </button>
+    {[
+      { id: "Dashboard", icon: LayoutDashboard, label: t.home },
+      { id: "My Birds", icon: Bird, label: t.birds },
+      { id: "Eggs", icon: EggIcon, label: t.eggs },
+      { id: "Settings", icon: Settings, label: t.profile }
+    ].map((item) => (
+      <button
+        key={item.id}
+        onClick={() => setActiveTab(item.id)}
+        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-primary scale-110' : 'text-slate-400'}`}
+      >
+        <item.icon className="w-6 h-6" />
+        <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
+      </button>
+    ))}
+  </motion.div>
 );
 
 const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any, value: string | number, label: string, colorClass: string, onClick?: () => void }) => (
@@ -1187,29 +1197,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
 
-  const BottomNav = () => (
-    <motion.div 
-      initial={{ y: 100 }}
-      animate={{ y: 0 }}
-      className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-3 flex items-center justify-between z-[100] md:hidden"
-    >
-      {[
-        { id: "Dashboard", icon: LayoutDashboard, label: t.home },
-        { id: "My Birds", icon: Bird, label: t.birds },
-        { id: "Eggs", icon: EggIcon, label: t.eggs },
-        { id: "Settings", icon: Settings, label: t.profile }
-      ].map((item) => (
-        <button
-          key={item.id}
-          onClick={() => setActiveTab(item.id)}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-primary scale-110' : 'text-slate-400'}`}
-        >
-          <item.icon className="w-6 h-6" />
-          <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
-        </button>
-      ))}
-    </motion.div>
-  );
+
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showAuthPage, setShowAuthPage] = useState(false);
@@ -3392,7 +3380,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <div 
                   key={i} 
                   className="group cursor-pointer"
-                  onClick={() => navigateToTab(`Advice/${r.id}`)}
+                  onClick={() => navigateToTab(`Advice/${r.id}`, false)}
                 >
                   <div className="aspect-[4/3] rounded-[40px] overflow-hidden mb-6 relative">
                     <img 
@@ -3433,7 +3421,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <div 
                   key={i} 
                   className="glass p-8 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group cursor-pointer"
-                  onClick={() => navigateToTab(`News/${n.id}`)}
+                  onClick={() => navigateToTab(`News/${n.id}`, false)}
                 >
                   <div className="aspect-video rounded-3xl overflow-hidden mb-6">
                     <img src={n.img} alt={n.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
@@ -3706,19 +3694,19 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <div className="space-y-4">
                   <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Product</h5>
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
-                    <li onClick={() => navigateToTab("Features", true)} className="hover:text-primary cursor-pointer">Features</li>
-                    <li onClick={() => navigateToTab("Genetics", true)} className="hover:text-primary cursor-pointer">AI Genetics</li>
+                    <li onClick={() => navigateToTab("Features", false)} className="hover:text-primary cursor-pointer">Features</li>
+                    <li onClick={() => navigateToTab("Genetics", false)} className="hover:text-primary cursor-pointer">AI Genetics</li>
                     <li onClick={() => navigateToTab("Advice", false)} className="hover:text-primary cursor-pointer">Advice</li>
-                    <li onClick={() => navigateToTab("Marketplace", true)} className="hover:text-primary cursor-pointer">Marketplace</li>
+                    <li onClick={() => navigateToTab("Marketplace", false)} className="hover:text-primary cursor-pointer">Marketplace</li>
                   </ul>
                 </div>
                 <div className="space-y-4">
                   <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Company</h5>
                   <ul className="space-y-2 text-sm font-bold text-slate-600">
-                    <li onClick={() => navigateToTab("About", true)} className="hover:text-primary cursor-pointer">About Us</li>
-                    <li onClick={() => navigateToTab("Terms", true)} className="hover:text-primary cursor-pointer">Terms & Conditions</li>
-                    <li onClick={() => navigateToTab("Contact", true)} className="hover:text-primary cursor-pointer">Contact</li>
-                    <li onClick={() => navigateToTab("Privacy", true)} className="hover:text-primary cursor-pointer">Privacy</li>
+                    <li onClick={() => navigateToTab("About", false)} className="hover:text-primary cursor-pointer">About Us</li>
+                    <li onClick={() => navigateToTab("Terms", false)} className="hover:text-primary cursor-pointer">Terms & Conditions</li>
+                    <li onClick={() => navigateToTab("Contact", false)} className="hover:text-primary cursor-pointer">Contact</li>
+                    <li onClick={() => navigateToTab("Privacy", false)} className="hover:text-primary cursor-pointer">Privacy</li>
                   </ul>
                 </div>
               </div>
@@ -3861,14 +3849,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           </div>
         )}
       </aside>
-
-      {/* Bottom Navigation - Mobile Only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex items-center justify-around z-[100] safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-        <BottomNavItem icon={LayoutDashboard} label="Home" active={activeTab === "Dashboard"} onClick={() => setActiveTab("Dashboard")} />
-        <BottomNavItem icon={Users} label="Birds" active={activeTab === "My Birds"} onClick={() => setActiveTab("My Birds")} />
-        <BottomNavItem icon={Heart} label="Nests" active={activeTab === "Couples"} onClick={() => setActiveTab("Couples")} />
-        <BottomNavItem icon={Settings} label="System" active={activeTab === "Settings"} onClick={() => setActiveTab("Settings")} />
-      </nav>
 
       {/* Main Content */}
       <main className={`flex-1 transition-all duration-300 p-4 md:p-10 pb-24 md:pb-10 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
@@ -4948,28 +4928,65 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         )}
 
         {activeTab === "About Us" && (
-          <section className="max-w-3xl mx-auto text-center">
-            <div className="w-20 h-20 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-8">
-              <Info className="w-10 h-10" />
+          <section className="max-w-4xl mx-auto">
+            <div className="text-center mb-16">
+              <div className="w-24 h-24 bg-primary/10 text-primary rounded-[32px] flex items-center justify-center mx-auto mb-8">
+                <Info className="w-12 h-12" />
+              </div>
+              <h3 className="text-4xl font-black font-display text-slate-800 mb-4">About PetsBird</h3>
+              <p className="text-xs font-black text-primary uppercase tracking-[0.3em]">A passion for aviculture, powered by technology</p>
             </div>
-            <h3 className="text-3xl font-bold font-display text-slate-800 mb-4">About PetsBird</h3>
-            <p className="text-slate-600 leading-relaxed mb-8">
-              PetsBird is the world's leading platform for professional aviary management. 
-              Our mission is to empower breeders with advanced tools like AI Genetics and real-time egg tracking 
-              to ensure the health and success of every bird.
-            </p>
-            <div className="grid grid-cols-3 gap-8">
-              <div>
-                <div className="text-3xl font-bold text-primary mb-1">10k+</div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Breeders</div>
+
+            <div className="space-y-12">
+              <div className="glass p-10 rounded-[40px] border-white/20">
+                <p className="text-lg text-slate-600 leading-relaxed font-medium">
+                  Founded in 2024, PetsBird was born from a simple idea: that technology should empower breeders, not complicate their lives. We bridge the gap between traditional bird breeding and modern digital management, providing tools and insights that make a real difference in the aviary.
+                </p>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-primary mb-1">50k+</div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Birds Tracked</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="glass p-8 rounded-[40px] border-white/20 space-y-4">
+                  <h4 className="text-xl font-bold text-slate-800 uppercase tracking-tight">Why PetsBird is Different?</h4>
+                  <p className="text-slate-500 leading-relaxed text-sm">
+                    Unlike generic advice websites, PetsBird is built on real-world experience. We operate a professional 70-square-meter breeding facility where we test every technique, diet, and supplement we recommend.
+                  </p>
+                  <p className="text-slate-500 leading-relaxed text-sm">
+                    Our content is rooted in practical success—from managing complex genetic mutations to achieving high-productivity cycles, such as our recent milestone of successfully raising 10 healthy chicks in a single month.
+                  </p>
+                </div>
+                <div className="glass p-8 rounded-[40px] border-white/20 space-y-4">
+                  <h4 className="text-xl font-bold text-slate-800 uppercase tracking-tight">Our Vision</h4>
+                  <p className="text-slate-500 leading-relaxed text-sm">
+                    To create a world where every breeder, from hobbyists to professionals, has access to professional-grade management tools and scientifically backed avian knowledge.
+                  </p>
+                  <div className="pt-4 grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-primary">10k+</div>
+                      <div className="text-[8px] font-bold text-slate-400 uppercase">Breeders</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-primary">50k+</div>
+                      <div className="text-[8px] font-bold text-slate-400 uppercase">Birds</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-primary">100k+</div>
+                      <div className="text-[8px] font-bold text-slate-400 uppercase">Eggs</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-3xl font-bold text-primary mb-1">100k+</div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">Eggs Hatched</div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[
+                  { title: "Integrity", desc: "We only share advice that has been tried and tested in our own breeding rooms." },
+                  { title: "Innovation", desc: "We continuously develop digital solutions to simplify tracking and breeding." },
+                  { title: "Bird Welfare", desc: "We place the health and well-being of every bird at the core of everything we do." }
+                ].map((v, i) => (
+                  <div key={i} className="glass p-6 rounded-3xl border-white/10 hover:bg-white/5 transition-colors">
+                    <h5 className="text-sm font-black text-slate-900 mb-2 uppercase tracking-widest">{v.title}</h5>
+                    <p className="text-xs text-slate-500 leading-relaxed">{v.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
@@ -5730,7 +5747,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       </AnimatePresence>
 
       {/* Bottom Navigation for Mobile */}
-      <BottomNav />
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} t={t} />
 
       {/* Confirmation Modal */}
       <AnimatePresence>
