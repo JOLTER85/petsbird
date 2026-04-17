@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, FormEvent, MouseEvent, useRef, Component, ReactNode } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
   auth, 
@@ -199,6 +199,8 @@ const SPECIES_LIST = [
     mutations: ["Normal", "White", "Silver", "Fawn", "Pied", "Opal"]
   },
 ];
+
+console.log("App.tsx module loaded");
 
 const TRANSLATIONS = {
   en: {
@@ -843,8 +845,11 @@ const uploadImageWithTimeout = async (file: File, userId: string): Promise<strin
 };
 
 // Error Boundary Component
-class ErrorBoundary extends (Component as any) {
-  state = { hasError: false, error: null };
+class ErrorBoundary extends React.Component<any, any> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
   static getDerivedStateFromError(error: any) {
     return { hasError: true, error };
@@ -1236,6 +1241,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     }
   };
 
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
 
@@ -3740,8 +3746,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       </div>
     );
   }
-
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-background font-sans selection:bg-primary/10 overflow-x-hidden">
