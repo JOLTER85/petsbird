@@ -13,6 +13,11 @@ async function startServer() {
 
     console.log(`Starting server in ${process.env.NODE_ENV || 'development'} mode...`);
 
+    // Health check endpoint
+    app.get("/api/ping", (req, res) => {
+      res.json({ message: "pong", timestamp: new Date().toISOString() });
+    });
+
     // Vite middleware for development
     if (process.env.NODE_ENV !== "production") {
       console.log("Initializing Vite dev server...");
