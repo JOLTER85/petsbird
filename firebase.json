@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "petsbird-29b25",
     "public": "dist",
     "ignore": [
       "firebase.json",
