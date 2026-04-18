@@ -2868,7 +2868,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             {["Features", "Genetics", "Advice", "News", "About"].map((item) => (
               <button 
                 key={item} 
-                onClick={() => navigateToTab(item, true)}
+                onClick={() => navigateToTab(item, false)}
                 className={`text-sm font-bold transition-colors uppercase tracking-widest ${landingTab === item ? 'text-primary' : 'text-slate-500 hover:text-primary'}`}
               >
                 {item}
@@ -3001,7 +3001,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
                       className="bg-slate-50 p-8 rounded-[40px] border border-slate-100 hover:bg-white hover:shadow-2xl hover:-translate-y-2 transition-all group cursor-pointer"
-                      onClick={() => navigateToTab(feature.tab, true)}
+                      onClick={() => navigateToTab(feature.tab, false)}
                     >
                       <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-8 ${feature.color} group-hover:scale-110 transition-transform`}>
                         <feature.icon className="w-10 h-10" />
