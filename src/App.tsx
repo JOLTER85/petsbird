@@ -200,8 +200,6 @@ const SPECIES_LIST = [
   },
 ];
 
-console.log("App.tsx module loaded");
-
 const TRANSLATIONS = {
   en: {
     home: "Home",
