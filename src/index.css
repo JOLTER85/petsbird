@@ -6,14 +6,15 @@
   --font-display: "Poppins", sans-serif;
   
   --color-primary: #1A73E8;
-  --color-sidebar: #0F172A;
-  --color-background: #F8FAFC;
-  --color-accent-gold: #FBBC05;
-  --color-accent-orange: #F97316;
-  --color-female: #FDF2F8;
-  --color-female-text: #DB2777;
-  --color-male: #EFF6FF;
-  --color-male-text: #2563EB;
+  --color-sidebar: #0a0f1d;
+  --color-background: #0f172a;
+  --color-accent-gold: #ffb800;
+  --color-accent-orange: #f97316;
+  --color-female: #fdf2f8;
+  --color-female-text: #db2777;
+  --color-male: #eff6ff;
+  --color-male-text: #2563eb;
+  --color-card-bg: #ffffff;
 }
 
 @layer base {
@@ -51,4 +52,9 @@
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
 }

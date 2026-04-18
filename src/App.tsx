@@ -79,7 +79,8 @@ import {
   Instagram,
   CheckCircle2,
   Moon,
-  AlertTriangle
+  AlertTriangle,
+  Shield
 } from "lucide-react";
 
 import { 
@@ -276,23 +277,23 @@ const TRANSLATIONS = {
 const Logo = ({ variant = 'full', className = "", theme = 'light' }: { variant?: 'full' | 'icon', className?: string, theme?: 'light' | 'dark' }) => (
   <div className={`flex items-center gap-3 ${className}`}>
     <div className="w-12 h-12 shrink-0 relative group/logo">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent-gold rounded-full shadow-xl opacity-20 group-hover/logo:opacity-30 transition-opacity" />
-      <div className="absolute inset-[2px] bg-white rounded-full z-0" />
-      <img 
-        src="https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=200" 
-        alt="PetsBird Logo" 
-        className="w-full h-full object-cover rounded-full relative z-10 border-2 border-white shadow-sm"
-        onError={(e) => {
-          // Fallback if image is not found
-          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=100";
-        }}
-        referrerPolicy="no-referrer"
-      />
+      {/* Golden Glow Effect */}
+      <div className="absolute -inset-1 bg-amber-400 rounded-full blur opacity-25 group-hover/logo:opacity-50 transition duration-1000 group-hover/logo:duration-200" />
+      <div className="relative w-12 h-12 bg-gradient-to-br from-amber-200 via-amber-400 to-amber-500 rounded-2xl flex items-center justify-center shadow-lg border border-amber-100/50 overflow-hidden transform group-hover/logo:scale-105 transition-transform">
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:250%_250%] animate-[shimmer_3s_infinite]" />
+        <Bird className="w-7 h-7 text-amber-900 drop-shadow-sm relative z-10" />
+      </div>
     </div>
     {variant === 'full' && (
       <div className="flex flex-col">
-        <h1 className={`text-2xl font-black font-display leading-none tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>PetsBird</h1>
-        <span className={`text-[8px] font-bold uppercase tracking-[0.2em] mt-1 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>Global Aviary Management</span>
+        <span className="text-2xl font-black tracking-tighter leading-none mb-0.5">
+          <span className="bg-gradient-to-r from-amber-600 via-amber-400 to-amber-700 bg-clip-text text-transparent drop-shadow-sm">
+            PetsBird
+          </span>
+        </span>
+        <span className="text-[9px] font-black tracking-[0.3em] text-amber-600/70 uppercase leading-none text-right mr-0.5">
+          Aviary Elite
+        </span>
       </div>
     )}
   </div>
@@ -343,14 +344,14 @@ const StatCard = ({ icon: Icon, value, label, colorClass, onClick }: { icon: any
     whileHover={onClick ? { scale: 1.02, y: -4 } : {}}
     whileTap={onClick ? { scale: 0.98 } : {}}
     onClick={onClick}
-    className={`glass p-6 rounded-3xl shadow-sm border border-white/20 flex items-center gap-5 ${onClick ? 'cursor-pointer hover:shadow-lg transition-all' : ''}`}
+    className={`bg-white p-6 rounded-[32px] shadow-2xl border border-slate-100 flex items-center gap-5 ${onClick ? 'cursor-pointer hover:shadow-xl transition-all' : ''}`}
   >
-    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${colorClass}`}>
+    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${colorClass}`}>
       <Icon className="w-7 h-7" />
     </div>
     <div>
-      <div className="text-2xl font-bold font-display">{value}</div>
-      <div className="text-slate-500 text-sm font-medium">{label}</div>
+      <div className="text-2xl font-black text-slate-900 leading-tight">{value}</div>
+      <div className="text-slate-400 text-[11px] font-black uppercase tracking-widest">{label}</div>
     </div>
   </motion.div>
 );
@@ -1204,7 +1205,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   };
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isDemoOpen, setIsDemoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Dashboard");
 
 
@@ -1271,7 +1271,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           try {
             const userDoc = await getDoc(userDocRef);
             if (!userDoc.exists()) {
-              await setDoc(userDocRef, {
+              const newProfile = {
                 userId: currentUser.uid,
                 name: currentUser.displayName || "مربي جديد",
                 email: currentUser.email || "",
@@ -1279,7 +1279,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 avatar: currentUser.photoURL || (currentUser.displayName ? currentUser.displayName.substring(0, 2).toUpperCase() : "??"),
                 welcomeEmailSent: true,
                 createdAt: new Date().toISOString()
-              });
+              };
+              await setDoc(userDocRef, newProfile);
+              setUserProfile(newProfile);
               
               // Simulate sending welcome email
               console.log("%c📧 Welcome Email Sent to " + currentUser.email, "color: #1A73E8; font-weight: bold; font-size: 14px;");
@@ -1287,6 +1289,14 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               console.log("%cSubject: Welcome to the PetsBird Global Community! 🐦", "font-weight: bold;");
               console.log("Hello " + (currentUser.displayName || "Breeder") + ",\n\nWelcome to PetsBird! We're thrilled to have you as part of our global community of passionate breeders.\n\nYour aviary management just got a whole lot smarter. Start tracking your birds, calculating hatch dates, and exploring genetic mutations today.\n\nHappy Breeding!\nThe PetsBird Team");
               console.log("%c--------------------------------------------------", "color: #ccc;");
+            } else {
+              const data = userDoc.data();
+              setUserProfile({
+                name: data.name || "مربي جديد",
+                location: data.location || "",
+                email: data.email || currentUser.email || "",
+                avatar: data.avatar || (data.name ? data.name.substring(0, 2).toUpperCase() : "??")
+              });
             }
           } catch (error) {
             console.error("Error checking/creating user profile:", error);
@@ -1679,8 +1689,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   });
 
   const [notifications, setNotifications] = useState([
-    { id: 1, title: "Welcome!", message: "Welcome to PetsBird.com", time: "Just now", read: false },
-    { id: 2, title: "Egg Update", message: "Couple #001 laid a new egg!", time: "2 hours ago", read: false }
+    { id: 1, title: "Notification System Active", message: "PetsBird notification system is monitoring your aviary.", time: "Just now", read: false },
+    { id: 2, title: "Aviary Health", message: "All breeding systems are operational.", time: "2 hours ago", read: false }
   ]);
   
   const [birds, setBirds] = useState<BirdData[]>([]);
@@ -1789,36 +1799,60 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     const checkHatchingSoon = () => {
       const today = new Date();
       
-      eggs.forEach(egg => {
-        if (egg.status === 'Intact' && egg.hatchDate) {
-          const hatchDate = new Date(egg.hatchDate);
-          const diffTime = hatchDate.getTime() - today.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      setNotifications(prev => {
+        let newNotifications = [...prev];
+        let hasChanges = false;
 
-          if (diffDays <= 2 && diffDays >= 0) {
-            const notificationId = `hatch-${egg.id}`;
-            if (!notifications.some(n => n.id === notificationId)) {
-              const couple = couples.find(c => c.id === egg.coupleId);
-              const male = birds.find(b => b.id === couple?.maleId);
-              const female = birds.find(b => b.id === couple?.femaleId);
-              
-              setNotifications(prev => [
-                {
+        eggs.forEach(egg => {
+          if (egg.status === 'Intact' && egg.hatchDate) {
+            const hatchDate = new Date(egg.hatchDate);
+            const diffTime = hatchDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            // 1. Hatching Soon Alert
+            if (diffDays <= 2 && diffDays >= 0) {
+              const notificationId = `hatch-soon-${egg.id}`;
+              if (!newNotifications.some(n => n.id === notificationId)) {
+                const couple = couples.find(c => c.id === egg.coupleId);
+                const male = birds.find(b => b.id === couple?.maleId);
+                const female = birds.find(b => b.id === couple?.femaleId);
+                
+                newNotifications.unshift({
                   id: notificationId,
                   title: "Hatching Soon!",
-                  message: `Get ready! Egg #${egg.eggNumber || egg.id.slice(-3)} from ${male?.name || 'Tio'} & ${female?.name || 'Rosa'} is hatching soon!`,
+                  message: `Egg #${egg.eggNumber || egg.id.slice(-3)} from ${male?.name || 'Pair'} & ${female?.name || ''} is hatching soon!`,
                   time: "Alert",
                   read: false
-                },
-                ...prev
-              ]);
+                });
+                hasChanges = true;
+              }
+            }
+
+            // 2. Overdue Eggs Alert
+            if (diffDays < 0) {
+              const notificationId = `overdue-${egg.id}`;
+              if (!newNotifications.some(n => n.id === notificationId)) {
+                newNotifications.unshift({
+                  id: notificationId,
+                  title: "Overdue Egg!",
+                  message: `Egg #${egg.eggNumber || egg.id.slice(-3)} is past its hatch date. Please check the nest!`,
+                  time: "Warning",
+                  read: false
+                });
+                hasChanges = true;
+              }
             }
           }
-        }
+        });
+
+        return hasChanges ? newNotifications : prev;
       });
     };
 
     checkHatchingSoon();
+    // Check every hour
+    const interval = setInterval(checkHatchingSoon, 3600000);
+    return () => clearInterval(interval);
   }, [user, eggs, couples, birds]);
 
   const [newBird, setNewBird] = useState({
@@ -2775,53 +2809,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   if (!showApp) {
     return (
       <div className="min-h-screen bg-[#fcfcf9] selection:bg-primary/10 overflow-x-hidden">
-        {/* Demo Modal */}
-        <AnimatePresence>
-          {isDemoOpen && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-xl"
-            >
-              <motion.div 
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                className="relative w-full max-w-5xl aspect-video bg-black rounded-[40px] overflow-hidden shadow-2xl border border-white/10"
-              >
-                <button 
-                  onClick={() => setIsDemoOpen(false)}
-                  className="absolute top-6 right-6 z-10 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-12">
-                  <div className="w-24 h-24 bg-white rounded-[40px] flex items-center justify-center mb-8 shadow-2xl shadow-primary/20 border border-white/10">
-                    <Logo variant="icon" className="w-14 h-14 animate-pulse" />
-                  </div>
-                  <h2 className="text-4xl font-black text-white mb-4 font-display">Experience PetsBird</h2>
-                  <p className="text-slate-400 max-w-lg mb-8">Watch how our AI Genetics and real-time tracking transform your aviary management.</p>
-                  <div className="w-full max-w-3xl aspect-video bg-slate-800 rounded-3xl relative overflow-hidden group cursor-pointer">
-                    <img 
-                      src="https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=1920" 
-                      alt="Demo Preview" 
-                      className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-20 h-20 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 group-hover:scale-110 transition-all">
-                        <TrendingUp className="w-8 h-8" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Article Detail Modal */}
         <AnimatePresence>
           {isArticleModalOpen && selectedArticle && (
@@ -2936,12 +2923,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   >
                     {user ? t.goDashboard : t.startManaging}
                     <TrendingUp className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                  <button 
-                    onClick={() => setIsDemoOpen(true)}
-                    className="w-full sm:w-auto px-10 py-5 bg-white text-slate-900 border border-slate-200 rounded-[24px] font-bold text-lg hover:bg-slate-50 transition-all"
-                  >
-                    {t.watchDemo}
                   </button>
                   <button 
                     onClick={handleInstallClick}
@@ -3749,7 +3730,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold truncate">{user?.displayName || "Breeder"}</span>
+                <span className="text-sm font-bold truncate">{userProfile?.name || user?.displayName || "Breeder"}</span>
                 <span className="text-[9px] bg-accent-gold/20 text-accent-gold px-1.5 py-0.5 rounded-md font-bold uppercase">Admin</span>
               </div>
               <div className="flex items-center gap-1 text-slate-500 text-[10px] mt-0.5">
@@ -3819,15 +3800,14 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       </aside>
 
       {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 p-4 md:p-10 pb-24 md:pb-10 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
+      <main className={`flex-1 transition-all duration-300 p-4 md:p-10 pb-24 md:pb-10 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-72'} bg-slate-900 min-h-screen`}>
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-12">
           <div className="flex items-center gap-4">
             <div className="md:hidden">
               <Logo variant="icon" className="w-10 h-10" />
             </div>
             <div>
-              <h2 className="text-2xl md:text-4xl font-bold font-display text-slate-800 mb-1 md:mb-2">{activeTab}</h2>
-              <p className="text-xs md:text-base text-slate-500 font-medium">Welcome back <span className="text-primary font-bold">{user?.displayName?.split(' ')[0] || "Breeder"}</span>!</p>
+              <h2 className="text-2xl md:text-5xl font-black font-display text-white tracking-tighter">{activeTab}</h2>
             </div>
           </div>
           <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
@@ -3915,57 +3895,85 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         </header>
 
         {activeTab === "Dashboard" && (
-          <div className="space-y-12" ref={dashboardRef}>
-            {/* Analytics Stats */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold font-display text-slate-800">Performance Overview</h3>
-              <button 
-                onClick={shareDashboardStats}
-                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-primary hover:text-primary transition-all shadow-sm"
-              >
-                <Share2 className="w-4 h-4" />
-                Share My Stats
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              <StatCard 
-                icon={Bird} 
-                value={birds.length} 
-                label="Total Birds" 
-                colorClass="bg-primary/10 text-primary" 
-                onClick={() => setActiveTab("My Birds")}
-              />
-              <StatCard 
-                icon={Sparkles} 
-                value={`${eggs.length > 0 ? Math.round((eggs.filter(e => e.isFertile).length / eggs.length) * 100) : 0}%`} 
-                label="Fertility Rate" 
-                colorClass="bg-accent-gold/10 text-accent-gold" 
-                onClick={() => setActiveTab("Eggs")}
-              />
+          <div className="space-y-10" ref={dashboardRef}>
+            {/* Quick Stats Grid - More visual like the image */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {/* Featured Bird Stats - Health Tracking Style */}
+              {birds.slice(0, 2).map((bird, idx) => (
+                <motion.div 
+                  key={bird.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-white rounded-[32px] overflow-hidden shadow-2xl relative group h-full flex flex-col"
+                >
+                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Tracking</span>
+                    <Activity className="w-4 h-4 text-primary animate-pulse" />
+                  </div>
+                  <div className="relative aspect-video">
+                    <img 
+                      src={bird.imageUrl || "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=400"} 
+                      alt={bird.name}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-4 left-4 text-white">
+                      <div className="text-lg font-black leading-none">{bird.name}</div>
+                      <div className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{bird.species}</div>
+                    </div>
+                  </div>
+                  <div className="p-6 flex-1 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Performance</div>
+                      <div className="text-lg font-black text-primary">80%</div>
+                    </div>
+                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: "80%" }}
+                        className="h-full bg-primary"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                       <span className="text-[9px] bg-slate-50 px-2 py-1 rounded-lg font-bold text-slate-400 border border-slate-100">Vital Signs</span>
+                       <span className="text-[9px] bg-slate-50 px-2 py-1 rounded-lg font-bold text-slate-400 border border-slate-100">Nutrition</span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
               <StatCard 
                 icon={TrendingUp} 
                 value={`${eggs.filter(e => e.isFertile).length > 0 ? Math.round((eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.isFertile).length) * 100) : 0}%`} 
-                label="Hatch Rate" 
-                colorClass="bg-green-500/10 text-green-500" 
+                label="Hatch Success Rate" 
+                colorClass="bg-green-50 text-green-600" 
                 onClick={() => setActiveTab("Eggs")}
               />
               <StatCard 
                 icon={Activity} 
                 value={Math.round((eggs.filter(e => e.status === 'Completed').length / (eggs.length || 1)) * 100)} 
-                label="Success Score" 
-                colorClass="bg-purple-500/10 text-purple-500" 
-                onClick={() => {
-                  const chartsSection = document.getElementById('charts-section');
-                  if (chartsSection) chartsSection.scrollIntoView({ behavior: 'smooth' });
-                }}
+                label="Aviary Multi-Metrics" 
+                colorClass="bg-blue-50 text-blue-600" 
+                onClick={() => setActiveTab("Statistics")}
               />
             </div>
 
-            {/* Charts Section */}
-            <div id="charts-section" className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="glass p-8 rounded-[40px] border-white/20 shadow-xl">
-                <h3 className="text-xl font-bold font-display text-slate-800 mb-8">Production Chart</h3>
-                <div className="h-[300px]">
+            {/* Charts Section - White cards on dark BG */}
+            <div id="charts-section" className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="lg:col-span-2 bg-white p-10 rounded-[40px] shadow-2xl">
+                <div className="flex items-center justify-between mb-10">
+                  <div>
+                    <h3 className="text-2xl font-black text-slate-900">Health Monitoring Chart</h3>
+                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mt-1">Real-time Data Stream</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 bg-primary rounded-full" />
+                    <span className="text-xs font-black uppercase text-slate-400">Activity Level</span>
+                  </div>
+                </div>
+                <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={(() => {
                       const monthlyData: { [key: string]: number } = {};
@@ -3979,50 +3987,97 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       return Object.entries(monthlyData).map(([name, count]) => ({ name, count }));
                     })()}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
                       <Tooltip 
-                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                        contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.1)' }}
                         cursor={{ fill: '#f8fafc' }}
                       />
-                      <Bar dataKey="count" fill="#1A73E8" radius={[8, 8, 0, 0]} />
+                      <Bar dataKey="count" fill="#1A73E8" radius={[12, 12, 12, 12]} barSize={20} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
 
-              <div className="glass p-8 rounded-[40px] border-white/20 shadow-xl">
-                <h3 className="text-xl font-bold font-display text-slate-800 mb-8">Egg Status Distribution</h3>
-                <div className="h-[300px]">
+              <div className="bg-white p-10 rounded-[40px] shadow-2xl space-y-10">
+                <div>
+                   <h3 className="text-2xl font-black text-slate-900">Aviary Status</h3>
+                   <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Detailed Metrics Distribution</p>
+                </div>
+                <div className="h-[300px] relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Fertile', value: eggs.filter(e => e.isFertile && e.status !== 'Completed').length, color: '#FBBC05' },
+                          { name: 'Fertile', value: eggs.filter(e => e.isFertile && e.status !== 'Completed').length, color: '#ffb800' },
                           { name: 'Hatched', value: eggs.filter(e => e.status === 'Completed').length, color: '#1A73E8' },
                           { name: 'Broken', value: eggs.filter(e => e.status === 'Broken').length, color: '#EF4444' },
                           { name: 'Pending', value: eggs.filter(e => e.status === 'Intact' && e.isFertile === undefined).length, color: '#94A3B8' }
                         ]}
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
+                        innerRadius={70}
+                        outerRadius={100}
+                        paddingAngle={8}
                         dataKey="value"
                       >
                         {[0, 1, 2, 3].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={['#FBBC05', '#1A73E8', '#EF4444', '#94A3B8'][index]} />
+                          <Cell key={`cell-${index}`} fill={['#ffb800', '#1A73E8', '#EF4444', '#94A3B8'][index]} />
                         ))}
                       </Pie>
                       <Tooltip />
-                      <Legend verticalAlign="bottom" height={36}/>
                     </PieChart>
                   </ResponsiveContainer>
+                  <div className="absolute inset-0 flex items-center justify-center flex-col pointer-events-none">
+                    <div className="text-4xl font-black text-slate-900">{eggs.length}</div>
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Eggs</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fertile</span>
+                    <span className="text-xl font-black text-amber-500">{eggs.filter(e => e.isFertile).length}</span>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hatched</span>
+                    <span className="text-xl font-black text-primary">{eggs.filter(e => e.status === 'Completed').length}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Top Couples Ranking */}
-            <div className="glass p-8 rounded-[40px] border-white/20 shadow-xl">
-              <h3 className="text-xl font-bold font-display text-slate-800 mb-8">Top Performing Couples</h3>
+            {/* Performance Tracker Style */}
+            <div className="bg-white p-10 rounded-[40px] shadow-2xl overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
+                <TrendingUp className="w-64 h-64 text-primary" />
+              </div>
+              <div className="relative z-10">
+                <h3 className="text-2xl font-black text-slate-900 mb-8">Performance Tracking Summary</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                   {[
+                     { label: "Active Pairs", val: couples.length, target: "80%", icon: Heart, color: "text-red-500" },
+                     { label: "Chick Survival", val: "92%", target: "95%", icon: Sparkles, color: "text-amber-500" },
+                     { label: "Inventory Level", val: "Low", target: "Normal", icon: Box, color: "text-blue-500" },
+                     { label: "System Health", val: "Optimal", target: "Active", icon: Shield, color: "text-green-500" }
+                   ].map((item, i) => (
+                     <div key={i} className="space-y-4">
+                        <div className="flex items-center gap-3">
+                           <div className={`p-2 rounded-xl bg-slate-50 ${item.color}`}>
+                              <item.icon className="w-5 h-5" />
+                           </div>
+                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
+                        </div>
+                        <div className="text-3xl font-black text-slate-900">{item.val}</div>
+                        <div className="flex items-center justify-between text-[10px] font-bold">
+                           <span className="text-slate-400 italic">Target: {item.target}</span>
+                           <span className="text-green-500">+2.5%</span>
+                        </div>
+                     </div>
+                   ))}
+                </div>
+              </div>
+            </div>
+            {/* Top Performing Couples */}
+            <div className="bg-white p-10 rounded-[40px] shadow-2xl">
+              <h3 className="text-2xl font-black text-slate-900 mb-8">Top Performing Couples</h3>
               <div className="space-y-4">
                 {couples
                   .map(couple => {
@@ -4038,30 +4093,24 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   .sort((a, b) => b.hatchedCount - a.hatchedCount)
                   .slice(0, 5)
                   .map((couple, i) => (
-                    <div key={couple.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50/50 border border-slate-100">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                    <div key={couple.id} className="flex items-center justify-between p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                      <div className="flex items-center gap-6">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">
                           #{i + 1}
                         </div>
                         <div>
-                          <div className="font-bold text-slate-800">
-                            {couple.male?.name || 'Unknown'} × {couple.female?.name || 'Unknown'}
+                          <div className="font-black text-lg text-slate-900">
+                            {couple.male?.name || 'Pair'} × {couple.female?.name || ''}
                           </div>
-                          <div className="text-xs text-slate-500">
+                          <div className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                             {couple.hatchedCount} Successful Hatches
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        {couple.fertilityRate < 50 && couple.hatchedCount > 0 && (
-                          <div className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold flex items-center gap-1">
-                            <Info className="w-3 h-3" />
-                            Advice: Check diet/age
-                          </div>
-                        )}
+                      <div className="flex items-center gap-6">
                         <div className="text-right">
-                          <div className="text-sm font-bold text-slate-800">{Math.round(couple.fertilityRate)}%</div>
-                          <div className="text-[10px] text-slate-400 uppercase font-bold">Fertility</div>
+                           <div className="text-xl font-black text-slate-900">{Math.round(couple.fertilityRate)}%</div>
+                           <div className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Fertility</div>
                         </div>
                       </div>
                     </div>
@@ -4071,7 +4120,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
             <section>
               <div className="flex items-center justify-between mb-6 md:mb-8">
-                <h3 className="text-xl md:text-2xl font-bold font-display text-slate-800">Recent Birds</h3>
+                <h3 className="text-xl md:text-2xl font-bold font-display text-white">Recent Birds</h3>
               </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {birds.slice(-3).map((bird) => (
@@ -4094,7 +4143,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           <section>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div className="flex items-center gap-4">
-                <h3 className="text-3xl font-black font-display text-slate-900">All Birds</h3>
+                <h3 className="text-3xl font-black font-display text-white">All Birds</h3>
                 {cageFilter && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-2xl text-xs font-bold border border-primary/20 shadow-sm">
                     <MapPin className="w-3.5 h-3.5" />
@@ -4156,7 +4205,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         {activeTab === "Couples" && (
           <section>
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold font-display text-slate-800">Breeding Couples</h3>
+              <h3 className="text-2xl font-black font-display text-white">Breeding Couples</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
               {couples.map((couple) => {
@@ -4281,10 +4330,11 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                               setSelectedCoupleForStats(couple);
                               setIsStatsModalOpen(true);
                             }}
-                            className="p-2 bg-purple-50 text-purple-500 rounded-xl hover:bg-purple-100 transition-colors"
-                            title={t.statistics}
+                            className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-colors group/stat"
+                            title="Statistique (الإحصائيات)"
                           >
-                            <TrendingUp className="w-4 h-4" />
+                            <TrendingUp className="w-4 h-4 group-hover/stat:scale-110 transition-transform" />
+                            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Statistique</span>
                           </button>
                           {male && (
                             <button 
@@ -4342,8 +4392,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           <section>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div>
-                <h3 className="text-3xl font-black font-display text-slate-900">Egg Tracking</h3>
-                <p className="text-slate-500 text-sm font-medium mt-1">Monitor your aviary's productivity in real-time</p>
+                <h3 className="text-3xl font-black font-display text-white">Egg Tracking</h3>
+                <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Monitor your aviary's productivity in real-time</p>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
@@ -4651,15 +4701,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <BrainCircuit className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold font-display text-slate-800">AI Genetics Predictor</h3>
-                <p className="text-sm text-slate-500">Predict offspring mutations using advanced AI</p>
+                <h3 className="text-2xl font-black font-display text-white italic tracking-tighter">AI Genetics Predictor</h3>
+                <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Predict offspring mutations using advanced AI</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Selection Panel */}
               <div className="lg:col-span-1 space-y-6">
-                <div className="glass p-8 rounded-[40px] border-white/20 space-y-6">
+                <div className="bg-white p-8 rounded-[40px] shadow-2xl space-y-6">
                   <div className="space-y-4">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Select Male Bird</label>
                     <select 
@@ -4725,7 +4775,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                           <BrainCircuit className="w-10 h-10 animate-pulse" />
                         </div>
                       </div>
-                      <h4 className="text-xl font-bold mb-2">Analyzing Genetics...</h4>
+                      <h4 className="text-xl font-bold mb-2 text-slate-900">Analyzing Genetics...</h4>
                       <p className="text-slate-500">Our AI is calculating possible mutation combinations based on Mendelian inheritance and species-specific traits.</p>
                     </motion.div>
                   ) : geneticsResult ? (
@@ -4735,9 +4785,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       animate={{ opacity: 1, y: 0 }}
                       className="space-y-6"
                     >
-                      <div className="glass p-8 rounded-[40px] border-white/20">
+                      <div className="bg-white p-8 rounded-[40px] shadow-2xl">
                         <div className="flex items-center justify-between mb-8">
-                          <h4 className="text-xl font-bold font-display">Possible Offspring</h4>
+                          <h4 className="text-xl font-black font-display text-slate-900">Possible Offspring</h4>
                           <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl">
                             <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Difficulty</span>
                             <div className="flex gap-1">
@@ -4807,8 +4857,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <GitBranch className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-3xl font-black font-display text-slate-900">Pedigree Explorer</h3>
-                <p className="text-slate-500 font-medium">Visualize and trace the lineage of your birds</p>
+                <h3 className="text-3xl font-black font-display text-white">Pedigree Explorer</h3>
+                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Visualize and trace the lineage of your birds</p>
               </div>
             </div>
 
@@ -4822,7 +4872,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     setPedigreeBirdId(bird.id);
                     setIsPedigreeModalOpen(true);
                   }}
-                  className="glass p-6 rounded-[32px] border-white/20 hover:border-accent-gold/30 transition-all cursor-pointer group relative overflow-hidden"
+                  className="bg-white p-6 rounded-[32px] shadow-2xl hover:border-accent-gold/30 transition-all cursor-pointer group relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-accent-gold/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700" />
                   <div className="flex items-center gap-4 relative z-10">
@@ -4856,8 +4906,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <BookOpen className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold font-display text-slate-800">Breeding Advice</h3>
-                <p className="text-sm text-slate-500">Expert tips for a successful aviary</p>
+                <h3 className="text-2xl font-black font-display text-white">Breeding Advice</h3>
+                <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Expert tips for a successful aviary</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -4865,7 +4915,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <div 
                   key={i} 
                   onClick={() => navigateToTab(`Advice/${item.id}`)}
-                  className="glass p-8 rounded-[32px] border-white/20 hover:shadow-xl transition-all cursor-pointer group"
+                  className="bg-white p-8 rounded-[32px] shadow-2xl hover:shadow-xl transition-all cursor-pointer group"
                 >
                   <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{item.icon}</div>
                   <h4 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{item.title}</h4>
@@ -4883,8 +4933,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <Newspaper className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold font-display text-slate-800">Aviary News</h3>
-                <p className="text-sm text-slate-500">Latest updates from the bird breeding world</p>
+                <h3 className="text-2xl font-black font-display text-white">Aviary News</h3>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Latest updates from the bird breeding world</p>
               </div>
             </div>
             <div className="space-y-6">
@@ -4893,7 +4943,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 { date: "March 28, 2026", title: "Spring Breeding Expo", desc: "Join us next month for the annual expo showcasing the best breeding pairs." },
                 { date: "March 15, 2026", title: "App Update v2.1", desc: "We've launched the AI Genetics predictor to help you plan your nests better." }
               ].map((news, i) => (
-                <div key={i} className="glass p-8 rounded-[32px] border-white/20 flex gap-6 items-start">
+                <div key={i} className="bg-white p-8 rounded-[32px] shadow-2xl flex gap-6 items-start">
                   <div className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap">{news.date}</div>
                   <div>
                     <h4 className="text-xl font-bold mb-2">{news.title}</h4>
