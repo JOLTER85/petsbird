@@ -228,6 +228,13 @@ const TRANSLATIONS = {
     inventory: "Inventory Management",
     breedingPairs: "Breeding Pairs",
     eggMonitoring: "Egg Monitoring",
+    statistics: "Statistics",
+    totalEggs: "Total Eggs",
+    successHatch: "Hatched Successfully",
+    failedEggs: "Failed Eggs",
+    survivedChicks: "Survived Chicks",
+    breedingRounds: "Breeding Rounds",
+    successRate: "Success Rate",
   },
   ar: {
     home: "الرئيسية",
@@ -256,6 +263,13 @@ const TRANSLATIONS = {
     inventory: "إدارة المخزون",
     breedingPairs: "أزواج التربية",
     eggMonitoring: "مراقبة البيض",
+    statistics: "الإحصائيات",
+    totalEggs: "إجمالي البيض",
+    successHatch: "بيض فَقَسَ بنجاح",
+    failedEggs: "بيض لم ينجح",
+    survivedChicks: "فراخ حية",
+    breedingRounds: "مرات التفريخ",
+    successRate: "نسبة النجاح",
   }
 };
 
@@ -842,59 +856,9 @@ const uploadImageWithTimeout = async (file: File, userId: string): Promise<strin
   });
 };
 
-// Error Boundary Component
-class ErrorBoundary extends React.Component<any, any> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error("ErrorBoundary caught an error", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center">
-          <div className="max-w-md glass p-10 rounded-[40px] border-white/20 shadow-2xl">
-            <div className="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="w-10 h-10" />
-            </div>
-            <h2 className="text-2xl font-black text-slate-800 mb-4">عذراً، حدث خطأ غير متوقع</h2>
-            <p className="text-slate-500 mb-8 text-sm leading-relaxed">
-              لقد واجهنا مشكلة تقنية. يرجى محاولة إعادة تحميل الصفحة.
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-4 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
-            >
-              إعادة تحميل الصفحة
-            </button>
-            <details className="mt-6 text-left">
-              <summary className="text-[10px] font-bold text-slate-400 uppercase cursor-pointer">تفاصيل الخطأ</summary>
-              <pre className="mt-2 p-4 bg-slate-900 text-slate-300 text-[10px] rounded-xl overflow-auto max-h-40">
-                {this.state.error?.toString()}
-              </pre>
-            </details>
-          </div>
-        </div>
-      );
-    }
-
-    return (this.props as any).children;
-  }
-}
-
 export default function App() {
   return (
-    <ErrorBoundary>
-      <AppContent />
-    </ErrorBoundary>
+    <AppContent />
   );
 }
 
@@ -1548,6 +1512,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [failureReason, setFailureReason] = useState("");
   const [pedigreeBirdId, setPedigreeBirdId] = useState<string | null>(null);
   const [isPedigreeModalOpen, setIsPedigreeModalOpen] = useState(false);
+  const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+  const [selectedCoupleForStats, setSelectedCoupleForStats] = useState<CoupleData | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
@@ -4310,6 +4276,16 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                           <span className="font-bold text-slate-800">{coupleEggs.length} Eggs</span>
                         </div>
                         <div className="flex gap-2">
+                          <button 
+                            onClick={() => {
+                              setSelectedCoupleForStats(couple);
+                              setIsStatsModalOpen(true);
+                            }}
+                            className="p-2 bg-purple-50 text-purple-500 rounded-xl hover:bg-purple-100 transition-colors"
+                            title={t.statistics}
+                          >
+                            <TrendingUp className="w-4 h-4" />
+                          </button>
                           {male && (
                             <button 
                               onClick={() => {
@@ -5441,6 +5417,184 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   {editingEggId ? 'Update Egg Info' : 'Confirm Egg Laying'}
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Statistics Modal */}
+      <AnimatePresence>
+        {isStatsModalOpen && selectedCoupleForStats && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsStatsModalOpen(false)}
+              className="absolute inset-0 bg-sidebar/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-primary/5">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-2xl flex items-center justify-center">
+                    <TrendingUp className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold font-display">{t.statistics}</h3>
+                    <p className="text-xs text-slate-500 font-medium">
+                      {birds.find(b => b.id === selectedCoupleForStats.maleId)?.name} x {birds.find(b => b.id === selectedCoupleForStats.femaleId)?.name}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setIsStatsModalOpen(false)} className="p-2 hover:bg-white rounded-xl transition-colors shadow-sm">
+                  <X className="w-6 h-6 text-slate-400" />
+                </button>
+              </div>
+              
+              <div className="p-8 overflow-y-auto max-h-[70vh]">
+                {(() => {
+                  const coupleEggs = eggs.filter(e => e.coupleId === selectedCoupleForStats.id);
+                  const totalEggs = coupleEggs.length;
+                  const hatchedEggs = eggs.filter(e => e.coupleId === selectedCoupleForStats.id && (e.status === 'Hatched' || e.status === 'Completed')).length;
+                  const failedEggs = eggs.filter(e => e.coupleId === selectedCoupleForStats.id && (e.status === 'Failed' || e.status === 'Broken')).length;
+                  const survivedChicks = birds.filter(b => b.fatherId === selectedCoupleForStats.maleId && b.motherId === selectedCoupleForStats.femaleId).length;
+                  
+                  // Calculate rounds
+                  const sortedEggs = [...coupleEggs].sort((a, b) => new Date(a.laidDate).getTime() - new Date(b.laidDate).getTime());
+                  let rounds = 0;
+                  if (sortedEggs.length > 0) {
+                    rounds = 1;
+                    for (let i = 1; i < sortedEggs.length; i++) {
+                      const diff = (new Date(sortedEggs[i].laidDate).getTime() - new Date(sortedEggs[i - 1].laidDate).getTime()) / (1000 * 3600 * 24);
+                      if (diff > 45) rounds++;
+                    }
+                  }
+
+                  const successRate = totalEggs > 0 ? Math.round((survivedChicks / totalEggs) * 100) : 0;
+                  const hatchRate = totalEggs > 0 ? Math.round((hatchedEggs / totalEggs) * 100) : 0;
+
+                  const chartData = [
+                    { name: 'Hatched', value: hatchedEggs, color: '#10B981' },
+                    { name: 'Failed', value: failedEggs, color: '#EF4444' },
+                    { name: 'Intact', value: totalEggs - hatchedEggs - failedEggs, color: '#F59E0B' }
+                  ].filter(d => d.value > 0);
+
+                  return (
+                    <div className="space-y-8">
+                      {/* Key Stats Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col gap-1 text-center">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.breedingRounds}</span>
+                          <span className="text-2xl font-black text-slate-900">{rounds}</span>
+                        </div>
+                        <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col gap-1 text-center">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.totalEggs}</span>
+                          <span className="text-2xl font-black text-slate-900">{totalEggs}</span>
+                        </div>
+                        <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col gap-1 text-center">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.successRate}</span>
+                          <span className="text-2xl font-black text-primary">{successRate}%</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        {/* Circular Success Indicator */}
+                        <div className="flex flex-col items-center justify-center p-8 bg-slate-900 rounded-[40px] text-white">
+                          <div className="relative w-32 h-32 mb-4">
+                            <svg className="w-full h-full transform -rotate-90">
+                              <circle
+                                cx="64"
+                                cy="64"
+                                r="58"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                fill="transparent"
+                                className="text-slate-800"
+                              />
+                              <motion.circle
+                                initial={{ strokeDashoffset: 364 }}
+                                animate={{ strokeDashoffset: 364 - (364 * successRate) / 100 }}
+                                cx="64"
+                                cy="64"
+                                r="58"
+                                stroke="currentColor"
+                                strokeWidth="8"
+                                strokeDasharray="364"
+                                fill="transparent"
+                                className="text-primary"
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-3xl font-black">{successRate}%</span>
+                            </div>
+                          </div>
+                          <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Survival Success</span>
+                        </div>
+
+                        {/* List Detail */}
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between p-4 rounded-2xl bg-green-50/50 border border-green-100">
+                             <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 bg-green-500 text-white rounded-lg flex items-center justify-center">
+                                 <Check className="w-4 h-4" />
+                               </div>
+                               <span className="font-bold text-slate-800">{t.successHatch}</span>
+                             </div>
+                             <span className="text-lg font-black text-green-600">{hatchedEggs}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-4 rounded-2xl bg-red-50/50 border border-red-100">
+                             <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 bg-red-500 text-white rounded-lg flex items-center justify-center">
+                                 <X className="w-4 h-4" />
+                               </div>
+                               <span className="font-bold text-slate-800">{t.failedEggs}</span>
+                             </div>
+                             <span className="text-lg font-black text-red-600">{failedEggs}</span>
+                          </div>
+                          <div className="flex items-center justify-between p-4 rounded-2xl bg-blue-50/50 border border-blue-100">
+                             <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center">
+                                 <Bird className="w-4 h-4" />
+                               </div>
+                               <span className="font-bold text-slate-800">{t.survivedChicks}</span>
+                             </div>
+                             <span className="text-lg font-black text-blue-600">{survivedChicks}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {chartData.length > 0 && (
+                        <div className="h-64 w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={chartData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="value"
+                              >
+                                {chartData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
             </motion.div>
           </div>
         )}
