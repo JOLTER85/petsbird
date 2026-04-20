@@ -203,6 +203,21 @@ const SPECIES_LIST = [
     incubation: 15,
     mutations: ["Normal", "White", "Silver", "Fawn", "Pied", "Opal"]
   },
+  { 
+    name: "Quaker (كويكر)", 
+    incubation: 24,
+    mutations: ["Normal", "Blue", "Pallid", "Lutino", "Albino", "Cinnamon", "Violet"]
+  },
+  { 
+    name: "African Grey (الببغاء الرمادي الأفريقي)", 
+    incubation: 28,
+    mutations: ["Normal", "Red Factor", "Albino"]
+  },
+  { 
+    name: "Senegal Parrot (اليويو السنيغالي)", 
+    incubation: 26,
+    mutations: ["Normal", "Pied", "Dilute"]
+  },
 ];
 
 const TRANSLATIONS = {
