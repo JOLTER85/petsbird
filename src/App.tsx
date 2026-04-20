@@ -1597,10 +1597,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       ...prev.slice(0, 19)
     ]);
 
-    // Auto-remove toast after 6 seconds
+    // Auto-remove toast after 5 seconds
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
-    }, 6000);
+    }, 5000);
   };
   const [hatchFailureEgg, setHatchFailureEgg] = useState<EggData | null>(null);
   const [failureReason, setFailureReason] = useState("");
@@ -1754,10 +1754,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     avatar: "JT"
   });
 
-  const [notifications, setNotifications] = useState([
-    { id: 1, title: "Notification System Active", message: "PetsBird notification system is monitoring your aviary.", time: "Just now", read: false },
-    { id: 2, title: "Aviary Health", message: "All breeding systems are operational.", time: "2 hours ago", read: false }
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
   
   const [birds, setBirds] = useState<BirdData[]>([]);
   const [cageFilter, setCageFilter] = useState<string | null>(null);
