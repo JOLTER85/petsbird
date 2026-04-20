@@ -1758,6 +1758,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   
   const [birds, setBirds] = useState<BirdData[]>([]);
   const [cageFilter, setCageFilter] = useState<string | null>(null);
+  const [speciesFilter, setSpeciesFilter] = useState<string>("All");
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
   const [searchEgg, setSearchEgg] = useState("");
@@ -3768,6 +3769,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     );
   }
 
+  const aviarySpecies = ["All", ...Array.from(new Set(birds.map(b => b.species)))];
+
   return (
     <div className="flex min-h-screen bg-background font-sans selection:bg-primary/10 overflow-x-hidden">
       {/* Sidebar - Desktop/Tablet */}
@@ -4249,6 +4252,21 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
               <div className="flex items-center gap-4">
                 <h3 className="text-3xl font-black font-display text-white">All Birds</h3>
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                  {aviarySpecies.map(species => (
+                    <button
+                      key={species}
+                      onClick={() => setSpeciesFilter(species)}
+                      className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
+                        speciesFilter === species 
+                          ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      }`}
+                    >
+                      {species}
+                    </button>
+                  ))}
+                </div>
                 {cageFilter && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-2xl text-xs font-bold border border-primary/20 shadow-sm">
                     <MapPin className="w-3.5 h-3.5" />
@@ -4275,7 +4293,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {birds
-                .filter(b => !cageFilter || b.cage === cageFilter)
+                .filter(b => (!cageFilter || b.cage === cageFilter) && (speciesFilter === "All" || b.species === speciesFilter))
                 .map((bird) => (
                 <BirdCard 
                   key={bird.id} 
