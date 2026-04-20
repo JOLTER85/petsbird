@@ -23,6 +23,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { User } from 'firebase/auth';
 import { 
   collection, 
+  collectionGroup,
   doc, 
   setDoc, 
   updateDoc, 
@@ -31,9 +32,11 @@ import {
   query, 
   where,
   getDoc,
+  getDocs,
   getDocFromServer,
   addDoc
 } from 'firebase/firestore';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   Bird, 
   LayoutDashboard, 
@@ -328,10 +331,10 @@ const SidebarItem = ({ icon: Icon, label, active = false, onClick, collapsed = f
 );
 
 const BottomNav = ({ activeTab, setActiveTab, t }: { activeTab: string, setActiveTab: (tab: string) => void, t: any }) => (
-  <motion.div 
+    <motion.div 
     initial={{ y: 100 }}
     animate={{ y: 0 }}
-    className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-3 flex items-center justify-between z-[100] md:hidden"
+    className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-slate-100 px-6 py-4 flex items-center justify-between z-[100] md:hidden shadow-[0_-8px_30px_rgb(0,0,0,0.04)]"
   >
     {[
       { id: "Dashboard", icon: LayoutDashboard, label: t.home },
@@ -342,10 +345,20 @@ const BottomNav = ({ activeTab, setActiveTab, t }: { activeTab: string, setActiv
       <button
         key={item.id}
         onClick={() => setActiveTab(item.id)}
-        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-primary scale-110' : 'text-slate-400'}`}
+        className={`flex flex-col items-center gap-1.5 transition-all relative ${activeTab === item.id ? 'text-primary' : 'text-slate-400'}`}
       >
-        <item.icon className="w-6 h-6" />
-        <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
+        <div className={`p-2 rounded-xl transition-all ${activeTab === item.id ? 'bg-primary/10' : ''}`}>
+          <item.icon className={`w-6 h-6 ${activeTab === item.id ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
+        </div>
+        <span className={`text-[9px] font-black uppercase tracking-tighter transition-all ${activeTab === item.id ? 'opacity-100 translate-y-0' : 'opacity-80'}`}>
+          {item.label}
+        </span>
+        {activeTab === item.id && (
+          <motion.div 
+            layoutId="nav-pill"
+            className="absolute -top-1 w-1 h-1 bg-primary rounded-full"
+          />
+        )}
       </button>
     ))}
   </motion.div>
@@ -420,7 +433,7 @@ const calculateDetailedAge = (birthDateStr: string) => {
   }
 };
 
-const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void }) => {
+const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick, onShare }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void, onShare?: (e: MouseEvent) => void }) => {
   // Debugging log to check URL validity
   useEffect(() => {
     if (imageUrl) {
@@ -456,19 +469,31 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
     <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
       onClick={onSelect}
-      className={`bg-white p-5 rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
+      className={`bg-white p-5 rounded-[28px] md:rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
     >
       {/* Top Actions */}
       <div className="absolute top-4 left-4 flex gap-2 z-10">
+        {onShare && (
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare(e);
+            }}
+            className="p-3 md:p-2 bg-white/90 backdrop-blur-sm text-slate-400 rounded-xl hover:text-green-500 hover:bg-white shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
+            title="Share Digital ID"
+          >
+            <Share2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
+          </button>
+        )}
         {onEdit && (
           <button 
             onClick={(e) => {
               e.stopPropagation();
               onEdit(e);
             }}
-            className="p-2 bg-white/80 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all"
+            className="p-3 md:p-2 bg-white/90 backdrop-blur-sm text-slate-400 rounded-xl hover:text-primary hover:bg-white shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
         )}
         {onExportCertificate && (
@@ -886,6 +911,236 @@ const PedigreeTree = ({ birdId, birds, onBirdClick, onEditParent }: { birdId: st
   );
 };
 
+const PublicBirdProfile = ({ bird, ancestors, isLoading, onBack }: { bird: BirdData | null, ancestors: BirdData[], isLoading: boolean, onBack: () => void }) => {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
+        <Loader2 className="w-12 h-12 text-accent-gold animate-spin mb-4" />
+        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Fetching Digital Records...</p>
+      </div>
+    );
+  }
+
+  if (!bird) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
+        <Logo theme="dark" className="scale-125 mb-16" />
+        <div className="w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center mb-8 border border-red-500/20">
+           <X className="w-12 h-12 text-red-500" />
+        </div>
+        <h2 className="text-4xl font-black mb-4 tracking-tighter">ID Not Registered</h2>
+        <p className="text-slate-400 max-w-sm mb-12 font-bold uppercase tracking-widest text-[10px] leading-relaxed">The digital bird ID you are searching for is not currently in the PetsBird global registry.</p>
+        <button onClick={onBack} className="bg-primary text-white px-10 py-5 rounded-[32px] font-black shadow-2xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest text-xs">
+           Return to Home
+        </button>
+      </div>
+    );
+  }
+
+  const profileUrl = `${window.location.origin}/bird/${bird.id}`;
+
+  return (
+    <div className="min-h-screen bg-slate-950 pb-24 overflow-x-hidden">
+       {/* High-End Header */}
+       <header className="p-6 md:p-10 flex items-center justify-between sticky top-0 bg-slate-950/90 backdrop-blur-2xl z-50 border-b border-white/5">
+          <div onClick={onBack} className="cursor-pointer group flex items-center gap-4">
+             <Logo theme="dark" variant="icon" className="w-10 h-10 group-hover:scale-110 transition-transform" />
+             <div className="hidden md:block">
+                <span className="block text-[10px] font-black text-accent-gold uppercase tracking-[0.3em]">PetsBird</span>
+                <span className="block text-[8px] font-bold text-slate-500 uppercase tracking-widest">Digital Registry</span>
+             </div>
+          </div>
+          <div className="flex items-center gap-4">
+             <button 
+                onClick={() => {
+                  const text = `Check out this bird on PetsBird: ${bird.name} (${bird.species}). View its digital profile and pedigree here: ${profileUrl}`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                }}
+                className="px-6 py-3.5 bg-green-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-green-500/20 flex items-center gap-2 hover:scale-105 active:scale-95 transition-all"
+             >
+                <Share2 className="w-4 h-4" /> Share on WhatsApp
+             </button>
+          </div>
+       </header>
+
+       <div className="max-w-7xl mx-auto px-6 py-12">
+          {/* Main Layout Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12 items-start">
+             
+             {/* Left Column: Core Identity Card */}
+             <div className="lg:col-span-4 space-y-8 sticky top-32">
+                <motion.div 
+                   initial={{ opacity: 0, y: 30 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   className="glass-dark p-3 rounded-[56px] border-white/5 shadow-2xl relative"
+                >
+                   <div className="aspect-[4/5] rounded-[48px] overflow-hidden bg-slate-900 border border-white/5 relative group">
+                      <img 
+                         src={bird.imageUrl || DEFAULT_BIRD_IMAGE} 
+                         alt={bird.name} 
+                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2000ms]"
+                         referrerPolicy="no-referrer"
+                      />
+                      {/* Floating Status Badge */}
+                      <div className="absolute top-8 left-8 flex flex-col gap-3">
+                         <div className="flex items-center gap-2 px-5 py-2 bg-accent-gold text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-accent-gold/40 border border-white/20">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Verified Breeder Stock
+                         </div>
+                         <div className="px-5 py-2 bg-black/60 backdrop-blur-xl text-white rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 shadow-xl">
+                            Ring: {bird.ring}
+                         </div>
+                      </div>
+                   </div>
+                </motion.div>
+
+                <div className="space-y-4 px-4 text-center lg:text-left">
+                   <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white leading-tight">
+                      {bird.name}
+                   </h1>
+                   <p className="text-2xl text-slate-500 font-bold tracking-tight uppercase flex items-center justify-center lg:justify-start gap-4">
+                      {bird.species}
+                      <span className="w-2 h-2 bg-accent-gold rounded-full" />
+                   </p>
+                   <div className="flex flex-wrap justify-center lg:justify-start gap-3 pt-4">
+                      <span className="px-6 py-2.5 bg-primary/20 text-primary border border-primary/20 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">{bird.mutation || 'Normal Mutation'}</span>
+                      <span className={`px-6 py-2.5 border rounded-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 ${
+                        bird.gender === 'Male' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-lg shadow-blue-500/10' : 'bg-pink-500/10 text-pink-400 border-pink-500/20 shadow-lg shadow-pink-500/10'
+                      }`}>
+                         <Bird className="w-3 h-3 saturate-0" />
+                         {bird.gender} Sex
+                      </span>
+                   </div>
+                </div>
+
+                {/* Digital Passport Card */}
+                <motion.div 
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   transition={{ delay: 0.4 }}
+                   className="glass-dark p-8 rounded-[48px] border-white/5 flex items-center gap-8 shadow-inner"
+                >
+                   <div className="bg-white p-3 rounded-2xl shrink-0 shadow-2xl">
+                      <QRCodeSVG value={profileUrl} size={110} level="H" />
+                   </div>
+                   <div className="space-y-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-accent-gold">Global ID Passport</h4>
+                      <p className="text-slate-500 text-[11px] font-bold leading-relaxed uppercase tracking-tight">
+                         The identity of this bird is cryptographically signed and stored on the PetsBird management floor for instant verification.
+                      </p>
+                   </div>
+                </motion.div>
+             </div>
+
+             <div className="lg:col-span-8 space-y-10">
+                {/* Pedigree Section */}
+                <motion.div 
+                   initial={{ opacity: 0, scale: 0.98 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   transition={{ delay: 0.2 }}
+                   className="glass-dark p-10 rounded-[64px] border-white/5 relative overflow-hidden"
+                >
+                   {/* Background Graphics */}
+                   <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -mr-32 -mt-32" />
+                   
+                   <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between mb-16 gap-6">
+                      <div className="space-y-2">
+                         <h3 className="text-3xl font-black text-white tracking-tighter">Digital Pedigree</h3>
+                         <div className="flex items-center gap-3">
+                            <div className="w-8 h-1 bg-accent-gold rounded-full" />
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">3-Generation Verified Lineage</p>
+                         </div>
+                      </div>
+                      <div className="p-4 rounded-3xl bg-white/5 border border-white/10 shrink-0">
+                         <GitBranch className="w-8 h-8 text-accent-gold" />
+                      </div>
+                   </div>
+                   
+                   {/* Pedigree Tree Container */}
+                   <div className="relative p-6 md:p-12 rounded-[56px] bg-black/30 border border-white/5 shadow-2xl overflow-x-auto no-scrollbar custom-scrollbar">
+                      <div className="min-w-[800px]">
+                         <PedigreeTree 
+                            birdId={bird.id} 
+                            birds={ancestors} 
+                            onBirdClick={(id) => {
+                               // Deep link to another bird if clicked
+                               window.history.pushState({}, '', `/bird/${id}`);
+                               window.dispatchEvent(new Event('popstate'));
+                            }} 
+                         />
+                      </div>
+                   </div>
+                </motion.div>
+
+                {/* Metrics Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <motion.div 
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 }}
+                      className="glass-dark p-10 rounded-[48px] border-white/5 flex flex-col justify-between"
+                   >
+                      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-12">Performance Summary</h4>
+                      <div className="grid grid-cols-2 gap-10">
+                         <div>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                               <div className="w-1.5 h-1.5 rounded-full bg-green-500" /> State
+                            </p>
+                            <p className="text-2xl font-black text-white">{bird.status || 'Active'}</p>
+                         </div>
+                         <div>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                               <Calendar className="w-3 h-3" /> Vintage
+                            </p>
+                            <p className="text-2xl font-black text-white">{bird.birthYear}</p>
+                         </div>
+                      </div>
+                      <div className="mt-12 pt-8 border-t border-white/5">
+                         <div className="flex items-center gap-4">
+                            <div className="w-1.5 h-8 bg-accent-gold rounded-full" />
+                            <div>
+                               <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Breeder Efficiency</p>
+                               <p className="text-white font-black text-sm uppercase">Elite Status Level</p>
+                            </div>
+                         </div>
+                      </div>
+                   </motion.div>
+
+                   <motion.div 
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.6 }}
+                      className="glass-dark p-10 rounded-[48px] border-white/10 flex items-center gap-8 shadow-2xl relative group overflow-hidden"
+                   >
+                      {/* Shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-accent-gold/0 via-accent-gold/5 to-accent-gold/0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1500ms]" />
+                      
+                      <div className="w-20 h-20 rounded-[28px] bg-accent-gold/10 flex items-center justify-center shrink-0 border border-accent-gold/20 shadow-inner">
+                         <Shield className="w-10 h-10 text-accent-gold" />
+                      </div>
+                      <div className="space-y-2">
+                         <h4 className="font-black text-white uppercase text-sm tracking-widest leading-tight">Authenticity <br /> Guaranteed</h4>
+                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-normal leading-relaxed">
+                            This record is cryptographically indexed in the global avicultural inventory.
+                         </p>
+                      </div>
+                   </motion.div>
+                </div>
+
+                {/* Footer Disclaimer */}
+                <div className="text-center md:text-left px-10">
+                   <p className="text-slate-600 text-[9px] font-bold uppercase tracking-[0.2em] leading-relaxed">
+                      Generated at {new Date().toLocaleDateString()} — Powered by PetsBird Global Aviary Intelligence <br />
+                      This record serves as an official breeder's digital passport.
+                   </p>
+                </div>
+             </div>
+          </div>
+       </div>
+    </div>
+  );
+};
+
 const uploadImageWithTimeout = async (file: File, userId: string): Promise<string> => {
   const DEFAULT_BIRD_IMAGE = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
   
@@ -1113,6 +1368,19 @@ Networking with other professionals and maintaining detailed lineage records are
     const handleNavigation = () => {
       const path = window.location.pathname.replace('/', '');
       const validTabs = ["Home", "Features", "Genetics", "Advice", "About", "News", "Terms", "Privacy", "Contact", "Marketplace"];
+      
+      if (path.startsWith('bird/')) {
+        const id = path.split('/')[1];
+        if (id) {
+          loadPublicBird(id);
+          setShowPublicProfile(true);
+          setShowApp(false);
+          setShowAuthPage(false);
+          return;
+        }
+      }
+
+      setShowPublicProfile(false);
       
       if (validTabs.includes(path)) {
         setLandingTab(path);
@@ -1621,6 +1889,61 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [feedbackText, setFeedbackText] = useState("");
   const dashboardRef = useRef<HTMLDivElement>(null);
 
+  const loadPublicBird = async (id: string) => {
+    setIsPublicLoading(true);
+    try {
+      // Find bird across all users using collectionGroup
+      // Note: This requires a Firestore index
+      const q = query(collectionGroup(db, 'birds'), where('id', '==', id));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const birdDoc = querySnapshot.docs[0];
+        const birdData = birdDoc.data() as BirdData;
+        setPublicBird(birdData);
+        
+        // Fetch ancestors for the pedigree tree
+        const ancestors: BirdData[] = [birdData];
+        const loadedIds = new Set([birdData.id]);
+
+        const fetchAncestors = async (b: BirdData, depth: number) => {
+          if (depth >= 3) return;
+          
+          const parentsToFetch = [];
+          if (b.fatherId && !loadedIds.has(b.fatherId)) parentsToFetch.push(b.fatherId);
+          if (b.motherId && !loadedIds.has(b.motherId)) parentsToFetch.push(b.motherId);
+
+          for (const pId of parentsToFetch) {
+            const pQ = query(collectionGroup(db, 'birds'), where('id', '==', pId));
+            const pSnap = await getDocs(pQ);
+            if (!pSnap.empty) {
+              const pData = pSnap.docs[0].data() as BirdData;
+              ancestors.push(pData);
+              loadedIds.add(pId);
+              await fetchAncestors(pData, depth + 1);
+            }
+          }
+        };
+
+        await fetchAncestors(birdData, 1);
+        setPublicAncestors(ancestors);
+      } else {
+        setPublicBird(null);
+      }
+    } catch (error) {
+      console.error("Error loading public bird profile:", error);
+      addNotification("Error", "Could not load the bird profile. It might be private or deleted.", 'warning');
+    } finally {
+      setIsPublicLoading(false);
+    }
+  };
+
+  const handleShareWhatsApp = (bird: BirdData) => {
+    const url = `${window.location.origin}/bird/${bird.id}`;
+    const text = `Check out this bird on PetsBird: ${bird.name} (${bird.species}). View its digital profile and pedigree here: ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   const downloadUserData = () => {
     const data = {
       birds,
@@ -1765,6 +2088,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [filterEggStatus, setFilterEggStatus] = useState<string>("All");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Public Profile State
+  const [publicBird, setPublicBird] = useState<BirdData | null>(null);
+  const [publicAncestors, setPublicAncestors] = useState<BirdData[]>([]);
+  const [isPublicLoading, setIsPublicLoading] = useState(false);
+  const [showPublicProfile, setShowPublicProfile] = useState(false);
 
   const exportPedigreePDF = async (birdId: string) => {
     const bird = birds.find(b => b.id === birdId);
@@ -2660,14 +2989,25 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
   const handleFertilityCheck = async (eggId: string, isFertile: boolean) => {
     if (!user) return;
-    if (!isFertile) {
-      // Delete egg if not fertile
-      handleDeleteEgg(eggId);
-      return;
-    }
     
     const path = `users_data/${user.uid}/eggs/${eggId}`;
     try {
+      if (!isFertile) {
+        await updateDoc(doc(db, "users_data", user.uid, "eggs", eggId), {
+          isFertile: false,
+          status: 'Failed'
+        });
+        setConfirmModal({
+          isOpen: true,
+          title: "Clear Egg",
+          message: "تم تسجيل البيضة كغير مخصبة. سيتم الاحتفاظ بها في السجلات كبيضة فاشلة.",
+          variant: 'info',
+          confirmText: "حسناً",
+          onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
+        });
+        return;
+      }
+
       await updateDoc(doc(db, "users_data", user.uid, "eggs", eggId), {
         isFertile: true
       });
@@ -2750,6 +3090,21 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           </div>
         </div>
       </div>
+    );
+  }
+
+  if (showPublicProfile) {
+    return (
+      <PublicBirdProfile 
+        bird={publicBird} 
+        ancestors={publicAncestors} 
+        isLoading={isPublicLoading} 
+        onBack={() => {
+          setShowPublicProfile(false);
+          window.history.pushState({}, '', '/');
+          window.dispatchEvent(new Event('popstate'));
+        }} 
+      />
     );
   }
 
@@ -3984,59 +4339,57 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  className="bg-white rounded-[32px] overflow-hidden shadow-2xl relative group h-full flex flex-col"
+                  className="bg-white rounded-[32px] overflow-hidden shadow-2xl relative group h-full flex flex-col min-h-[280px]"
                 >
                   <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Health Tracking</span>
                     <Activity className="w-4 h-4 text-primary animate-pulse" />
                   </div>
-                  <div className="relative aspect-video">
+                  <div className="relative flex-1">
                     <img 
                       src={bird.imageUrl || DEFAULT_BIRD_IMAGE} 
                       alt={bird.name}
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <div className="text-lg font-black leading-none">{bird.name}</div>
-                      <div className="text-[10px] font-bold opacity-80 uppercase tracking-widest">{bird.species}</div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <div className="text-xl font-black leading-tight truncate">{bird.name}</div>
+                      <div className="text-[10px] font-bold opacity-80 uppercase tracking-widest truncate">{bird.species}</div>
                     </div>
                   </div>
-                  <div className="p-6 flex-1 space-y-4">
+                  <div className="p-5 space-y-4 bg-white">
                     <div className="flex items-center justify-between">
-                      <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">Performance</div>
-                      <div className="text-lg font-black text-primary">80%</div>
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vital Score</div>
+                      <div className="text-base font-black text-primary">80%</div>
                     </div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: "80%" }}
                         className="h-full bg-primary"
                       />
                     </div>
-                    <div className="flex gap-2">
-                       <span className="text-[9px] bg-slate-50 px-2 py-1 rounded-lg font-bold text-slate-400 border border-slate-100">Vital Signs</span>
-                       <span className="text-[9px] bg-slate-50 px-2 py-1 rounded-lg font-bold text-slate-400 border border-slate-100">Nutrition</span>
-                    </div>
                   </div>
                 </motion.div>
               ))}
 
-              <StatCard 
-                icon={TrendingUp} 
-                value={`${eggs.filter(e => e.isFertile).length > 0 ? Math.round((eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.isFertile).length) * 100) : 0}%`} 
-                label="Hatch Success Rate" 
-                colorClass="bg-green-50 text-green-600" 
-                onClick={() => setActiveTab("Eggs")}
-              />
-              <StatCard 
-                icon={Activity} 
-                value={Math.round((eggs.filter(e => e.status === 'Completed').length / (eggs.length || 1)) * 100)} 
-                label="Aviary Multi-Metrics" 
-                colorClass="bg-blue-50 text-blue-600" 
-                onClick={() => setActiveTab("Statistics")}
-              />
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-4 md:gap-6 lg:contents">
+                <StatCard 
+                  icon={TrendingUp} 
+                  value={`${eggs.filter(e => e.isFertile).length > 0 ? Math.round((eggs.filter(e => e.status === 'Completed').length / eggs.filter(e => e.isFertile).length) * 100) : 0}%`} 
+                  label="Hatch rate" 
+                  colorClass="bg-green-50 text-green-600" 
+                  onClick={() => setActiveTab("Eggs")}
+                />
+                <StatCard 
+                  icon={Activity} 
+                  value={Math.round((eggs.filter(e => e.status === 'Completed').length / (eggs.length || 1)) * 100)} 
+                  label="Performance" 
+                  colorClass="bg-blue-50 text-blue-600" 
+                  onClick={() => setActiveTab("Statistics")}
+                />
+              </div>
             </div>
 
             {/* Charts Section - White cards on dark BG */}
@@ -4308,6 +4661,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   }}
                   onExportCertificate={exportPedigreePDF}
                   onCageClick={(cage) => setCageFilter(cage)}
+                  onShare={() => handleShareWhatsApp(bird)}
                 />
               ))}
               <motion.div 
@@ -4582,33 +4936,33 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 if (coupleEggs.length === 0) return null;
 
                 return (
-                  <div key={couple.id} className="bg-slate-900/40 p-10 rounded-[48px] border border-white/5 relative overflow-hidden group">
+                  <div key={couple.id} className="bg-slate-900/40 p-6 md:p-10 rounded-[32px] md:rounded-[48px] border border-white/5 relative overflow-hidden group">
                      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 transition-colors group-hover:bg-primary/10" />
                      
                      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6 relative z-10">
-                        <div className="flex items-center gap-6">
-                           <div className="flex -space-x-4">
-                              <div className="w-14 h-14 rounded-2xl bg-male overflow-hidden border-4 border-slate-900 shadow-xl rotate-[-10deg] group-hover:rotate-0 transition-transform">
+                        <div className="flex items-center gap-4 md:gap-6">
+                           <div className="flex -space-x-3 md:-space-x-4">
+                              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-male overflow-hidden border-4 border-slate-900 shadow-xl rotate-[-8deg] group-hover:rotate-0 transition-transform">
                                  <img src={male?.imageUrl || DEFAULT_BIRD_IMAGE} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                               </div>
-                              <div className="w-14 h-14 rounded-2xl bg-female overflow-hidden border-4 border-slate-900 shadow-xl rotate-[10deg] group-hover:rotate-0 transition-transform">
+                              <div className="w-12 h-12 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-female overflow-hidden border-4 border-slate-900 shadow-xl rotate-[8deg] group-hover:rotate-0 transition-transform">
                                  <img src={female?.imageUrl || DEFAULT_BIRD_IMAGE} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                               </div>
                            </div>
-                           <div>
-                              <h4 className="text-2xl font-black text-white">{male?.name || 'Pair'} × {female?.name || ''}</h4>
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">{coupleEggs.length} Eggs Total • {coupleEggs.filter(e => e.isFertile).length} Fertile</p>
+                           <div className="min-w-0">
+                              <h4 className="text-xl md:text-2xl font-black text-white truncate">{male?.name || 'Pair'} × {female?.name || ''}</h4>
+                              <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{coupleEggs.length} Eggs Total • {coupleEggs.filter(e => e.isFertile).length} Fertile</p>
                            </div>
                         </div>
                         <button 
                            onClick={() => openEggModal(couple.id)} 
-                           className="self-start px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5"
+                           className="w-full md:w-auto px-6 py-4 md:py-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-white/5"
                         >
-                           <Plus className="w-4 h-4" /> New Egg for this Pair
+                           <Plus className="w-4 h-4" /> New Egg
                         </button>
                      </div>
 
-                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-8">
                         {coupleEggs.map(egg => {
                            const parseDateStr = (dStr: string) => {
                              if (!dStr) return new Date();
@@ -4622,37 +4976,42 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                            if (hd) hd.setHours(0,0,0,0);
                            const diff = hd ? Math.ceil((hd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
                            const isHatching = diff === 0 && egg.status === 'Intact';
+                           const isOverdue = (diff !== null && diff < 0) && egg.status === 'Intact';
 
                            return (
                               <motion.div 
                                  key={egg.id} 
                                  whileHover={{ y: -10 }}
-                                 className={`relative p-8 rounded-[40px] text-center transition-all ${
+                                 className={`relative p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center transition-all ${
                                     egg.status === 'Completed' || egg.status === 'Hatched' ? 'bg-green-500 shadow-xl shadow-green-500/20' :
                                     isHatching ? 'bg-orange-500 shadow-xl shadow-orange-500/20 animate-pulse' :
-                                    egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-slate-200' :
+                                    isOverdue ? 'bg-red-500 shadow-xl shadow-red-500/20' :
+                                    egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-slate-100 text-slate-500' :
                                     'bg-white shadow-xl shadow-black/5'
                                  }`}
                               >
-                                 <div className="absolute top-4 right-4 flex gap-1 z-20">
-                                    <button onClick={() => openEggModal(undefined, egg)} className="p-2 text-slate-300 hover:text-primary transition-colors hover:bg-slate-50 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button>
-                                    <button onClick={() => handleDeleteEgg(egg.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors hover:bg-slate-50 rounded-lg"><X className="w-3.5 h-3.5" /></button>
+                                 <div className="absolute top-4 right-4 flex gap-2 z-20">
+                                    <button onClick={() => openEggModal(undefined, egg)} className="p-2.5 bg-slate-50/50 backdrop-blur-sm text-slate-400 hover:text-primary transition-colors rounded-xl shadow-sm"><Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" /></button>
+                                    <button onClick={() => handleDeleteEgg(egg.id)} className="p-2.5 bg-slate-50/50 backdrop-blur-sm text-slate-400 hover:text-red-500 transition-colors rounded-xl shadow-sm"><X className="w-4 h-4 md:w-3.5 md:h-3.5" /></button>
                                  </div>
-                                 <h5 className={`text-4xl font-black mb-1 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching ? 'text-white' : 'text-slate-900'}`}>#{egg.eggNumber || egg.id.slice(-3)}</h5>
-                                 <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-6 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching ? 'text-white/70' : 'text-slate-400'}`}>{egg.status}</p>
+                                 <h5 className={`text-3xl md:text-4xl font-black mb-1 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching || isOverdue ? 'text-white' : 'text-slate-900'}`}>#{egg.eggNumber || egg.id.slice(-3)}</h5>
+                                 <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-6 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching || isOverdue ? 'text-white/70' : 'text-slate-400'}`}>
+                                   {isOverdue ? 'Overdue ⚠️' : egg.status}
+                                 </p>
                                  
                                  <div className="space-y-4 relative z-10">
-                                    <div className={`flex justify-between text-[10px] font-bold border-t pt-4 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching ? 'text-white/80 border-white/10' : 'text-slate-500 border-slate-100'}`}>
-                                       <span>Laid: {egg.laidDate}</span>
-                                       {diff !== null && diff > 0 && <span>{diff}d to go</span>}
-                                       {isHatching && <span>Today!</span>}
+                                    <div className={`flex justify-between items-center text-[9px] md:text-[10px] font-bold border-t pt-4 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching || isOverdue ? 'text-white/80 border-white/10' : 'text-slate-500 border-slate-100'}`}>
+                                       <span>{egg.laidDate}</span>
+                                       {diff !== null && diff > 0 && <span className="bg-primary/10 px-2 py-0.5 rounded-lg">{diff}d left</span>}
+                                       {isHatching && <span className="bg-white/20 px-2 py-0.5 rounded-lg">Today!</span>}
+                                       {isOverdue && <span className="bg-white/20 px-2 py-0.5 rounded-lg">{Math.abs(diff)}d Late</span>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
-                                       <button onClick={() => handleFertilityCheck(egg.id, true)} className={`py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${egg.isFertile === true ? 'bg-white text-primary shadow-lg' : 'bg-black/5 text-slate-400'}`}>Fertile</button>
-                                       <button onClick={() => handleFertilityCheck(egg.id, false)} className={`py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${egg.isFertile === false ? 'bg-slate-900 text-white shadow-lg' : 'bg-black/5 text-slate-400'}`}>Clear</button>
+                                       <button onClick={() => handleFertilityCheck(egg.id, true)} className={`py-4 md:py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${egg.isFertile === true ? 'bg-white text-primary shadow-lg ring-1 ring-primary/20' : 'bg-black/5 text-slate-400 hover:bg-black/10'}`}>Fertile</button>
+                                       <button onClick={() => handleFertilityCheck(egg.id, false)} className={`py-4 md:py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${egg.isFertile === false ? 'bg-slate-900 text-white shadow-lg' : 'bg-black/5 text-slate-400 hover:bg-black/10'}`}>Clear</button>
                                     </div>
                                     {isHatching && (
-                                       <button onClick={() => handleHatchSuccess(egg)} className="w-full py-4 bg-white text-orange-600 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20">Mark Hatched 🐣</button>
+                                       <button onClick={() => handleHatchSuccess(egg)} className="w-full py-4 bg-white text-orange-600 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95 transition-all">Mark Hatched 🐣</button>
                                     )}
                                  </div>
                               </motion.div>
@@ -5425,9 +5784,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 </div>
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Laid Date</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Laid Date (تاريخ البيضة)</label>
                     <input 
-                      type="text" 
+                      type="date" 
                       value={newEgg.laidDate}
                       onChange={(e) => setNewEgg({...newEgg, laidDate: e.target.value})}
                       className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
