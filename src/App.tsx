@@ -80,8 +80,12 @@ import {
   CheckCircle2,
   Moon,
   AlertTriangle,
-  Shield
+  Shield,
+  Smartphone,
+  Search
 } from "lucide-react";
+
+const DEFAULT_BIRD_IMAGE = "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=400";
 
 import { 
   BarChart, 
@@ -499,16 +503,17 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
             referrerPolicy="no-referrer"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              console.error(`Failed to load image for bird [${name}]:`, cleanImageUrl);
               target.onerror = null;
-              target.src = "https://images.unsplash.com/photo-1522926193341-e9fed6c10841?auto=format&fit=crop&q=80&w=400";
+              target.src = DEFAULT_BIRD_IMAGE;
             }}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-slate-300">
-            <Bird className="w-16 h-16 mb-2 opacity-20" />
-            <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">No Image</span>
-          </div>
+          <img 
+            src={DEFAULT_BIRD_IMAGE} 
+            alt="Default Bird" 
+            className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[0.5]"
+            referrerPolicy="no-referrer"
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         
@@ -1518,6 +1523,23 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     variant: 'info',
     onConfirm: () => {}
   });
+
+  const DEFAULT_BIRD_IMAGE = "https://images.unsplash.com/photo-1552728089-57bdde30ebd3?auto=format&fit=crop&q=80&w=400";
+
+  const addNotification = (title: string, message: string, type: 'info' | 'success' | 'warning' = 'info') => {
+    setNotifications(prev => [
+      { 
+        id: Date.now(), 
+        title, 
+        message, 
+        time: "Just now", 
+        read: false,
+        // @ts-ignore
+        type 
+      },
+      ...prev.slice(0, 19)
+    ]);
+  };
   const [hatchFailureEgg, setHatchFailureEgg] = useState<EggData | null>(null);
   const [failureReason, setFailureReason] = useState("");
   const [pedigreeBirdId, setPedigreeBirdId] = useState<string | null>(null);
@@ -1964,20 +1986,11 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         const birdData = { ...newBird, id, imageUrl, userId: user.uid };
         await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
         
-        setNotifications([
-          { 
-            id: Date.now(), 
-            title: "Bird Added", 
-            message: `تمت إضافة ${newBird.name} بنجاح!`, 
-            time: "Just now", 
-            read: false 
-          },
-          ...notifications
-        ]);
+        addNotification("Bird Added", `تمت إضافة ${newBird.name} بنجاح!`, 'success');
 
         setSelectedFile(null);
         localStorage.removeItem('petsbird_draft_bird');
-        setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
+        setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", status: "Ready", imageUrl: "" });
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `users_data/${user.uid}/birds`);
       } finally {
@@ -2145,6 +2158,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     const path = `users_data/${user.uid}/couples/${id}`;
     try {
       await setDoc(doc(db, "users_data", user.uid, "couples", id), newCouple);
+      addNotification("Couple Created", "تم إنشاء الكوبل الجديد بنجاح", 'success');
       setIsCoupleModalOpen(false);
       setSelectedBirds([]);
       setActiveTab("Couples");
@@ -2323,17 +2337,20 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             { 
               name: `${male.mutation || "Normal"} (Visual)`, 
               probability: "50%", 
-              description: "Offspring inheriting the visual characteristics of the father." 
+              description: "Offspring inheriting the visual characteristics of the father.",
+              thumbnailKeyword: male.mutation || "Normal bird"
             },
             { 
               name: `${female.mutation || "Normal"} (Visual)`, 
               probability: "25%", 
-              description: "Offspring inheriting the visual characteristics of the mother." 
+              description: "Offspring inheriting the visual characteristics of the mother.",
+              thumbnailKeyword: female.mutation || "Normal bird"
             },
             { 
               name: `Split ${male.mutation || "Mutation"}`, 
               probability: "25%", 
-              description: "Offspring carrying the gene but not showing it visually." 
+              description: "Offspring carrying the gene but not showing it visually.",
+              thumbnailKeyword: "Bird DNA"
             }
           ],
           advice: "This is a simulated result because the Gemini API key is not configured. For accurate genetic predictions based on real avian science, please add your Gemini API key in the app settings.",
@@ -2354,7 +2371,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         Female Mutation: ${female.mutation || "Normal/Classic"}
 
         Please provide the results in a structured JSON format with the following fields:
-        - possibleMutations: An array of objects, each with 'name' (mutation name), 'probability' (percentage), and 'description' (brief explanation).
+        - possibleMutations: An array of objects, each with 'name' (mutation name), 'probability' (percentage), 'description' (brief explanation), and 'thumbnailKeyword' (a simple keyword for image search e.g. 'green budgie' or 'albino lovebird').
         - advice: A short expert advice for breeding this specific pair.
         - difficulty: A rating from 1 to 5 (1 easy, 5 expert).
 
@@ -2376,9 +2393,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   properties: {
                     name: { type: Type.STRING },
                     probability: { type: Type.STRING },
-                    description: { type: Type.STRING }
+                    description: { type: Type.STRING },
+                    thumbnailKeyword: { type: Type.STRING }
                   },
-                  required: ["name", "probability", "description"]
+                  required: ["name", "probability", "description", "thumbnailKeyword"]
                 }
               },
               advice: { type: Type.STRING },
@@ -2485,6 +2503,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         hatchDate,
         coupleId: selectedCoupleId
       });
+      addNotification("Egg Updated", "تم تحديث بيانات البيضة بنجاح", 'success');
       setIsEggModalOpen(false);
       setEditingEggId(null);
       setSelectedCoupleId("");
@@ -2506,6 +2525,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       onConfirm: async () => {
         try {
           await deleteDoc(doc(db, "users_data", user.uid, "eggs", id));
+          addNotification("Egg Deleted", "تم حذف البيضة بنجاح", 'warning');
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
           handleFirestoreError(error, OperationType.DELETE, path);
@@ -3913,7 +3933,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   </div>
                   <div className="relative aspect-video">
                     <img 
-                      src={bird.imageUrl || "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=400"} 
+                      src={bird.imageUrl || DEFAULT_BIRD_IMAGE} 
                       alt={bird.name}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
@@ -4118,6 +4138,35 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               </div>
             </div>
 
+            {/* PWA Download Banner */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="bg-gradient-to-br from-primary to-blue-700 p-10 rounded-[40px] shadow-2xl shadow-primary/20 text-white flex flex-col md:flex-row items-center justify-between group overflow-hidden relative"
+            >
+              <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+                <Download className="w-64 h-64" />
+              </div>
+              <div className="relative z-10 max-w-2xl text-center md:text-left">
+                <h3 className="text-3xl font-black mb-3">PetsBird Mobile Experience</h3>
+                <p className="text-blue-100 font-bold leading-relaxed mb-8">احصل على تجربة أفضل واسرع من خلال تثبيت التطبيق على هاتفك. تتبع طيورك وانتاجك في أي وقت وفي أي مكان.</p>
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                  <button 
+                    onClick={handleInstallClick}
+                    className="px-10 py-4 bg-white text-primary rounded-2xl font-black text-sm shadow-xl hover:bg-slate-50 hover:scale-105 transition-all flex items-center gap-3"
+                  >
+                    <Download className="w-5 h-5" />
+                    تثبيت التطبيق الآن
+                  </button>
+                  <div className="px-6 py-4 bg-primary-dark/30 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-100 border border-white/10 flex items-center gap-2">
+                    <Smartphone className="w-4 h-4" />
+                    Works on iOS & Android
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
             <section>
               <div className="flex items-center justify-between mb-6 md:mb-8">
                 <h3 className="text-xl md:text-2xl font-bold font-display text-white">Recent Birds</h3>
@@ -4239,14 +4288,14 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                             {male?.imageUrl ? (
                               <img src={male.imageUrl} alt={male.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                              <Bird className="w-6 h-6 md:w-7 md:h-7 text-male-text" />
+                              <img src={DEFAULT_BIRD_IMAGE} alt="Default Male" className="w-full h-full object-cover opacity-60 grayscale-[0.5]" referrerPolicy="no-referrer" />
                             )}
                           </div>
                           <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-female flex items-center justify-center border-4 border-white shadow-md rotate-[6deg] hover:rotate-0 transition-transform overflow-hidden">
                             {female?.imageUrl ? (
                               <img src={female.imageUrl} alt={female.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                              <Bird className="w-6 h-6 md:w-7 md:h-7 text-female-text" />
+                              <img src={DEFAULT_BIRD_IMAGE} alt="Default Female" className="w-full h-full object-cover opacity-60 grayscale-[0.5]" referrerPolicy="no-referrer" />
                             )}
                           </div>
                         </div>
@@ -4275,9 +4324,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                           {male?.imageUrl ? (
                             <img src={male.imageUrl} alt={male.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Bird className="w-6 h-6 md:w-8 md:h-8 text-male-text opacity-40" />
-                            </div>
+                            <img src={DEFAULT_BIRD_IMAGE} alt="Default Male" className="w-full h-full object-cover opacity-60 grayscale-[0.5]" referrerPolicy="no-referrer" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -4362,12 +4409,26 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                           )}
                         </div>
                       </div>
-                      <button 
-                        onClick={() => openEggModal(couple.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-accent-orange/10 text-accent-orange rounded-xl font-bold text-xs hover:bg-accent-orange/20 transition-colors"
-                      >
-                        <Plus className="w-4 h-4" /> Add Egg
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button 
+                          onClick={() => {
+                            const coupleEggs = eggs.filter(e => e.coupleId === couple.id);
+                            const hatchCount = coupleEggs.filter(e => e.status === 'Completed' || e.status === 'Hatched').length;
+                            const rate = coupleEggs.length > 0 ? Math.round((hatchCount / coupleEggs.length) * 100) : 0;
+                            addNotification(`Stats: ${male?.name} × ${female?.name}`, `Eggs: ${coupleEggs.length} | Hatched: ${hatchCount} | Success Rate: ${rate}%`, 'info');
+                            setIsNotificationsOpen(true);
+                          }}
+                          className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl font-bold text-xs hover:bg-primary/20 transition-colors"
+                        >
+                          <BarChart className="w-4 h-4" /> Statistique
+                        </button>
+                        <button 
+                          onClick={() => openEggModal(couple.id)}
+                          className="flex items-center gap-2 px-4 py-2 bg-accent-orange/10 text-accent-orange rounded-xl font-bold text-xs hover:bg-accent-orange/20 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" /> Add Egg
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -4395,7 +4456,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <h3 className="text-3xl font-black font-display text-white">Egg Tracking</h3>
                 <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Monitor your aviary's productivity in real-time</p>
               </div>
-              
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative">
                   <input 
@@ -4403,291 +4463,135 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     placeholder="Search Egg ID or Couple..." 
                     value={searchEgg}
                     onChange={(e) => setSearchEgg(e.target.value)}
-                    className="pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-full sm:w-64"
+                    className="w-full sm:w-80 bg-slate-800/30 border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-500 font-bold"
                   />
-                  <Box className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <Search className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 </div>
-                
                 <select 
                   value={filterEggStatus}
-                  onChange={(e) => setFilterEggStatus(e.target.value)}
-                  className="px-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-primary/20 transition-all"
+                  onChange={(e) => setFilterEggStatus(e.target.value as any)}
+                  className="bg-slate-800/30 border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold"
                 >
-                  <option value="All">All Statuses</option>
-                  <option value="Intact">Intact (Incubating)</option>
+                  <option value="All">All Status</option>
+                  <option value="Intact">Intact</option>
                   <option value="Hatched">Hatched</option>
                   <option value="Completed">Completed</option>
                   <option value="Broken">Broken</option>
                   <option value="Failed">Failed</option>
                 </select>
+                <button 
+                  onClick={() => openEggModal()}
+                  className="bg-primary text-white px-8 py-4 rounded-2xl font-black text-sm shadow-xl shadow-primary/20 flex items-center gap-2 hover:scale-105 transition-all"
+                >
+                  <Plus className="w-4 h-4" /> Add Egg
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {eggs
-                .filter(e => {
-                  const statusMatch = filterEggStatus === "All" || e.status === filterEggStatus;
-                  const couple = couples.find(c => c.id === e.coupleId);
-                  const male = birds.find(b => b.id === couple?.maleId);
-                  const female = birds.find(b => b.id === couple?.femaleId);
-                  const searchLower = searchEgg.toLowerCase();
-                  const searchMatch = 
-                    e.eggNumber?.toLowerCase().includes(searchLower) || 
-                    e.id.toLowerCase().includes(searchLower) ||
-                    male?.name.toLowerCase().includes(searchLower) ||
-                    female?.name.toLowerCase().includes(searchLower) ||
-                    male?.ring.toLowerCase().includes(searchLower) ||
-                    female?.ring.toLowerCase().includes(searchLower);
-                  return statusMatch && searchMatch;
-                })
-                .map((egg) => {
-                const couple = couples.find(c => c.id === egg.coupleId);
-                const male = birds.find(b => b.id === couple?.maleId);
-                const female = birds.find(b => b.id === couple?.femaleId);
-                
-                const parseDate = (dStr: string) => {
-                  if (!dStr) return new Date();
-                  if (dStr.includes('-')) {
-                    const parts = dStr.split('-');
-                    if (parts[0].length === 4) return new Date(dStr); // YYYY-MM-DD
-                    const [d, m, y] = parts.map(Number);
-                    return new Date(y, m - 1, d); // DD-MM-YYYY
-                  }
-                  const [d, m, y] = dStr.split('/').map(Number);
-                  return new Date(y, m - 1, d);
-                };
+            <div className="space-y-12">
+              {couples.map((couple) => {
+                const male = birds.find(b => b.id === couple.maleId);
+                const female = birds.find(b => b.id === couple.femaleId);
+                const coupleEggs = eggs.filter(e => e.coupleId === couple.id)
+                  .filter(e => {
+                    const statusMatch = filterEggStatus === "All" || e.status === filterEggStatus;
+                    const searchLower = searchEgg.toLowerCase();
+                    const searchMatch = 
+                      e.eggNumber?.toLowerCase().includes(searchLower) || 
+                      e.id.toLowerCase().includes(searchLower) ||
+                      male?.name.toLowerCase().includes(searchLower) ||
+                      female?.name.toLowerCase().includes(searchLower);
+                    return statusMatch && searchMatch;
+                  });
 
-                const daysToHatch = (() => {
-                  if (!egg.hatchDate || egg.status !== 'Intact') return null;
-                  try {
-                    const hatch = parseDate(egg.hatchDate);
-                    hatch.setHours(0, 0, 0, 0);
-                    const now = new Date();
-                    now.setHours(0, 0, 0, 0);
-                    const diffTime = hatch.getTime() - now.getTime();
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    return diffDays;
-                  } catch (e) { return null; }
-                })();
-
-                const progress = (() => {
-                  if (!egg.laidDate || !egg.hatchDate || egg.status !== 'Intact') return 0;
-                  try {
-                    const laid = parseDate(egg.laidDate).getTime();
-                    const hatch = parseDate(egg.hatchDate).getTime();
-                    const now = new Date().getTime();
-                    const total = hatch - laid;
-                    const elapsed = now - laid;
-                    if (total <= 0) return 100;
-                    return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
-                  } catch (e) { return 0; }
-                })();
-
-                const isHatchingToday = daysToHatch === 0;
-                const isNearHatching = daysToHatch !== null && daysToHatch <= 2 && daysToHatch > 0;
+                if (coupleEggs.length === 0 && (searchEgg !== "" || filterEggStatus !== "All")) return null;
+                if (coupleEggs.length === 0) return null;
 
                 return (
-                  <motion.div
-                    key={egg.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    whileHover={{ scale: 1.05 }}
-                    className="relative flex flex-col items-center group"
-                  >
-                    {/* Edit/Delete Buttons */}
-                    <div className="absolute -top-2 -right-2 flex flex-col gap-2 z-40">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); openEggModal(undefined, egg); }}
-                        className="p-2.5 bg-white shadow-xl text-slate-400 rounded-xl hover:text-primary hover:scale-110 transition-all border border-slate-100"
-                        title="تعديل"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteEgg(egg.id); }}
-                        className="p-2.5 bg-white shadow-xl text-slate-400 rounded-xl hover:text-red-500 hover:scale-110 transition-all border border-slate-100"
-                        title="حذف"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Egg Shape Container */}
-                    <div className={`relative w-full min-h-[580px] rounded-[50%_50%_50%_50%_/_70%_70%_45%_45%] shadow-[0_30px_60px_rgba(0,0,0,0.12)] border-t border-white/60 transition-all duration-700 flex flex-col items-center justify-center p-8 text-center
-                      ${egg.status === 'Completed' || egg.status === 'Hatched' ? 'bg-gradient-to-b from-green-50 to-emerald-100 border-green-200' :
-                        isHatchingToday ? 'bg-gradient-to-b from-orange-100 to-amber-200 border-orange-300 ring-8 ring-orange-400/10' : 
-                        isNearHatching ? 'bg-gradient-to-b from-amber-50 to-orange-100 border-amber-200 animate-pulse' : 
-                        'bg-gradient-to-b from-white to-slate-100 border-slate-100'}
-                      ${egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-gradient-to-b from-red-50 to-rose-100 border-red-200 opacity-80' : ''}
-                    `}>
-                      {/* Depth Shadow */}
-                      <div className="absolute inset-0 bg-gradient-to-tr from-black/5 via-transparent to-white/10 pointer-events-none" />
-                      
-                      {/* Cracking Effect */}
-                      {(isNearHatching || isHatchingToday) && (
-                        <div className="absolute inset-0 pointer-events-none opacity-40">
-                          <svg viewBox="0 0 100 120" className="w-full h-full fill-none stroke-amber-900/30 stroke-[0.8]">
-                            <path d="M30,40 L45,55 L35,70" />
-                            <path d="M70,30 L60,50 L75,65" />
-                            <path d="M50,80 L40,95 L60,110" />
-                            <path d="M20,60 L40,65 L30,80" />
-                          </svg>
+                  <div key={couple.id} className="bg-slate-900/40 p-10 rounded-[48px] border border-white/5 relative overflow-hidden group">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 transition-colors group-hover:bg-primary/10" />
+                     
+                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6 relative z-10">
+                        <div className="flex items-center gap-6">
+                           <div className="flex -space-x-4">
+                              <div className="w-14 h-14 rounded-2xl bg-male overflow-hidden border-4 border-slate-900 shadow-xl rotate-[-10deg] group-hover:rotate-0 transition-transform">
+                                 <img src={male?.imageUrl || DEFAULT_BIRD_IMAGE} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                              <div className="w-14 h-14 rounded-2xl bg-female overflow-hidden border-4 border-slate-900 shadow-xl rotate-[10deg] group-hover:rotate-0 transition-transform">
+                                 <img src={female?.imageUrl || DEFAULT_BIRD_IMAGE} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              </div>
+                           </div>
+                           <div>
+                              <h4 className="text-2xl font-black text-white">{male?.name || 'Pair'} × {female?.name || ''}</h4>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">{coupleEggs.length} Eggs Total • {coupleEggs.filter(e => e.isFertile).length} Fertile</p>
+                           </div>
                         </div>
-                      )}
+                        <button 
+                           onClick={() => openEggModal(couple.id)} 
+                           className="self-start px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-white/5"
+                        >
+                           <Plus className="w-4 h-4" /> New Egg for this Pair
+                        </button>
+                     </div>
 
-                      {/* Status Badge */}
-                      <div className={`absolute top-6 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg z-20 ${
-                        egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-600 text-white' :
-                        egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-red-600 text-white' :
-                        isHatchingToday ? 'bg-orange-600 text-white animate-bounce' :
-                        'bg-primary text-white'
-                      }`}>
-                        {isHatchingToday ? 'Hatching Now! 🐣' : egg.status}
-                      </div>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8">
+                        {coupleEggs.map(egg => {
+                           const parseDateStr = (dStr: string) => {
+                             if (!dStr) return new Date();
+                             const separator = dStr.includes('/') ? '/' : '-';
+                             const parts = dStr.split(separator).map(Number);
+                             return parts[0] > 1000 ? new Date(parts[0], parts[1]-1, parts[2]) : new Date(parts[2], parts[1]-1, parts[0]);
+                           };
+                           const today = new Date();
+                           today.setHours(0,0,0,0);
+                           const hd = egg.hatchDate ? parseDateStr(egg.hatchDate) : null;
+                           if (hd) hd.setHours(0,0,0,0);
+                           const diff = hd ? Math.ceil((hd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+                           const isHatching = diff === 0 && egg.status === 'Intact';
 
-                      {/* Egg Content */}
-                      <div className="space-y-4 relative z-10 w-full">
-                        <div className="relative w-20 h-20 mx-auto mb-2">
-                          <div className={`w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center border-2 ${isHatchingToday ? 'border-orange-300' : 'border-slate-100'}`}>
-                            {egg.status === 'Hatched' || egg.status === 'Completed' ? (
-                              <Bird className="w-10 h-10 text-green-600 animate-pulse" />
-                            ) : egg.status === 'Broken' || egg.status === 'Failed' ? (
-                              <X className="w-10 h-10 text-red-400" />
-                            ) : (
-                              <EggIcon className={`w-10 h-10 ${isHatchingToday ? 'text-orange-600' : 'text-accent-orange'}`} />
-                            )}
-                          </div>
-                          {daysToHatch !== null && daysToHatch > 0 && (
-                            <div className="absolute -top-3 -right-3 w-10 h-10 bg-accent-orange text-white rounded-full flex items-center justify-center text-xs font-black border-4 border-white shadow-xl animate-bounce">
-                              {daysToHatch}d
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Breeding Pair</p>
-                          <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-2 border border-slate-200 shadow-sm">
-                            <p className="text-[10px] font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
-                              <span className="text-blue-500">♂</span> {male ? male.name : 'N/A'}
-                            </p>
-                            <div className="flex items-center justify-center my-1">
-                              <div className="h-[1px] flex-1 bg-slate-200" />
-                              <Heart className="w-2 h-2 text-red-400 mx-2 fill-red-400" />
-                              <div className="h-[1px] flex-1 bg-slate-200" />
-                            </div>
-                            <p className="text-[10px] font-bold text-slate-800 leading-tight flex items-center justify-center gap-1">
-                              <span className="text-pink-500">♀</span> {female ? female.name : 'N/A'}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none">Identification</p>
-                          <p className="text-2xl font-black font-display text-primary drop-shadow-sm">#{egg.eggNumber || egg.id.slice(-3)}</p>
-                        </div>
-
-                        {/* Progress Bar */}
-                        {egg.status === 'Intact' && (
-                          <div className="space-y-1.5 pt-1">
-                            <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-slate-500">
-                              <span>Incubation</span>
-                              <span className={progress > 80 ? 'text-orange-600' : ''}>{progress}%</span>
-                            </div>
-                            <div className="h-2 w-full bg-slate-200/50 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                           return (
                               <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${progress}%` }}
-                                className={`h-full rounded-full ${isHatchingToday ? 'bg-gradient-to-r from-orange-500 to-amber-500' : 'bg-gradient-to-r from-primary to-blue-400'}`}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100/50">
-                          <div className="flex flex-col items-center p-2 bg-white/40 backdrop-blur-sm rounded-xl border border-white/60">
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Eggs Laid</span>
-                            <span className="text-[11px] font-black text-slate-800">{egg.laidDate}</span>
-                          </div>
-                          <div className={`flex flex-col items-center p-2 backdrop-blur-sm rounded-xl border ${isHatchingToday || (daysToHatch !== null && daysToHatch < 0) ? 'bg-orange-500 text-white border-orange-400 shadow-lg shadow-orange-200' : 'bg-accent-orange/10 text-accent-orange border-accent-orange/20'}`}>
-                            <span className={`text-[9px] font-black uppercase tracking-widest mb-1 ${isHatchingToday || (daysToHatch !== null && daysToHatch < 0) ? 'text-white/80' : 'text-accent-orange'}`}>Hatch Date</span>
-                            <span className="text-[11px] font-black">{egg.hatchDate || "TBD"}</span>
-                          </div>
-                        </div>
-
-                        {/* Fertility Check Date & Buttons */}
-                        {egg.status === 'Intact' && !isHatchingToday && (daysToHatch === null || daysToHatch > 0) && (
-                          <div className="pt-4 space-y-3">
-                            <div className="flex flex-col items-center">
-                              <span className="text-[8px] font-black text-blue-400 uppercase tracking-widest block mb-1">Fertility Check</span>
-                              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">{egg.fertilityCheckDate}</span>
-                            </div>
-                            
-                            {!egg.isFertile && (
-                              <div className="flex gap-2">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); handleFertilityCheck(egg.id, true); }}
-                                  className="flex-1 py-2 bg-blue-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-sm"
-                                >
-                                  Fertile
-                                </button>
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); handleFertilityCheck(egg.id, false); }}
-                                  className="flex-1 py-2 bg-red-50 text-red-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-100 transition-all border border-red-100"
-                                >
-                                  Infertile
-                                </button>
-                              </div>
-                            )}
-                            {egg.isFertile && (
-                              <div className="flex items-center justify-center gap-1.5 text-green-500 bg-green-50 py-2 rounded-xl border border-green-100">
-                                <Sparkles className="w-3 h-3" />
-                                <span className="text-[9px] font-black uppercase tracking-widest">Confirmed Fertile</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Hatch Confirmation Buttons - ONLY SHOW WHEN TIME ARRIVES */}
-                        {egg.status === 'Intact' && (isHatchingToday || (daysToHatch !== null && daysToHatch <= 0)) && (
-                          <div className="pt-6 space-y-3 bg-white/50 p-4 rounded-3xl border border-orange-100 shadow-inner mt-2">
-                            <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2">Hatching Decision</p>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleHatchSuccess(egg); }}
-                              className="w-full py-3 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all flex items-center justify-center gap-2"
-                            >
-                              <Sparkles className="w-3 h-3" /> Hatched Successfully
-                            </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setHatchFailureEgg(egg); }}
-                              className="w-full py-3 bg-white text-red-500 border border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-all"
-                            >
-                              Failed to Hatch (Delete)
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Near Hatching Indicator */}
-                      {isNearHatching && (
-                        <div className="absolute bottom-6 flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-100 animate-bounce z-20">
-                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                          <span className="text-[10px] font-black text-amber-600 tracking-wider">HATCHING SOON</span>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                );
+                                 key={egg.id} 
+                                 whileHover={{ y: -10 }}
+                                 className={`relative p-8 rounded-[40px] text-center transition-all ${
+                                    egg.status === 'Completed' || egg.status === 'Hatched' ? 'bg-green-500 shadow-xl shadow-green-500/20' :
+                                    isHatching ? 'bg-orange-500 shadow-xl shadow-orange-500/20 animate-pulse' :
+                                    egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-slate-200' :
+                                    'bg-white shadow-xl shadow-black/5'
+                                 }`}
+                              >
+                                 <div className="absolute top-4 right-4 flex gap-1 z-20">
+                                    <button onClick={() => openEggModal(undefined, egg)} className="p-2 text-slate-300 hover:text-primary transition-colors hover:bg-slate-50 rounded-lg"><Edit2 className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => handleDeleteEgg(egg.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors hover:bg-slate-50 rounded-lg"><X className="w-3.5 h-3.5" /></button>
+                                 </div>
+                                 <h5 className={`text-4xl font-black mb-1 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching ? 'text-white' : 'text-slate-900'}`}>#{egg.eggNumber || egg.id.slice(-3)}</h5>
+                                 <p className={`text-[10px] font-black uppercase tracking-[0.2em] mb-6 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching ? 'text-white/70' : 'text-slate-400'}`}>{egg.status}</p>
+                                 
+                                 <div className="space-y-4 relative z-10">
+                                    <div className={`flex justify-between text-[10px] font-bold border-t pt-4 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching ? 'text-white/80 border-white/10' : 'text-slate-500 border-slate-100'}`}>
+                                       <span>Laid: {egg.laidDate}</span>
+                                       {diff !== null && diff > 0 && <span>{diff}d to go</span>}
+                                       {isHatching && <span>Today!</span>}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                       <button onClick={() => handleFertilityCheck(egg.id, true)} className={`py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${egg.isFertile === true ? 'bg-white text-primary shadow-lg' : 'bg-black/5 text-slate-400'}`}>Fertile</button>
+                                       <button onClick={() => handleFertilityCheck(egg.id, false)} className={`py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${egg.isFertile === false ? 'bg-slate-900 text-white shadow-lg' : 'bg-black/5 text-slate-400'}`}>Clear</button>
+                                    </div>
+                                    {isHatching && (
+                                       <button onClick={() => handleHatchSuccess(egg)} className="w-full py-4 bg-white text-orange-600 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20">Mark Hatched 🐣</button>
+                                    )}
+                                 </div>
+                              </motion.div>
+                           )
+                        })}
+                     </div>
+                  </div>
+                )
               })}
-              {eggs.length === 0 && (
-                <div className="col-span-4 glass p-20 rounded-[40px] text-center border-white/20">
-                  <EggIcon className="w-12 h-12 text-accent-orange/40 mx-auto mb-4" />
-                  <p className="text-slate-500 font-medium mb-6">No eggs tracked yet.</p>
-                  <button 
-                    onClick={() => openEggModal()}
-                    className="bg-accent-orange text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-accent-orange/20 flex items-center gap-2 mx-auto"
-                  >
-                    <Plus className="w-4 h-4" /> Add Your First Egg
-                  </button>
+              {(eggs.length === 0 || couples.length === 0) && (
+                <div className="text-center py-20 bg-slate-800/20 rounded-[48px] border border-white/5">
+                  <EggIcon className="w-16 h-16 text-slate-700 mx-auto mb-4" />
+                  <p className="text-slate-500 font-bold">No eggs tracking for your couples yet.</p>
                 </div>
               )}
             </div>
@@ -4805,16 +4709,28 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: idx * 0.1 }}
-                              className="p-6 bg-white rounded-3xl border border-slate-100 hover:border-primary/20 transition-all group"
+                              className="p-6 bg-white rounded-3xl border border-slate-100 hover:border-primary/20 transition-all group overflow-hidden relative"
                             >
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="px-3 py-1 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest rounded-lg">
-                                  {mut.probability}
-                                </span>
-                                <Dna className="w-4 h-4 text-slate-200 group-hover:text-primary transition-colors" />
+                              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700" />
+                              <div className="flex items-center gap-4 relative z-10">
+                                <div className="w-16 h-16 rounded-2xl bg-slate-100 shrink-0 overflow-hidden border-2 border-white shadow-sm">
+                                  <img 
+                                    src={`https://picsum.photos/seed/${mut.thumbnailKeyword || mut.name}/200/200`} 
+                                    alt={mut.name}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase tracking-widest rounded-md">
+                                      {mut.probability}
+                                    </span>
+                                  </div>
+                                  <h5 className="font-bold text-slate-800 text-sm truncate">{mut.name}</h5>
+                                  <p className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{mut.description}</p>
+                                </div>
                               </div>
-                              <h5 className="font-bold text-slate-800 mb-1">{mut.name}</h5>
-                              <p className="text-xs text-slate-500 leading-relaxed">{mut.description}</p>
                             </motion.div>
                           ))}
                         </div>
@@ -6009,6 +5925,36 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
           </div>
         )}
       </AnimatePresence>
+      {/* Toast Notifications */}
+      <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-4 pointer-events-none">
+        <AnimatePresence>
+          {notifications.map(n => (
+            <motion.div
+              key={n.id}
+              initial={{ opacity: 0, x: 20, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+              className={`pointer-events-auto min-w-[320px] p-6 rounded-[28px] shadow-2xl backdrop-blur-xl border ${
+                n.type === 'success' ? 'bg-green-500/90 border-green-400 text-white' :
+                n.type === 'error' ? 'bg-red-500/90 border-red-400 text-white' :
+                'bg-blue-500/90 border-blue-400 text-white'
+              }`}
+            >
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-white/20 rounded-xl">
+                  {n.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : 
+                   n.type === 'error' ? <AlertTriangle className="w-5 h-5" /> : 
+                   <Bell className="w-5 h-5" />}
+                </div>
+                <div>
+                  <h4 className="font-black text-sm uppercase tracking-widest">{n.title}</h4>
+                  <p className="text-sm font-medium opacity-90 mt-1">{n.message}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
