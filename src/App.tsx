@@ -1223,7 +1223,7 @@ Mastering these patterns will help you predict not just the color of your birds,
             { 
               id: "genetic-diversity",
               title: "Genetic Diversity", 
-              category: "Aviary Health", 
+              category: "Breeding Guide", 
               img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
               content: `Maintaining genetic diversity is essential for the long-term health and sustainability of your aviary. Inbreeding can lead to weakened immune systems, reduced fertility, and physical deformities.
 
@@ -3349,7 +3349,7 @@ Mastering these patterns will help you predict not just the color of your birds,
                 { 
                   id: "genetic-diversity",
                   title: "Genetic Diversity", 
-                  category: "Aviary Health", 
+                  category: "Aviary Science", 
                   img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=600",
                   content: `Maintaining genetic diversity is essential for the long-term health and sustainability of your aviary. Inbreeding can lead to weakened immune systems, reduced fertility, and physical deformities.
 
@@ -4128,12 +4128,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               <div className="relative z-10">
                 <h3 className="text-2xl font-black text-slate-900 mb-8">Performance Tracking Summary</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                   {[
-                     { label: "Active Pairs", val: couples.length, target: "80%", icon: Heart, color: "text-red-500" },
-                     { label: "Chick Survival", val: "92%", target: "95%", icon: Sparkles, color: "text-amber-500" },
-                     { label: "Inventory Level", val: "Low", target: "Normal", icon: Box, color: "text-blue-500" },
-                     { label: "System Health", val: "Optimal", target: "Active", icon: Shield, color: "text-green-500" }
-                   ].map((item, i) => (
+                    {[
+                      { label: "Pair Activity", val: couples.length, target: "Optimal", icon: Heart, color: "text-red-500" },
+                      { label: "Chick Survival", val: "92%", target: "95%", icon: Sparkles, color: "text-amber-500" },
+                      { label: "Inventory Level", val: "Stable", target: "Healthy", icon: Box, color: "text-blue-500" },
+                      { label: "Aviary Status", val: "Optimal", target: "Ready", icon: Shield, color: "text-green-500" }
+                    ].map((item, i) => (
                      <div key={i} className="space-y-4">
                         <div className="flex items-center gap-3">
                            <div className={`p-2 rounded-xl bg-slate-50 ${item.color}`}>
