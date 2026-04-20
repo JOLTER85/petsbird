@@ -194,14 +194,9 @@ const SPECIES_LIST = [
     mutations: ["Normal", "Black Cheek", "Chestnut Flanked", "Fawn", "Pied", "White", "Crested"]
   },
   { 
-    name: "Diamond Dove (يمام ماسي)", 
-    incubation: 13,
-    mutations: ["Normal", "Silver", "White-tailed", "Brilliant", "Cinnamon", "Pied"]
-  },
-  { 
-    name: "Java Sparrow (جاوا)", 
-    incubation: 15,
-    mutations: ["Normal", "White", "Silver", "Fawn", "Pied", "Opal"]
+    name: "Conure (الكونيور)", 
+    incubation: 24,
+    mutations: ["Normal", "Green Cheek", "Pineapple", "Cinnamon", "Yellow-sided", "Turquoise", "Sun Conure"]
   },
   { 
     name: "Quaker (كويكر)", 
@@ -624,9 +619,19 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
   );
 };
 
-const PedigreeNode = ({ bird, label, gender, onClick }: { bird?: BirdData, label: string, gender?: 'Male' | 'Female', onClick?: (id: string) => void }) => (
+const PedigreeNode = ({ bird, label, gender, onClick, onEdit }: { bird?: BirdData, label: string, gender?: 'Male' | 'Female', onClick?: (id: string) => void, onEdit?: () => void }) => (
   <div className="flex flex-col items-center gap-2 w-full">
-    <div className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{label}</div>
+    <div className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1 flex items-center justify-between w-full px-2">
+      <span>{label}</span>
+      {onEdit && (
+        <button 
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          className="p-1 hover:bg-slate-100 rounded-md text-primary transition-colors"
+        >
+          <Edit2 className="w-2.5 h-2.5" />
+        </button>
+      )}
+    </div>
     <div 
       onClick={() => bird && onClick?.(bird.id)}
       className={`relative w-full p-4 rounded-3xl border-2 transition-all group ${
@@ -790,7 +795,7 @@ const GeneticsPredictor = ({ t }: { t: any }) => {
   );
 };
 
-const PedigreeTree = ({ birdId, birds, onBirdClick }: { birdId: string, birds: BirdData[], onBirdClick: (id: string) => void }) => {
+const PedigreeTree = ({ birdId, birds, onBirdClick, onEditParent }: { birdId: string, birds: BirdData[], onBirdClick: (id: string) => void, onEditParent?: (childId: string, type: 'father' | 'mother') => void }) => {
   const getBird = (id?: string) => birds.find(b => b.id === id);
   
   const targetBird = getBird(birdId);
@@ -808,10 +813,34 @@ const PedigreeTree = ({ birdId, birds, onBirdClick }: { birdId: string, birds: B
     <div className="p-8 space-y-12">
       {/* Level 1: Grandparents */}
       <div className="grid grid-cols-4 gap-4">
-        <PedigreeNode bird={paternalGrandfather} label="Paternal GF" gender="Male" onClick={onBirdClick} />
-        <PedigreeNode bird={paternalGrandmother} label="Paternal GM" gender="Female" onClick={onBirdClick} />
-        <PedigreeNode bird={maternalGrandfather} label="Maternal GF" gender="Male" onClick={onBirdClick} />
-        <PedigreeNode bird={maternalGrandmother} label="Maternal GM" gender="Female" onClick={onBirdClick} />
+        <PedigreeNode 
+          bird={paternalGrandfather} 
+          label="Paternal GF" 
+          gender="Male" 
+          onClick={onBirdClick}
+          onEdit={father ? () => onEditParent?.(father.id, 'father') : undefined}
+        />
+        <PedigreeNode 
+          bird={paternalGrandmother} 
+          label="Paternal GM" 
+          gender="Female" 
+          onClick={onBirdClick}
+          onEdit={father ? () => onEditParent?.(father.id, 'mother') : undefined}
+        />
+        <PedigreeNode 
+          bird={maternalGrandfather} 
+          label="Maternal GF" 
+          gender="Male" 
+          onClick={onBirdClick}
+          onEdit={mother ? () => onEditParent?.(mother.id, 'father') : undefined}
+        />
+        <PedigreeNode 
+          bird={maternalGrandmother} 
+          label="Maternal GM" 
+          gender="Female" 
+          onClick={onBirdClick}
+          onEdit={mother ? () => onEditParent?.(mother.id, 'mother') : undefined}
+        />
       </div>
 
       {/* Connectors L1-L2 */}
@@ -826,8 +855,20 @@ const PedigreeTree = ({ birdId, birds, onBirdClick }: { birdId: string, birds: B
 
       {/* Level 2: Parents */}
       <div className="grid grid-cols-2 gap-12 px-12">
-        <PedigreeNode bird={father} label="Father" gender="Male" onClick={onBirdClick} />
-        <PedigreeNode bird={mother} label="Mother" gender="Female" onClick={onBirdClick} />
+        <PedigreeNode 
+          bird={father} 
+          label="Father" 
+          gender="Male" 
+          onClick={onBirdClick}
+          onEdit={() => onEditParent?.(targetBird.id, 'father')}
+        />
+        <PedigreeNode 
+          bird={mother} 
+          label="Mother" 
+          gender="Female" 
+          onClick={onBirdClick}
+          onEdit={() => onEditParent?.(targetBird.id, 'mother')}
+        />
       </div>
 
       {/* Connectors L2-L3 */}
@@ -1542,9 +1583,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const DEFAULT_BIRD_IMAGE = "https://images.unsplash.com/photo-1552728089-57bdde30ebd3?auto=format&fit=crop&q=80&w=400";
 
   const addNotification = (title: string, message: string, type: 'info' | 'success' | 'warning' = 'info') => {
+    const id = Date.now();
     setNotifications(prev => [
       { 
-        id: Date.now(), 
+        id, 
         title, 
         message, 
         time: "Just now", 
@@ -1554,11 +1596,23 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       },
       ...prev.slice(0, 19)
     ]);
+
+    // Auto-remove toast after 6 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 6000);
   };
   const [hatchFailureEgg, setHatchFailureEgg] = useState<EggData | null>(null);
   const [failureReason, setFailureReason] = useState("");
   const [pedigreeBirdId, setPedigreeBirdId] = useState<string | null>(null);
   const [isPedigreeModalOpen, setIsPedigreeModalOpen] = useState(false);
+  const [parentEditContext, setParentEditContext] = useState<{
+    childId: string;
+    type: 'father' | 'mother';
+  } | null>(null);
+  const [isParentModalOpen, setIsParentModalOpen] = useState(false);
+  const [manualParentName, setManualParentName] = useState("");
+  const [isAddingParentManual, setIsAddingParentManual] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [selectedCoupleForStats, setSelectedCoupleForStats] = useState<CoupleData | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
@@ -1583,16 +1637,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     link.click();
     URL.revokeObjectURL(url);
     
-    setNotifications(prev => [
-      {
-        id: Date.now(),
-        title: "Backup Complete",
-        message: "Your data has been successfully exported as a JSON file.",
-        time: "Just now",
-        read: false
-      },
-      ...prev
-    ]);
+    addNotification("Backup Complete", "Your data has been successfully exported as a JSON file.", 'success');
   };
 
   const handleFeedbackSubmit = async (e: FormEvent) => {
@@ -1658,16 +1703,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       await setDoc(doc(db, "users_data", user.uid, "birds", birdId), newBirdData);
       await setDoc(doc(db, "users_data", user.uid, "eggs", egg.id), updatedEgg);
       
-      setNotifications([
-        { 
-          id: Date.now(), 
-          title: "New Chick!", 
-          message: `Egg #${egg.id} hatched successfully! A new chick has been added to your birds.`, 
-          time: "Just now", 
-          read: false 
-        },
-        ...notifications
-      ]);
+      addNotification("New Chick!", `Egg #${egg.id} hatched successfully! A new chick has been added to your birds.`, 'success');
+
       setConfirmModal({
         isOpen: true,
         title: "Success",
@@ -1688,16 +1725,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setHatchFailureEgg(null);
       setFailureReason("");
       
-      setNotifications([
-        { 
-          id: Date.now(), 
-          title: "Egg Removed", 
-          message: `Egg #${egg.id} was removed (Reason: ${reason}).`, 
-          time: "Just now", 
-          read: false 
-        },
-        ...notifications
-      ]);
+      addNotification("Egg Removed", `Egg #${egg.id} was removed (Reason: ${reason}).`, 'warning');
+      
       setConfirmModal({
         isOpen: true,
         title: "Egg Removed",
@@ -1815,16 +1844,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       link.download = "PetsBird_Stats.png";
       link.click();
       
-      setNotifications(prev => [
-        {
-          id: Date.now(),
-          title: "Stats Exported!",
-          message: "Your dashboard stats have been saved as an image. Share it on your social media!",
-          time: "Just now",
-          read: false
-        },
-        ...prev
-      ]);
+      addNotification("Stats Exported!", "Your dashboard stats have been saved as an image. Share it on your social media!", 'success');
     } catch (error) {
       console.error("Error sharing stats:", error);
     }
@@ -2026,16 +2046,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
       await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird, imageUrl });
       
-      setNotifications([
-        { 
-          id: Date.now(), 
-          title: "Bird Updated", 
-          message: `تم تحديث بيانات ${newBird.name} بنجاح!`, 
-          time: "Just now", 
-          read: false 
-        },
-        ...notifications
-      ]);
+      addNotification("Bird Updated", `تم تحديث بيانات ${newBird.name} بنجاح!`, 'success');
 
       setEditingBirdId(null);
       setSelectedFile(null);
@@ -2044,6 +2055,51 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       handleFirestoreError(error, OperationType.UPDATE, `users_data/${user.uid}/birds/${editingBirdId}`);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleSetParent = async (parentId: string | null) => {
+    if (!user || !parentEditContext) return;
+    
+    let targetParentId = parentId;
+    
+    if (isAddingParentManual && manualParentName.trim()) {
+      try {
+        const id = Date.now().toString();
+        const child = birds.find(b => b.id === parentEditContext.childId);
+        const manualBird = {
+          id,
+          name: manualParentName,
+          gender: parentEditContext.type === 'father' ? 'Male' : 'Female',
+          species: child?.species || SPECIES_LIST[0].name,
+          ring: "Manual",
+          age: 1,
+          birthYear: (new Date().getFullYear() - 1).toString(),
+          date: new Date().toLocaleDateString('en-GB'),
+          cage: "Ancestors",
+          status: "External",
+          userId: user.uid
+        };
+        await setDoc(doc(db, "users_data", user.uid, "birds", id), manualBird);
+        targetParentId = id;
+      } catch (error) {
+        console.error("Error creating manual bird:", error);
+        return;
+      }
+    }
+    
+    try {
+      const field = parentEditContext.type === 'father' ? 'fatherId' : 'motherId';
+      await updateDoc(doc(db, "users_data", user.uid, "birds", parentEditContext.childId), {
+        [field]: targetParentId
+      });
+      setIsParentModalOpen(false);
+      setParentEditContext(null);
+      setManualParentName("");
+      setIsAddingParentManual(false);
+      addNotification("Genealogy Updated", "Parent reference updated successfully.", 'success');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users_data/${user.uid}/birds/${parentEditContext.childId}`);
     }
   };
 
@@ -2598,16 +2654,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setSelectedCoupleId("");
       setNewEgg({ laidDate: new Date().toISOString().split('T')[0], hatchDate: "", status: "Intact" });
       
-      setNotifications([
-        { 
-          id: Date.now(), 
-          title: "New Egg!", 
-          message: `A new egg was added for Couple #${coupleId}. Est. hatch: ${hatchDate}`, 
-          time: "Just now", 
-          read: false 
-        },
-        ...notifications
-      ]);
+      addNotification("New Egg!", `A new egg was added for Couple #${coupleId}. Est. hatch: ${hatchDate}`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }
@@ -2645,10 +2692,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     try {
       await setDoc(doc(db, "users", user.uid), { ...userProfile, userId: user.uid });
       setIsProfileModalOpen(false);
-      setNotifications([
-        { id: Date.now(), title: "Profile Updated", message: "Your profile information has been updated.", time: "Just now", read: false },
-        ...notifications
-      ]);
+      addNotification("Profile Updated", "Your profile information has been updated.", 'success');
     } catch (error) {
       console.error("Error updating profile:", error);
     }
@@ -5832,6 +5876,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   birdId={pedigreeBirdId} 
                   birds={birds} 
                   onBirdClick={(id) => setPedigreeBirdId(id)} 
+                  onEditParent={(childId, type) => {
+                    setParentEditContext({ childId, type });
+                    setIsParentModalOpen(true);
+                  }}
                 />
               </div>
             </motion.div>
@@ -5839,7 +5887,102 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         )}
       </AnimatePresence>
 
-      {/* Hatch Failure Reason Modal */}
+      {/* Set Parent Modal */}
+      <AnimatePresence>
+        {isParentModalOpen && parentEditContext && (
+          <div className="fixed inset-0 z-[130] flex items-center justify-center p-6">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsParentModalOpen(false)}
+              className="absolute inset-0 bg-sidebar/90 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[40px] shadow-2xl overflow-hidden"
+            >
+              <div className="p-8 border-b border-sidebar/5 flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-black font-display text-slate-900">
+                    Set {parentEditContext.type === 'father' ? 'Father' : 'Mother'}
+                  </h3>
+                  <p className="text-slate-400 text-xs font-medium">For bird: {birds.find(b => b.id === parentEditContext.childId)?.name}</p>
+                </div>
+                <button onClick={() => setIsParentModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div className="flex bg-slate-50 p-1 rounded-2xl">
+                  <button 
+                    onClick={() => setIsAddingParentManual(false)}
+                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all ${!isAddingParentManual ? 'bg-white shadow-sm text-primary' : 'text-slate-400'}`}
+                  >
+                    EXISTING (موجود)
+                  </button>
+                  <button 
+                    onClick={() => setIsAddingParentManual(true)}
+                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-black transition-all ${isAddingParentManual ? 'bg-white shadow-sm text-primary' : 'text-slate-400'}`}
+                  >
+                    MANUAL (غير موجود)
+                  </button>
+                </div>
+
+                {!isAddingParentManual ? (
+                  <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <button 
+                      onClick={() => handleSetParent(null)}
+                      className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 hover:text-red-500 hover:border-red-200 transition-all text-xs font-bold"
+                    >
+                      <X className="w-4 h-4" /> Clear Parent Reference
+                    </button>
+                    {birds
+                      .filter(b => b.id !== parentEditContext.childId && b.gender === (parentEditContext.type === 'father' ? 'Male' : 'Female'))
+                      .map(b => (
+                        <button 
+                          key={b.id}
+                          onClick={() => handleSetParent(b.id)}
+                          className="w-full flex items-center gap-4 p-4 bg-slate-50 hover:bg-primary/5 border border-transparent hover:border-primary/20 rounded-2xl transition-all text-left"
+                        >
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${b.gender === 'Male' ? 'bg-male/20 text-male-text' : 'bg-female/20 text-female-text'}`}>
+                            <Bird className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-800 text-sm truncate">{b.name}</p>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">#{b.ring} • {b.mutation || 'Normal'}</p>
+                          </div>
+                        </button>
+                      ))
+                    }
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2">Ancestor Name (اسم الطائر)</label>
+                      <input 
+                        type="text"
+                        value={manualParentName}
+                        onChange={(e) => setManualParentName(e.target.value)}
+                        placeholder="e.g. Blue King"
+                        className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
+                      />
+                    </div>
+                    <button 
+                      onClick={() => handleSetParent(null)}
+                      disabled={!manualParentName.trim()}
+                      className="w-full py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      Confirm Ancestor
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {hatchFailureEgg && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
