@@ -5121,12 +5121,13 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   onChange={(e) => setFilterEggStatus(e.target.value as any)}
                   className="bg-slate-800/30 border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold"
                 >
-                  <option value="All">All Status</option>
-                  <option value="Intact">Intact</option>
-                  <option value="Hatched">Hatched</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Broken">Broken</option>
-                  <option value="Failed">Failed</option>
+                  <option value="All">All Status (الكل)</option>
+                  <option value="Unchecked">Unchecked (غير محدد)</option>
+                  <option value="Fertile">Fertile (مخصب)</option>
+                  <option value="Clear">Clear (غير مخصب)</option>
+                  <option value="Hatched">Hatched (تم فقصه)</option>
+                  <option value="Failed">Failed (لم يتم فقصه)</option>
+                  <option value="Broken">Broken (مكسور)</option>
                 </select>
                 <button 
                   onClick={() => openEggModal()}
@@ -5143,7 +5144,21 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 const female = birds.find(b => b.id === couple.femaleId);
                 const coupleEggs = eggs.filter(e => e.coupleId === couple.id)
                   .filter(e => {
-                    const statusMatch = filterEggStatus === "All" || e.status === filterEggStatus;
+                    let statusMatch = true;
+                    if (filterEggStatus === "All") {
+                      statusMatch = true;
+                    } else if (filterEggStatus === "Unchecked") {
+                      statusMatch = e.isFertile === undefined && e.status === 'Intact';
+                    } else if (filterEggStatus === "Fertile") {
+                      statusMatch = e.isFertile === true;
+                    } else if (filterEggStatus === "Clear") {
+                      statusMatch = e.isFertile === false;
+                    } else if (filterEggStatus === "Hatched") {
+                      statusMatch = e.status === 'Hatched' || e.status === 'Completed';
+                    } else {
+                      statusMatch = e.status === filterEggStatus;
+                    }
+
                     const searchLower = searchEgg.toLowerCase();
                     const searchMatch = 
                       e.eggNumber?.toLowerCase().includes(searchLower) || 
@@ -5152,6 +5167,15 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       female?.name.toLowerCase().includes(searchLower);
                     return statusMatch && searchMatch;
                   });
+
+                // Sorting: Pending eggs first (isFertile undefined and Intact status)
+                const sortedEggs = [...coupleEggs].sort((a, b) => {
+                  const aPending = a.isFertile === undefined && a.status === 'Intact';
+                  const bPending = b.isFertile === undefined && b.status === 'Intact';
+                  if (aPending && !bPending) return -1;
+                  if (!aPending && bPending) return 1;
+                  return 0;
+                });
 
                 if (coupleEggs.length === 0 && (searchEgg !== "" || filterEggStatus !== "All")) return null;
                 if (coupleEggs.length === 0) return null;
@@ -5184,7 +5208,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                      </div>
 
                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
-                        {coupleEggs.map(egg => (
+                        {sortedEggs.map(egg => (
                            <EggCard 
                               key={egg.id}
                               egg={egg}
