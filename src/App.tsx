@@ -4492,23 +4492,43 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     >
                       <div className="p-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
                         <h4 className="font-bold text-sm">Notifications</h4>
-                        <button 
-                          onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
-                          className="text-[10px] font-bold text-primary uppercase tracking-wider"
-                        >
-                          Mark all as read
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={() => setNotifications(notifications.map(n => ({ ...n, read: true })))}
+                            className="text-[10px] font-bold text-primary uppercase tracking-wider"
+                          >
+                            Read All
+                          </button>
+                          <div className="w-px h-3 bg-slate-200" />
+                          <button 
+                            onClick={() => setNotifications([])}
+                            className="text-[10px] font-bold text-red-500 uppercase tracking-wider"
+                          >
+                            Clear All
+                          </button>
+                        </div>
                       </div>
                       <div className="max-h-[400px] overflow-y-auto">
                         {notifications.length > 0 ? (
                           notifications.map((n) => (
                             <div 
                               key={n.id} 
-                              className={`p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer ${!n.read ? 'bg-primary/5' : ''}`}
+                              className={`p-5 border-b border-slate-50 hover:bg-slate-50 transition-colors group relative ${!n.read ? 'bg-primary/5' : ''}`}
                             >
                               <div className="flex justify-between items-start mb-1">
                                 <h5 className="font-bold text-xs text-slate-800">{n.title}</h5>
-                                <span className="text-[9px] text-slate-400">{n.time}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9px] text-slate-400">{n.time}</span>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNotifications(prev => prev.filter(item => item.id !== n.id));
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-200 rounded text-slate-400 transition-all"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
                               <p className="text-[11px] text-slate-500 leading-relaxed">{n.message}</p>
                             </div>
@@ -6632,16 +6652,24 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 'bg-blue-500/90 border-blue-400 text-white'
               }`}
             >
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-white/20 rounded-xl">
-                  {n.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : 
-                   n.type === 'error' ? <AlertTriangle className="w-5 h-5" /> : 
-                   <Bell className="w-5 h-5" />}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="p-2 bg-white/20 rounded-xl">
+                    {n.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : 
+                     n.type === 'error' ? <AlertTriangle className="w-5 h-5" /> : 
+                     <Bell className="w-5 h-5" />}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-sm uppercase tracking-widest">{n.title}</h4>
+                    <p className="text-sm font-medium opacity-90 mt-1">{n.message}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-black text-sm uppercase tracking-widest">{n.title}</h4>
-                  <p className="text-sm font-medium opacity-90 mt-1">{n.message}</p>
-                </div>
+                <button 
+                  onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))}
+                  className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </motion.div>
           ))}
