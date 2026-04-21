@@ -951,6 +951,13 @@ const EggCard = ({
   const daysSinceLaid = Math.ceil((today.getTime() - ld.getTime()) / (1000 * 60 * 60 * 24));
   const progress = Math.min(100, Math.max(0, (daysSinceLaid / incubationPeriod) * 100));
   
+  // Fertility check logic (Standard 7 days after laid)
+  const fertCheckDays = 7;
+  const fertCheckDate = new Date(ld);
+  fertCheckDate.setDate(fertCheckDate.getDate() + fertCheckDays);
+  const isFertCheckReady = today.getTime() >= fertCheckDate.getTime();
+  const fertDateStr = `${fertCheckDate.getDate()}/${fertCheckDate.getMonth() + 1}/${fertCheckDate.getFullYear()}`;
+
   const diff = hd ? Math.ceil((hd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
   const isHatching = diff === 0 && egg.status === 'Intact';
   const isOverdue = (diff !== null && diff < 0) && egg.status === 'Intact';
@@ -1047,29 +1054,46 @@ const EggCard = ({
       </div>
 
       {/* Interactive Controls */}
-      <div className="mt-10 pt-8 border-t border-white/5 grid grid-cols-2 gap-3 relative z-10">
-        <button 
-          disabled={egg.status !== 'Intact'}
-          onClick={() => onFertilityCheck(egg.id, true)} 
-          className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            egg.isFertile === true 
-              ? 'bg-accent-gold text-slate-900 shadow-xl shadow-accent-gold/20' 
-              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-          } disabled:opacity-50`}
-        >
-          Fertile
-        </button>
-        <button 
-          disabled={egg.status !== 'Intact'}
-          onClick={() => onFertilityCheck(egg.id, false)} 
-          className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
-            egg.isFertile === false 
-              ? 'bg-red-500 text-white shadow-xl shadow-red-500/30' 
-              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-          } disabled:opacity-50`}
-        >
-          Clear
-        </button>
+      <div className="mt-10 pt-8 border-t border-white/5 relative z-10">
+        <div className="flex flex-col items-center mb-4">
+          <div className="flex items-center gap-2 mb-1">
+             <Calendar className={`w-3 h-3 ${isFertCheckReady ? 'text-green-500' : 'text-slate-500'}`} />
+             <p className={`text-[9px] font-black uppercase tracking-widest ${isFertCheckReady ? 'text-green-400' : 'text-slate-500'}`}>
+                Fertility Check Date (تاريخ الفحص)
+             </p>
+          </div>
+          <p className={`text-xs font-bold ${isFertCheckReady ? 'text-white' : 'text-slate-400'}`}>{fertDateStr}</p>
+          {!isFertCheckReady && egg.status === 'Intact' && (
+            <p className="text-[8px] text-slate-500 mt-1 font-bold">Buttons disabled until this date</p>
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button 
+            disabled={egg.status !== 'Intact' || !isFertCheckReady}
+            onClick={() => onFertilityCheck(egg.id, true)} 
+            className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              egg.isFertile === true 
+                ? 'bg-accent-gold text-slate-900 shadow-xl shadow-accent-gold/20' 
+                : isFertCheckReady && egg.status === 'Intact'
+                  ? 'bg-green-500/20 text-green-500 border-2 border-green-500/40 hover:bg-green-500 hover:text-white shadow-[0_0_20px_rgba(34,197,94,0.3)]'
+                  : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
+            } disabled:opacity-30 disabled:cursor-not-allowed`}
+          >
+            Fertile
+          </button>
+          <button 
+            disabled={egg.status !== 'Intact' || !isFertCheckReady}
+            onClick={() => onFertilityCheck(egg.id, false)} 
+            className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              egg.isFertile === false 
+                ? 'bg-red-500 text-white shadow-xl shadow-red-500/30' 
+                : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
+            } disabled:opacity-30 disabled:cursor-not-allowed`}
+          >
+            Clear
+          </button>
+        </div>
 
         {/* New Hatch Outcome UI for Fertile Eggs */}
         {egg.isFertile === true && egg.status === 'Intact' && (
