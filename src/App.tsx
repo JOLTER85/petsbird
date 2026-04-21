@@ -918,15 +918,18 @@ const EggCard = ({
   onEdit, 
   onDelete, 
   onFertilityCheck, 
-  onHatchSuccess 
+  onHatchSuccess,
+  onHatchFailure
 }: { 
   egg: EggData, 
   male?: BirdData, 
   female?: BirdData,
-  onEdit: (id: string, egg: EggData) => void,
-  onDelete: (id: string) => void,
-  onFertilityCheck: (id: string, isFertile: boolean) => void,
-  onHatchSuccess: (egg: EggData) => void
+  onEdit: (id?: string, egg?: EggData) => void,
+  onDelete: (id: string) => void | Promise<void>,
+  onFertilityCheck: (id: string, isFertile: boolean) => void | Promise<void>,
+  onHatchSuccess: (egg: EggData) => void | Promise<void>,
+  onHatchFailure: (egg: EggData, reason: string) => void | Promise<void>,
+  key?: any
 }) => {
   const parseDateStr = (dStr: string) => {
     if (!dStr) return new Date();
@@ -1046,26 +1049,50 @@ const EggCard = ({
       {/* Interactive Controls */}
       <div className="mt-10 pt-8 border-t border-white/5 grid grid-cols-2 gap-3 relative z-10">
         <button 
+          disabled={egg.status !== 'Intact'}
           onClick={() => onFertilityCheck(egg.id, true)} 
           className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
             egg.isFertile === true 
               ? 'bg-accent-gold text-slate-900 shadow-xl shadow-accent-gold/20' 
               : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-          }`}
+          } disabled:opacity-50`}
         >
           Fertile
         </button>
         <button 
+          disabled={egg.status !== 'Intact'}
           onClick={() => onFertilityCheck(egg.id, false)} 
           className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
             egg.isFertile === false 
               ? 'bg-red-500 text-white shadow-xl shadow-red-500/30' 
               : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-          }`}
+          } disabled:opacity-50`}
         >
           Clear
         </button>
-        {isHatching && (
+
+        {/* New Hatch Outcome UI for Fertile Eggs */}
+        {egg.isFertile === true && egg.status === 'Intact' && (
+          <div className="col-span-2 space-y-3 mt-4 p-4 rounded-3xl bg-white/5 border border-white/10">
+            <p className="text-[10px] font-black text-center text-slate-400 uppercase tracking-[0.2em] mb-2">Hatch Outcome? (حالة التفقيص)</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => onHatchSuccess(egg)} 
+                className="py-4 bg-green-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Check className="w-3.5 h-3.5" /> Hatched
+              </button>
+              <button 
+                onClick={() => onHatchFailure(egg, "Did not hatch")} 
+                className="py-4 bg-slate-800 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-500 transition-all border border-white/5"
+              >
+                <X className="w-3.5 h-3.5" /> Failed
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isHatching && !egg.isFertile && (
           <button 
             onClick={() => onHatchSuccess(egg)} 
             className="col-span-2 mt-2 py-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-500/40 active:scale-95 transition-all flex items-center justify-center gap-2"
@@ -2211,22 +2238,29 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const handleHatchFailure = async (egg: EggData, reason: string) => {
     if (!user) return;
     try {
-      await deleteDoc(doc(db, "users_data", user.uid, "eggs", egg.id));
+      // Archive instead of delete to keep in statistics
+      const updatedEgg: EggData = {
+        ...egg,
+        status: 'Failed',
+        failureReason: reason
+      };
+      
+      await setDoc(doc(db, "users_data", user.uid, "eggs", egg.id), updatedEgg);
       setHatchFailureEgg(null);
       setFailureReason("");
       
-      addNotification("Egg Removed", `Egg #${egg.id} was removed (Reason: ${reason}).`, 'warning');
+      addNotification("Egg Failed", `Egg #${egg.eggNumber || egg.id.slice(-3)} marked as failed (Reason: ${reason}).`, 'warning');
       
       setConfirmModal({
         isOpen: true,
-        title: "Egg Removed",
-        message: `تم حذف البيضة بنجاح (السبب: ${reason})`,
-        variant: 'success',
+        title: "Egg Archived",
+        message: `تم أرشفة البيضة بنجاح كبيضة فاشلة (السبب: ${reason}). ستبقى في إحصائيات الزوج.`,
+        variant: 'info',
         confirmText: "حسناً",
         onConfirm: () => setConfirmModal(prev => ({ ...prev, isOpen: false }))
       });
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `users_data/${user.uid}/eggs/${egg.id}`);
+      handleFirestoreError(error, OperationType.UPDATE, `users_data/${user.uid}/eggs/${egg.id}`);
     }
   };
   const [editingBirdId, setEditingBirdId] = useState<string | null>(null);
@@ -5140,6 +5174,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                               onDelete={handleDeleteEgg}
                               onFertilityCheck={handleFertilityCheck}
                               onHatchSuccess={handleHatchSuccess}
+                              onHatchFailure={handleHatchFailure}
                            />
                         ))}
                      </div>
