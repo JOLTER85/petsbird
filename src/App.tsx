@@ -911,6 +911,173 @@ const PedigreeTree = ({ birdId, birds, onBirdClick, onEditParent }: { birdId: st
   );
 };
 
+const EggCard = ({ 
+  egg, 
+  male, 
+  female, 
+  onEdit, 
+  onDelete, 
+  onFertilityCheck, 
+  onHatchSuccess 
+}: { 
+  egg: EggData, 
+  male?: BirdData, 
+  female?: BirdData,
+  onEdit: (id: string, egg: EggData) => void,
+  onDelete: (id: string) => void,
+  onFertilityCheck: (id: string, isFertile: boolean) => void,
+  onHatchSuccess: (egg: EggData) => void
+}) => {
+  const parseDateStr = (dStr: string) => {
+    if (!dStr) return new Date();
+    const separator = dStr.includes('/') ? '/' : '-';
+    const parts = dStr.split(separator).map(Number);
+    return parts[0] > 1000 ? new Date(parts[0], parts[1]-1, parts[2]) : new Date(parts[2], parts[1]-1, parts[0]);
+  };
+
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const hd = egg.hatchDate ? parseDateStr(egg.hatchDate) : null;
+  if (hd) hd.setHours(0,0,0,0);
+  
+  const ld = parseDateStr(egg.laidDate);
+  ld.setHours(0,0,0,0);
+  
+  const speciesInfo = female ? SPECIES_LIST.find(s => s.name === female.species) : null;
+  const incubationPeriod = speciesInfo?.incubation || 21;
+  const daysSinceLaid = Math.ceil((today.getTime() - ld.getTime()) / (1000 * 60 * 60 * 24));
+  const progress = Math.min(100, Math.max(0, (daysSinceLaid / incubationPeriod) * 100));
+  
+  const diff = hd ? Math.ceil((hd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+  const isHatching = diff === 0 && egg.status === 'Intact';
+  const isOverdue = (diff !== null && diff < 0) && egg.status === 'Intact';
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -12, scale: 1.02 }}
+      className={`relative p-8 rounded-[40px] border-2 transition-all duration-500 flex flex-col h-full ${
+        egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-500/10 border-green-500/30' :
+        isHatching ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_40px_rgba(249,115,22,0.2)] animate-pulse' :
+        isOverdue ? 'bg-red-500/10 border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.2)]' :
+        egg.status === 'Failed' || egg.status === 'Broken' ? 'bg-slate-900/40 border-slate-700/50 grayscale' :
+        'bg-slate-900 border-white/5 hover:border-accent-gold/40 shadow-2xl'
+      }`}
+    >
+      {/* Premium Glow Effect */}
+      <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent-gold/5 rounded-full blur-[100px] pointer-events-none" />
+      
+      {/* Top Actions */}
+      <div className="absolute top-6 right-6 flex gap-2 z-30">
+        <button onClick={() => onEdit(undefined as any, egg)} className="p-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-accent-gold transition-all rounded-xl border border-white/5">
+          <Edit2 className="w-3.5 h-3.5" />
+        </button>
+        <button onClick={() => onDelete(egg.id)} className="p-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-red-500 transition-all rounded-xl border border-white/5">
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Egg Header */}
+      <div className="mb-8 relative">
+        <div className="flex items-center gap-3 mb-2">
+          {egg.isFertile === true && <div className="px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-green-500/20">Fertile</div>}
+          {egg.isFertile === false && <div className="px-3 py-1 bg-red-500/10 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-red-500/20">Clear</div>}
+          {egg.isFertile === undefined && <div className="px-3 py-1 bg-white/5 text-slate-400 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">Unchecked</div>}
+          {isOverdue && <div className="px-3 py-1 bg-red-500 text-white rounded-full text-[9px] font-black uppercase tracking-widest animate-bounce">Overdue</div>}
+        </div>
+        <h5 className="text-4xl font-black text-white italic tracking-tighter">#{egg.eggNumber || egg.id.slice(-3)}</h5>
+        <div className="flex items-center gap-2 mt-2">
+          <div className="w-6 h-1 bg-accent-gold rounded-full" />
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{egg.status}</p>
+        </div>
+      </div>
+
+      {/* Progress & Countdown */}
+      <div className="flex-1 space-y-8 relative z-10">
+        <div className="space-y-4">
+          <div className="flex justify-between items-end">
+            <div className="flex items-center gap-3">
+               <div className="p-2.5 rounded-xl bg-white/5 border border-white/5">
+                  <Clock className="w-4 h-4 text-accent-gold" />
+               </div>
+               <div>
+                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Incubation Progress</p>
+                  <p className="text-sm font-bold text-white">{Math.round(progress)}% Complete</p>
+               </div>
+            </div>
+            {diff !== null && diff > 0 && (
+              <div className="text-right">
+                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Est. Hatch</p>
+                <div className="flex items-center gap-2 text-accent-gold">
+                  <span className="text-xl font-black">{diff}</span>
+                  <span className="text-[10px] font-bold uppercase">Days</span>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="h-2.5 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5 shadow-inner">
+             <motion.div 
+               initial={{ width: 0 }}
+               animate={{ width: `${progress}%` }}
+               transition={{ duration: 1.5, ease: "easeOut" }}
+               className={`h-full rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] ${
+                 isHatching ? 'bg-orange-500' :
+                 egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-500' :
+                 'bg-gradient-to-r from-accent-gold/40 to-accent-gold'
+               }`}
+             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white/5 p-4 rounded-3xl border border-white/5">
+             <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Laid Date</p>
+             <p className="text-xs font-bold text-white">{egg.laidDate}</p>
+          </div>
+          <div className={`p-4 rounded-3xl border transition-colors ${isHatching ? 'bg-orange-500/20 border-orange-500/30' : 'bg-white/5 border-white/5'}`}>
+             <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Hatch Date</p>
+             <p className="text-xs font-bold text-white">{egg.hatchDate || 'N/A'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Controls */}
+      <div className="mt-10 pt-8 border-t border-white/5 grid grid-cols-2 gap-3 relative z-10">
+        <button 
+          onClick={() => onFertilityCheck(egg.id, true)} 
+          className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            egg.isFertile === true 
+              ? 'bg-accent-gold text-slate-900 shadow-xl shadow-accent-gold/20' 
+              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
+          }`}
+        >
+          Fertile
+        </button>
+        <button 
+          onClick={() => onFertilityCheck(egg.id, false)} 
+          className={`py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${
+            egg.isFertile === false 
+              ? 'bg-red-500 text-white shadow-xl shadow-red-500/30' 
+              : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
+          }`}
+        >
+          Clear
+        </button>
+        {isHatching && (
+          <button 
+            onClick={() => onHatchSuccess(egg)} 
+            className="col-span-2 mt-2 py-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-500/40 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Sparkles className="w-5 h-5" /> Finalize Hatching
+          </button>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
 const PublicBirdProfile = ({ bird, ancestors, isLoading, onBack }: { bird: BirdData | null, ancestors: BirdData[], isLoading: boolean, onBack: () => void }) => {
   if (isLoading) {
     return (
@@ -4962,61 +5129,19 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                         </button>
                      </div>
 
-                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-8">
-                        {coupleEggs.map(egg => {
-                           const parseDateStr = (dStr: string) => {
-                             if (!dStr) return new Date();
-                             const separator = dStr.includes('/') ? '/' : '-';
-                             const parts = dStr.split(separator).map(Number);
-                             return parts[0] > 1000 ? new Date(parts[0], parts[1]-1, parts[2]) : new Date(parts[2], parts[1]-1, parts[0]);
-                           };
-                           const today = new Date();
-                           today.setHours(0,0,0,0);
-                           const hd = egg.hatchDate ? parseDateStr(egg.hatchDate) : null;
-                           if (hd) hd.setHours(0,0,0,0);
-                           const diff = hd ? Math.ceil((hd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
-                           const isHatching = diff === 0 && egg.status === 'Intact';
-                           const isOverdue = (diff !== null && diff < 0) && egg.status === 'Intact';
-
-                           return (
-                              <motion.div 
-                                 key={egg.id} 
-                                 whileHover={{ y: -10 }}
-                                 className={`relative p-6 md:p-8 rounded-[32px] md:rounded-[40px] text-center transition-all ${
-                                    egg.status === 'Completed' || egg.status === 'Hatched' ? 'bg-green-500 shadow-xl shadow-green-500/20' :
-                                    isHatching ? 'bg-orange-500 shadow-xl shadow-orange-500/20 animate-pulse' :
-                                    isOverdue ? 'bg-red-500 shadow-xl shadow-red-500/20' :
-                                    egg.status === 'Broken' || egg.status === 'Failed' ? 'bg-slate-100 text-slate-500' :
-                                    'bg-white shadow-xl shadow-black/5'
-                                 }`}
-                              >
-                                 <div className="absolute top-4 right-4 flex gap-2 z-20">
-                                    <button onClick={() => openEggModal(undefined, egg)} className="p-2.5 bg-slate-50/50 backdrop-blur-sm text-slate-400 hover:text-primary transition-colors rounded-xl shadow-sm"><Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" /></button>
-                                    <button onClick={() => handleDeleteEgg(egg.id)} className="p-2.5 bg-slate-50/50 backdrop-blur-sm text-slate-400 hover:text-red-500 transition-colors rounded-xl shadow-sm"><X className="w-4 h-4 md:w-3.5 md:h-3.5" /></button>
-                                 </div>
-                                 <h5 className={`text-3xl md:text-4xl font-black mb-1 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching || isOverdue ? 'text-white' : 'text-slate-900'}`}>#{egg.eggNumber || egg.id.slice(-3)}</h5>
-                                 <p className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] mb-6 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching || isOverdue ? 'text-white/70' : 'text-slate-400'}`}>
-                                   {isOverdue ? 'Overdue ⚠️' : egg.status}
-                                 </p>
-                                 
-                                 <div className="space-y-4 relative z-10">
-                                    <div className={`flex justify-between items-center text-[9px] md:text-[10px] font-bold border-t pt-4 ${egg.status === 'Completed' || egg.status === 'Hatched' || isHatching || isOverdue ? 'text-white/80 border-white/10' : 'text-slate-500 border-slate-100'}`}>
-                                       <span>{egg.laidDate}</span>
-                                       {diff !== null && diff > 0 && <span className="bg-primary/10 px-2 py-0.5 rounded-lg">{diff}d left</span>}
-                                       {isHatching && <span className="bg-white/20 px-2 py-0.5 rounded-lg">Today!</span>}
-                                       {isOverdue && <span className="bg-white/20 px-2 py-0.5 rounded-lg">{Math.abs(diff)}d Late</span>}
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                       <button onClick={() => handleFertilityCheck(egg.id, true)} className={`py-4 md:py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${egg.isFertile === true ? 'bg-white text-primary shadow-lg ring-1 ring-primary/20' : 'bg-black/5 text-slate-400 hover:bg-black/10'}`}>Fertile</button>
-                                       <button onClick={() => handleFertilityCheck(egg.id, false)} className={`py-4 md:py-3 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${egg.isFertile === false ? 'bg-slate-900 text-white shadow-lg' : 'bg-black/5 text-slate-400 hover:bg-black/10'}`}>Clear</button>
-                                    </div>
-                                    {isHatching && (
-                                       <button onClick={() => handleHatchSuccess(egg)} className="w-full py-4 bg-white text-orange-600 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl shadow-orange-600/20 active:scale-95 transition-all">Mark Hatched 🐣</button>
-                                    )}
-                                 </div>
-                              </motion.div>
-                           )
-                        })}
+                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+                        {coupleEggs.map(egg => (
+                           <EggCard 
+                              key={egg.id}
+                              egg={egg}
+                              male={male}
+                              female={female}
+                              onEdit={openEggModal}
+                              onDelete={handleDeleteEgg}
+                              onFertilityCheck={handleFertilityCheck}
+                              onHatchSuccess={handleHatchSuccess}
+                           />
+                        ))}
                      </div>
                   </div>
                 )
