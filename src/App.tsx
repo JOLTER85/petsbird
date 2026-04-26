@@ -1091,13 +1091,15 @@ const EggCard = ({
       <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-white/5 relative z-10">
         <div className="flex flex-col items-center mb-4">
           <div className="flex items-center gap-2 mb-1">
-             <Calendar className={`w-2.5 h-2.5 md:w-3 md:h-3 ${isFertCheckReady ? 'text-green-500' : 'text-slate-500'}`} />
-             <p className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest ${isFertCheckReady ? 'text-green-400' : 'text-slate-500'}`}>
-                Fertility Check Date (تاريخ الفحص)
+             <Calendar className={`w-2.5 h-2.5 md:w-3 md:h-3 ${egg.isFertile === true ? 'text-accent-gold' : isFertCheckReady ? 'text-green-500' : 'text-slate-500'}`} />
+             <p className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest ${egg.isFertile === true ? 'text-accent-gold' : isFertCheckReady ? 'text-green-400' : 'text-slate-500'}`}>
+                {egg.isFertile === true ? 'Hatch Date (تاريخ الفقص)' : 'Fertility Check Date (تاريخ الفحص)'}
              </p>
           </div>
-          <p className={`text-[10px] md:text-xs font-bold ${isFertCheckReady ? 'text-white' : 'text-slate-400'}`}>{fertDateStr}</p>
-          {!isFertCheckReady && egg.status === 'Intact' && (
+          <p className={`text-[10px] md:text-xs font-bold ${egg.isFertile === true || isFertCheckReady ? 'text-white' : 'text-slate-400'}`}>
+            {egg.isFertile === true ? (egg.hatchDate || 'N/A') : fertDateStr}
+          </p>
+          {egg.isFertile === undefined && !isFertCheckReady && egg.status === 'Intact' && (
             <p className="text-[7px] md:text-[8px] text-slate-500 mt-0.5 font-bold">Buttons disabled until this date</p>
           )}
         </div>
@@ -2440,6 +2442,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [cageFilter, setCageFilter] = useState<string | null>(null);
   const [speciesFilter, setSpeciesFilter] = useState<string>("All");
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [coupleFilter, setCoupleFilter] = useState<string>("All");
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
   const [searchEgg, setSearchEgg] = useState("");
@@ -5012,21 +5015,59 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     ))}
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-                  {["All", "Ready", "Resting", "Paired", "Chick", "Sold", "Deceased"].map(status => (
-                    <button
-                      key={status}
-                      onClick={() => setStatusFilter(status)}
-                      className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
-                        statusFilter === status 
-                          ? 'bg-accent-gold text-white shadow-lg shadow-accent-gold/20' 
-                          : 'bg-white/5 text-white/40 hover:bg-white/10'
-                      }`}
-                    >
-                      {status === "All" ? "All Status (الكل)" : status === "Deceased" ? "Deceased (مات)" : status}
-                    </button>
-                  ))}
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                    {["All", "Ready", "Resting", "Paired", "Chick", "Sold", "Deceased"].map(status => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          setStatusFilter(status);
+                          if (status !== "Chick" && coupleFilter !== "All") setCoupleFilter("All");
+                        }}
+                        className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                          statusFilter === status 
+                            ? 'bg-accent-gold text-white shadow-lg shadow-accent-gold/20' 
+                            : 'bg-white/5 text-white/40 hover:bg-white/10'
+                        }`}
+                      >
+                        {status === "All" ? "All Status (الكل)" : status === "Deceased" ? "Deceased (مات)" : status}
+                      </button>
+                    ))}
+                  </div>
+
+                  {statusFilter === "Chick" && couples.length > 0 && (
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                      <button
+                        onClick={() => setCoupleFilter("All")}
+                        className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                          coupleFilter === "All" 
+                            ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' 
+                            : 'bg-white/5 text-white/40 hover:bg-white/10'
+                        }`}
+                      >
+                        All Offspring (كل الفراخ)
+                      </button>
+                      {couples.map(couple => {
+                        const male = birds.find(b => b.id === couple.maleId);
+                        const female = birds.find(b => b.id === couple.femaleId);
+                        const label = `${male?.name || 'Pair'} × ${female?.name || ''}`;
+                        return (
+                          <button
+                            key={couple.id}
+                            onClick={() => setCoupleFilter(couple.id)}
+                            className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                              coupleFilter === couple.id 
+                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' 
+                                : 'bg-white/5 text-white/40 hover:bg-white/10'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -5044,6 +5085,19 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     </button>
                   </div>
                 )}
+                {coupleFilter !== "All" && (
+                   <div className="flex items-center gap-2 px-4 py-2 bg-purple-600/10 text-purple-600 rounded-2xl text-xs font-bold border border-purple-600/20 shadow-sm">
+                    <Heart className="w-3.5 h-3.5" />
+                    Couple Offspring
+                    <button 
+                      onClick={() => setCoupleFilter("All")} 
+                      className="ml-2 p-1 hover:bg-purple-600/20 rounded-lg transition-colors"
+                      title="Clear Filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
                 {selectedBirds.length > 0 && (
                   <span className="text-sm font-bold text-primary bg-primary/5 px-4 py-2 rounded-2xl border border-primary/10">
                     {selectedBirds.length}/2 birds selected for coupling
@@ -5054,7 +5108,17 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {birds
-                .filter(b => (!cageFilter || b.cage === cageFilter) && (speciesFilter === "All" || b.species === speciesFilter) && (statusFilter === "All" || b.status === statusFilter))
+                .filter(b => {
+                  const matchesCage = !cageFilter || b.cage === cageFilter;
+                  const matchesSpecies = speciesFilter === "All" || b.species === speciesFilter;
+                  const matchesStatus = statusFilter === "All" || b.status === statusFilter;
+                  const matchesCouple = coupleFilter === "All" || (
+                    couples.find(c => c.id === coupleFilter && (
+                      (b.fatherId === c.maleId && b.motherId === c.femaleId)
+                    ))
+                  );
+                  return matchesCage && matchesSpecies && matchesStatus && matchesCouple;
+                })
                 .map((bird) => (
                 <BirdCard 
                   key={bird.id} 
