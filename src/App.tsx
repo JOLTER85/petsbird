@@ -434,7 +434,7 @@ const calculateDetailedAge = (birthDateStr: string) => {
   }
 };
 
-const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, salePrice, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick, onShare }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void, onShare?: (e: MouseEvent) => void }) => {
+const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, salePrice, fatherId, motherId, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick, onShare, allBirds = [] }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void, onShare?: (e: MouseEvent) => void, allBirds?: BirdData[] }) => {
   // Debugging log to check URL validity
   useEffect(() => {
     if (imageUrl) {
@@ -443,6 +443,8 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
   }, [imageUrl, name]);
 
   const cleanImageUrl = imageUrl?.trim();
+  const father = allBirds.find(b => b.id === fatherId);
+  const mother = allBirds.find(b => b.id === motherId);
 
   // Refined Age Display
   const ageDisplay = calculateDetailedAge(birthYear);
@@ -650,6 +652,26 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
             <GitBranch className="w-4 h-4" />
             View Pedigree (3 Generations)
           </button>
+
+          {(father || mother) && (
+            <div className="mt-3 flex flex-col gap-2 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
+              <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Parent Info (معلومات الأبوين)</div>
+              <div className="flex flex-col gap-1.5 text-[10px] md:text-[11px]">
+                {father && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium">Father (الأب):</span>
+                    <span className="font-bold text-slate-700">{father.name} <span className="text-blue-500/70 ml-1">#{father.ring}</span></span>
+                  </div>
+                )}
+                {mother && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium">Mother (الأم):</span>
+                    <span className="font-bold text-slate-700">{mother.name} <span className="text-pink-500/70 ml-1">#{mother.ring}</span></span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -2538,13 +2560,18 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 const male = birds.find(b => b.id === couple?.maleId);
                 const female = birds.find(b => b.id === couple?.femaleId);
                 
+                const title = "Hatching Soon!";
+                const message = `Egg #${egg.eggNumber || egg.id.slice(-3)} from ${male?.name || 'Pair'} & ${female?.name || ''} is hatching soon!`;
+                
                 newNotifications.unshift({
                   id: notificationId,
-                  title: "Hatching Soon!",
-                  message: `Egg #${egg.eggNumber || egg.id.slice(-3)} from ${male?.name || 'Pair'} & ${female?.name || ''} is hatching soon!`,
+                  title,
+                  message,
                   time: "Alert",
                   read: false
                 });
+                
+                addNotification(title, message, 'info');
                 hasChanges = true;
               }
             }
@@ -2553,13 +2580,18 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             if (diffDays < 0) {
               const notificationId = `overdue-${egg.id}`;
               if (!newNotifications.some(n => n.id === notificationId)) {
+                const title = "Overdue Egg!";
+                const message = `Egg #${egg.eggNumber || egg.id.slice(-3)} is past its hatch date. Please check the nest!`;
+                
                 newNotifications.unshift({
                   id: notificationId,
-                  title: "Overdue Egg!",
-                  message: `Egg #${egg.eggNumber || egg.id.slice(-3)} is past its hatch date. Please check the nest!`,
+                  title,
+                  message,
                   time: "Warning",
                   read: false
                 });
+                
+                addNotification(title, message, 'warning');
                 hasChanges = true;
               }
             }
@@ -2686,8 +2718,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         const birdData = { ...newBird, id, imageUrl, userId: user.uid };
         await setDoc(doc(db, "users_data", user.uid, "birds", id), birdData);
         
-        addNotification("Bird Added", `تمت إضافة ${newBird.name} بنجاح!`, 'success');
-
         setSelectedFile(null);
         localStorage.removeItem('petsbird_draft_bird');
         setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", status: "Ready", imageUrl: "", salePrice: "" });
@@ -2711,8 +2741,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
       await updateDoc(doc(db, "users_data", user.uid, "birds", editingBirdId), { ...newBird, imageUrl });
       
-      addNotification("Bird Updated", `تم تحديث بيانات ${newBird.name} بنجاح!`, 'success');
-
       setEditingBirdId(null);
       setSelectedFile(null);
       setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "", salePrice: "" });
@@ -2762,7 +2790,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setParentEditContext(null);
       setManualParentName("");
       setIsAddingParentManual(false);
-      addNotification("Genealogy Updated", "Parent reference updated successfully.", 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users_data/${user.uid}/birds/${parentEditContext.childId}`);
     }
@@ -2894,7 +2921,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     const path = `users_data/${user.uid}/couples/${id}`;
     try {
       await setDoc(doc(db, "users_data", user.uid, "couples", id), newCouple);
-      addNotification("Couple Created", "تم إنشاء الكوبل الجديد بنجاح", 'success');
       setIsCoupleModalOpen(false);
       setSelectedBirds([]);
       setActiveTab("Couples");
@@ -3239,7 +3265,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         hatchDate,
         coupleId: selectedCoupleId
       });
-      addNotification("Egg Updated", "تم تحديث بيانات البيضة بنجاح", 'success');
       setIsEggModalOpen(false);
       setEditingEggId(null);
       setSelectedCoupleId("");
@@ -3261,7 +3286,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       onConfirm: async () => {
         try {
           await deleteDoc(doc(db, "users_data", user.uid, "eggs", id));
-          addNotification("Egg Deleted", "تم حذف البيضة بنجاح", 'warning');
           setConfirmModal(prev => ({ ...prev, isOpen: false }));
         } catch (error) {
           handleFirestoreError(error, OperationType.DELETE, path);
@@ -3318,8 +3342,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       localStorage.removeItem('petsbird_draft_egg');
       setSelectedCoupleId("");
       setNewEgg({ laidDate: new Date().toISOString().split('T')[0], hatchDate: "", status: "Intact" });
-      
-      addNotification("New Egg!", `A new egg was added for Couple #${coupleId}. Est. hatch: ${hatchDate}`, 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }
@@ -4955,6 +4977,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   <BirdCard 
                     key={bird.id} 
                     {...bird} 
+                    allBirds={birds}
                     onExportCertificate={exportPedigreePDF}
                     onCageClick={(cage) => {
                       setCageFilter(cage);
@@ -5036,6 +5059,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <BirdCard 
                   key={bird.id} 
                   {...bird} 
+                  allBirds={birds}
                   onSelect={() => handleToggleBirdSelection(bird.id)}
                   isSelected={selectedBirds.includes(bird.id)}
                   onEdit={() => openBirdModal(bird)}
