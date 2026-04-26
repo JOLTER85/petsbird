@@ -2087,10 +2087,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       ...prev.slice(0, 19)
     ]);
 
-    // Auto-remove toast after 5 seconds
+    // Auto-remove toast after 3 seconds
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
-    }, 5000);
+    }, 3000);
   };
   const [hatchFailureEgg, setHatchFailureEgg] = useState<EggData | null>(null);
   const [failureReason, setFailureReason] = useState("");
@@ -6711,37 +6711,37 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         )}
       </AnimatePresence>
       {/* Toast Notifications */}
-      <div className="fixed bottom-10 right-10 z-[100] flex flex-col gap-4 pointer-events-none">
+      <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-full max-w-xs px-4">
         <AnimatePresence>
           {notifications.map(n => (
             <motion.div
               key={n.id}
-              initial={{ opacity: 0, x: 20, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-              className={`pointer-events-auto min-w-[320px] p-6 rounded-[28px] shadow-2xl backdrop-blur-xl border ${
+              className={`pointer-events-auto w-full p-4 rounded-2xl shadow-xl backdrop-blur-xl border ${
                 n.type === 'success' ? 'bg-green-500/90 border-green-400 text-white' :
                 n.type === 'error' ? 'bg-red-500/90 border-red-400 text-white' :
                 'bg-blue-500/90 border-blue-400 text-white'
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 bg-white/20 rounded-xl">
-                    {n.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : 
-                     n.type === 'error' ? <AlertTriangle className="w-5 h-5" /> : 
-                     <Bell className="w-5 h-5" />}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-white/20 rounded-lg shrink-0">
+                    {n.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : 
+                     n.type === 'error' ? <AlertTriangle className="w-4 h-4" /> : 
+                     <Bell className="w-4 h-4" />}
                   </div>
-                  <div>
-                    <h4 className="font-black text-sm uppercase tracking-widest">{n.title}</h4>
-                    <p className="text-sm font-medium opacity-90 mt-1">{n.message}</p>
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-xs uppercase tracking-wider truncate">{n.title}</h4>
+                    <p className="text-xs font-medium opacity-90 truncate">{n.message}</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))}
-                  className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-1 hover:bg-white/20 rounded-lg transition-colors shrink-0"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3 h-3" />
                 </button>
               </div>
             </motion.div>
