@@ -434,7 +434,7 @@ const calculateDetailedAge = (birthDateStr: string) => {
   }
 };
 
-const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick, onShare }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void, onShare?: (e: MouseEvent) => void }) => {
+const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, date, cage, status, imageUrl, salePrice, onSelect, isSelected, onEdit, onDelete, onViewPedigree, onExportCertificate, onCageClick, onShare }: BirdData & { onSelect?: () => void, isSelected?: boolean, onEdit?: (e: MouseEvent) => void, onDelete?: (id: string) => void, onViewPedigree?: (id: string) => void, onExportCertificate?: (id: string) => void, onCageClick?: (cage: string) => void, onShare?: (e: MouseEvent) => void }) => {
   // Debugging log to check URL validity
   useEffect(() => {
     if (imageUrl) {
@@ -4700,9 +4700,10 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Fertile', value: eggs.filter(e => e.isFertile && e.status !== 'Completed').length, color: '#ffb800' },
+                          { name: 'Fertile', value: eggs.filter(e => e.isFertile && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken').length, color: '#ffb800' },
                           { name: 'Hatched', value: eggs.filter(e => e.status === 'Completed').length, color: '#1A73E8' },
-                          { name: 'Broken', value: eggs.filter(e => e.status === 'Broken').length, color: '#EF4444' },
+                          { name: 'Failed', value: eggs.filter(e => e.status === 'Failed' || e.isFertile === false).length, color: '#EF4444' },
+                          { name: 'Broken', value: eggs.filter(e => e.status === 'Broken').length, color: '#FF6B6B' },
                           { name: 'Pending', value: eggs.filter(e => e.status === 'Intact' && e.isFertile === undefined).length, color: '#94A3B8' }
                         ]}
                         innerRadius={70}
@@ -4710,8 +4711,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                         paddingAngle={8}
                         dataKey="value"
                       >
-                        {[0, 1, 2, 3].map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={['#ffb800', '#1A73E8', '#EF4444', '#94A3B8'][index]} />
+                        {[0, 1, 2, 3, 4].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={['#ffb800', '#1A73E8', '#EF4444', '#FF6B6B', '#94A3B8'][index]} />
                         ))}
                       </Pie>
                       <Tooltip />
@@ -4722,7 +4723,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Eggs</div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fertile</span>
                     <span className="text-xl font-black text-amber-500">{eggs.filter(e => e.isFertile).length}</span>
@@ -4730,6 +4731,14 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hatched</span>
                     <span className="text-xl font-black text-primary">{eggs.filter(e => e.status === 'Completed').length}</span>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Clear (غير مخصب)</span>
+                    <span className="text-xl font-black text-red-500">{eggs.filter(e => e.isFertile === false).length}</span>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Broken/Failed</span>
+                    <span className="text-xl font-black text-slate-900">{eggs.filter(e => e.status === 'Broken' || e.status === 'Failed').length}</span>
                   </div>
                 </div>
               </div>
@@ -4965,7 +4974,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               {couples.map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
-                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed');
+                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken');
                 
                 return (
                   <motion.div
@@ -5198,7 +5207,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               {couples.map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
-                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed')
+                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken')
                   .filter(e => {
                     let statusMatch = true;
                     if (filterEggStatus === "All") {
