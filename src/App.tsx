@@ -143,6 +143,7 @@ interface BirdData {
   lineage?: string;
   status?: string;
   imageUrl?: string;
+  salePrice?: string;
 }
 
 interface CoupleData {
@@ -615,19 +616,26 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
             <span className="text-[8px] md:text-[9px] text-slate-400 ml-5">DOB: {date}</span>
           </div>
 
-          {/* Right: Cage */}
-          <div className="flex flex-col gap-0.5">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                onCageClick?.(cage);
-              }}
-              className="flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors group/cage min-h-[32px]"
-            >
-              <MapPin className="w-3.5 h-3.5 group-hover/cage:scale-110 transition-transform" />
-              <span className="text-[10px] md:text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
-            </button>
+      {/* Right: Cage or Sale Price */}
+      <div className="flex flex-col gap-0.5">
+        {status === 'Sold' ? (
+          <div className="flex items-center gap-1.5 text-green-600 min-h-[32px]">
+            <span className="text-xs">💰</span>
+            <span className="text-[10px] md:text-[11px] font-black uppercase tracking-tight">Price: {salePrice || 'Sold'}</span>
           </div>
+        ) : (
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onCageClick?.(cage);
+            }}
+            className="flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors group/cage min-h-[32px]"
+          >
+            <MapPin className="w-3.5 h-3.5 group-hover/cage:scale-110 transition-transform" />
+            <span className="text-[10px] md:text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
+          </button>
+        )}
+      </div>
         </div>
 
         {/* Footer Action */}
@@ -2480,7 +2488,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     cage: "1",
     mutation: "",
     status: "Ready",
-    imageUrl: ""
+    imageUrl: "",
+    salePrice: ""
   });
 
   // Auto-save Recovery for Bird Form
@@ -2582,7 +2591,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
         setSelectedFile(null);
         localStorage.removeItem('petsbird_draft_bird');
-        setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", status: "Ready", imageUrl: "" });
+        setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", status: "Ready", imageUrl: "", salePrice: "" });
       } catch (error) {
         handleFirestoreError(error, OperationType.WRITE, `users_data/${user.uid}/birds`);
       } finally {
@@ -2607,7 +2616,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
 
       setEditingBirdId(null);
       setSelectedFile(null);
-      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "" });
+      setNewBird({ name: "", ring: "", species: SPECIES_LIST[0].name, gender: "Male", age: 0, birthYear: new Date().toISOString().split('T')[0], date: new Date().toISOString().split('T')[0], cage: "1", mutation: "", imageUrl: "", salePrice: "" });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users_data/${user.uid}/birds/${editingBirdId}`);
     } finally {
@@ -5841,6 +5850,18 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       <option value="Deceased">💀 Deceased (مات)</option>
                     </select>
                   </div>
+                  {newBird.status === 'Sold' && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sale Price (سعر البيع)</label>
+                      <input 
+                        type="text" 
+                        value={newBird.salePrice}
+                        onChange={(e) => setNewBird({...newBird, salePrice: e.target.value})}
+                        placeholder="e.g. 100$"
+                        className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium"
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Date Added</label>
                     <input 
