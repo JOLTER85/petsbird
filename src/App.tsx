@@ -162,7 +162,7 @@ interface EggData {
   hatchDate?: string;
   fertilityCheckDate?: string;
   isFertile?: boolean;
-  status: 'Intact' | 'Hatched' | 'Broken' | 'Completed' | 'Failed';
+  status: 'Intact' | 'Hatched' | 'Broken' | 'Completed' | 'Failed' | 'DeadInShell';
   failureReason?: string;
 }
 
@@ -1123,6 +1123,12 @@ const EggCard = ({
                 className="py-3 md:py-4 bg-slate-800 text-slate-400 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-500 transition-all border border-white/5"
               >
                 <X className="w-3 h-3 md:w-3.5 md:h-3.5" /> Failed
+              </button>
+              <button 
+                onClick={() => onHatchFailure(egg, "Dead in Shell")} 
+                className="col-span-2 py-3 md:py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-1 md:gap-2"
+              >
+                <X className="w-3 h-3 md:w-3.5 md:h-3.5" /> Dead in Shell (جنين مات)
               </button>
             </div>
           </div>
@@ -2274,10 +2280,11 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const handleHatchFailure = async (egg: EggData, reason: string) => {
     if (!user) return;
     try {
+      const status = reason === 'Dead in Shell' ? 'DeadInShell' : 'Failed';
       // Archive instead of delete to keep in statistics
       const updatedEgg: EggData = {
         ...egg,
-        status: 'Failed',
+        status,
         failureReason: reason
       };
       
@@ -2285,7 +2292,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       setHatchFailureEgg(null);
       setFailureReason("");
       
-      addNotification("Egg Failed", `Egg #${egg.eggNumber || egg.id.slice(-3)} marked as failed (Reason: ${reason}).`, 'warning');
+      addNotification(reason, `Egg #${egg.eggNumber || egg.id.slice(-3)} marked as ${reason}.`, 'warning');
       
       setConfirmModal({
         isOpen: true,
@@ -2324,6 +2331,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [eggs, setEggs] = useState<EggData[]>([]);
   const [searchEgg, setSearchEgg] = useState("");
   const [filterEggStatus, setFilterEggStatus] = useState<string>("All");
+  const [filterEggCouple, setFilterEggCouple] = useState<string>("All");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -4700,9 +4708,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     <PieChart>
                       <Pie
                         data={[
-                          { name: 'Fertile', value: eggs.filter(e => e.isFertile && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken').length, color: '#ffb800' },
+                          { name: 'Fertile', value: eggs.filter(e => e.isFertile && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken' && e.status !== 'DeadInShell').length, color: '#ffb800' },
                           { name: 'Hatched', value: eggs.filter(e => e.status === 'Completed').length, color: '#1A73E8' },
-                          { name: 'Failed', value: eggs.filter(e => e.status === 'Failed' || e.isFertile === false).length, color: '#EF4444' },
+                          { name: 'Failed', value: eggs.filter(e => e.status === 'Failed' || e.isFertile === false || e.status === 'DeadInShell').length, color: '#EF4444' },
                           { name: 'Broken', value: eggs.filter(e => e.status === 'Broken').length, color: '#FF6B6B' },
                           { name: 'Pending', value: eggs.filter(e => e.status === 'Intact' && e.isFertile === undefined).length, color: '#94A3B8' }
                         ]}
@@ -4738,7 +4746,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   </div>
                   <div className="p-4 bg-slate-50 rounded-2xl flex flex-col gap-1">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Broken/Failed</span>
-                    <span className="text-xl font-black text-slate-900">{eggs.filter(e => e.status === 'Broken' || e.status === 'Failed').length}</span>
+                    <span className="text-xl font-black text-slate-900">{eggs.filter(e => e.status === 'Broken' || e.status === 'Failed' || e.status === 'DeadInShell').length}</span>
                   </div>
                 </div>
               </div>
@@ -4974,7 +4982,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               {couples.map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
-                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken');
+                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken' && e.status !== 'DeadInShell');
                 
                 return (
                   <motion.div
@@ -5194,6 +5202,22 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   <option value="Failed">Failed (لم يتم فقصه)</option>
                   <option value="Broken">Broken (مكسور)</option>
                 </select>
+                <select 
+                  value={filterEggCouple}
+                  onChange={(e) => setFilterEggCouple(e.target.value)}
+                  className="bg-slate-800/30 border border-white/5 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 text-white text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold"
+                >
+                  <option value="All">All Couples (كل الكوبل)</option>
+                  {couples.map(c => {
+                    const male = birds.find(b => b.id === c.maleId);
+                    const female = birds.find(b => b.id === c.femaleId);
+                    return (
+                      <option key={c.id} value={c.id}>
+                        {male?.name || 'Male'} × {female?.name || 'Female'}
+                      </option>
+                    );
+                  })}
+                </select>
                 <button 
                   onClick={() => openEggModal()}
                   className="bg-primary text-white px-6 md:px-8 py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-xs md:text-sm shadow-xl shadow-primary/20 flex items-center justify-center gap-2 hover:scale-105 transition-all"
@@ -5204,10 +5228,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             </div>
 
             <div className="space-y-12">
-              {couples.map((couple) => {
+              {couples
+                .filter(c => filterEggCouple === "All" || c.id === filterEggCouple)
+                .map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
-                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken')
+                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed' && e.status !== 'Failed' && e.status !== 'Broken' && e.status !== 'DeadInShell')
                   .filter(e => {
                     let statusMatch = true;
                     if (filterEggStatus === "All") {
