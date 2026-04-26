@@ -4954,7 +4954,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               {couples.map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
-                const coupleEggs = eggs.filter(e => e.coupleId === couple.id);
+                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed');
                 
                 return (
                   <motion.div
@@ -5187,7 +5187,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               {couples.map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
-                const coupleEggs = eggs.filter(e => e.coupleId === couple.id)
+                const coupleEggs = eggs.filter(e => e.coupleId === couple.id && e.status !== 'Completed')
                   .filter(e => {
                     let statusMatch = true;
                     if (filterEggStatus === "All") {
