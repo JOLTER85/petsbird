@@ -458,6 +458,8 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
         return { icon: <Heart className="w-3 h-3" />, color: 'bg-orange-500', text: 'Paired', label: 'Linked' };
       case 'chick':
         return { icon: <Sparkles className="w-3 h-3" />, color: 'bg-purple-500', text: 'Chick', label: 'Young bird' };
+      case 'sold':
+        return { icon: <ShoppingBag className="w-3 h-3" />, color: 'bg-red-500', text: 'Sold', label: 'تم بيعه' };
       default:
         return { icon: <Info className="w-3 h-3" />, color: 'bg-slate-400', text: status || 'Unknown', label: '' };
     }
@@ -2307,6 +2309,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [birds, setBirds] = useState<BirdData[]>([]);
   const [cageFilter, setCageFilter] = useState<string | null>(null);
   const [speciesFilter, setSpeciesFilter] = useState<string>("All");
+  const [statusFilter, setStatusFilter] = useState<string>("All");
   const [couples, setCouples] = useState<CoupleData[]>([]);
   const [eggs, setEggs] = useState<EggData[]>([]);
   const [searchEgg, setSearchEgg] = useState("");
@@ -4848,23 +4851,44 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
         {activeTab === "My Birds" && (
           <section>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-              <div className="flex items-center gap-4">
-                <h3 className="text-3xl font-black font-display text-white">All Birds</h3>
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                  {aviarySpecies.map(species => (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-3xl font-black font-display text-white">All Birds</h3>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar no-scrollbar">
+                    {aviarySpecies.map(species => (
+                      <button
+                        key={species}
+                        onClick={() => setSpeciesFilter(species)}
+                        className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
+                          speciesFilter === species 
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                            : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        }`}
+                      >
+                        {species}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                  {["All", "Ready", "Resting", "Paired", "Chick", "Sold"].map(status => (
                     <button
-                      key={species}
-                      onClick={() => setSpeciesFilter(species)}
-                      className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-                        speciesFilter === species 
-                          ? 'bg-primary text-white shadow-lg shadow-primary/20' 
-                          : 'bg-white/10 text-white/60 hover:bg-white/20'
+                      key={status}
+                      onClick={() => setStatusFilter(status)}
+                      className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                        statusFilter === status 
+                          ? 'bg-accent-gold text-white shadow-lg shadow-accent-gold/20' 
+                          : 'bg-white/5 text-white/40 hover:bg-white/10'
                       }`}
                     >
-                      {species}
+                      {status === "All" ? "All Status (الكل)" : status}
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="flex items-center gap-4">
                 {cageFilter && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-2xl text-xs font-bold border border-primary/20 shadow-sm">
                     <MapPin className="w-3.5 h-3.5" />
@@ -4878,9 +4902,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     </button>
                   </div>
                 )}
-              </div>
-              
-              <div className="flex items-center gap-4">
                 {selectedBirds.length > 0 && (
                   <span className="text-sm font-bold text-primary bg-primary/5 px-4 py-2 rounded-2xl border border-primary/10">
                     {selectedBirds.length}/2 birds selected for coupling
@@ -4891,7 +4912,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
               {birds
-                .filter(b => (!cageFilter || b.cage === cageFilter) && (speciesFilter === "All" || b.species === speciesFilter))
+                .filter(b => (!cageFilter || b.cage === cageFilter) && (speciesFilter === "All" || b.species === speciesFilter) && (statusFilter === "All" || b.status === statusFilter))
                 .map((bird) => (
                 <BirdCard 
                   key={bird.id} 
@@ -5814,6 +5835,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       <option value="Resting">🔵 Resting (Non-breeding)</option>
                       <option value="Paired">🟠 Paired (Linked)</option>
                       <option value="Chick">🐣 Chick</option>
+                      <option value="Sold">🔴 Sold (تم بيعه)</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -5928,37 +5950,37 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               <form onSubmit={editingCoupleId ? handleUpdateCouple : handleCreateCoupleFromModal} className="p-8 space-y-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select Male Bird</label>
-                  <select 
-                    required
-                    value={selectedMaleId}
-                    onChange={(e) => setSelectedMaleId(e.target.value)}
-                    className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium appearance-none"
-                  >
-                    <option value="">Choose a male...</option>
-                    {birds
-                      .filter(b => b.gender === 'Male')
-                      .filter(b => !couples.some(c => c.status === 'Active' && (c.maleId === b.id || c.femaleId === b.id)))
-                      .map(b => (
-                        <option key={b.id} value={b.id}>{b.ring} ({b.species})</option>
-                      ))}
-                  </select>
+                    <select 
+                      required
+                      value={selectedMaleId}
+                      onChange={(e) => setSelectedMaleId(e.target.value)}
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium appearance-none"
+                    >
+                      <option value="">Choose a male...</option>
+                      {birds
+                        .filter(b => b.gender === 'Male' && b.status !== 'Sold')
+                        .filter(b => !couples.some(c => c.status === 'Active' && (c.maleId === b.id || c.femaleId === b.id)))
+                        .map(b => (
+                          <option key={b.id} value={b.id}>{b.ring} ({b.species})</option>
+                        ))}
+                    </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Select Female Bird</label>
-                  <select 
-                    required
-                    value={selectedFemaleId}
-                    onChange={(e) => setSelectedFemaleId(e.target.value)}
-                    className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium appearance-none"
-                  >
-                    <option value="">Choose a female...</option>
-                    {birds
-                      .filter(b => b.gender === 'Female')
-                      .filter(b => !couples.some(c => c.status === 'Active' && (c.maleId === b.id || c.femaleId === b.id)))
-                      .map(b => (
-                        <option key={b.id} value={b.id}>{b.ring} ({b.species})</option>
-                      ))}
-                  </select>
+                    <select 
+                      required
+                      value={selectedFemaleId}
+                      onChange={(e) => setSelectedFemaleId(e.target.value)}
+                      className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 focus:border-primary outline-none transition-all font-medium appearance-none"
+                    >
+                      <option value="">Choose a female...</option>
+                      {birds
+                        .filter(b => b.gender === 'Female' && b.status !== 'Sold')
+                        .filter(b => !couples.some(c => c.status === 'Active' && (c.maleId === b.id || c.femaleId === b.id)))
+                        .map(b => (
+                          <option key={b.id} value={b.id}>{b.ring} ({b.species})</option>
+                        ))}
+                    </select>
                 </div>
                 <button 
                   type="submit"
