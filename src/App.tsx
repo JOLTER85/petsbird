@@ -460,6 +460,8 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
         return { icon: <Sparkles className="w-3 h-3" />, color: 'bg-purple-500', text: 'Chick', label: 'Young bird' };
       case 'sold':
         return { icon: <ShoppingBag className="w-3 h-3" />, color: 'bg-red-500', text: 'Sold', label: 'تم بيعه' };
+      case 'deceased':
+        return { icon: <X className="w-3 h-3" />, color: 'bg-slate-900', text: 'Deceased', label: 'مات' };
       default:
         return { icon: <Info className="w-3 h-3" />, color: 'bg-slate-400', text: status || 'Unknown', label: '' };
     }
@@ -4872,7 +4874,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 </div>
                 
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-                  {["All", "Ready", "Resting", "Paired", "Chick", "Sold"].map(status => (
+                  {["All", "Ready", "Resting", "Paired", "Chick", "Sold", "Deceased"].map(status => (
                     <button
                       key={status}
                       onClick={() => setStatusFilter(status)}
@@ -4882,7 +4884,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                           : 'bg-white/5 text-white/40 hover:bg-white/10'
                       }`}
                     >
-                      {status === "All" ? "All Status (الكل)" : status}
+                      {status === "All" ? "All Status (الكل)" : status === "Deceased" ? "Deceased (مات)" : status}
                     </button>
                   ))}
                 </div>
@@ -5836,6 +5838,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       <option value="Paired">🟠 Paired (Linked)</option>
                       <option value="Chick">🐣 Chick</option>
                       <option value="Sold">🔴 Sold (تم بيعه)</option>
+                      <option value="Deceased">💀 Deceased (مات)</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -5958,7 +5961,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     >
                       <option value="">Choose a male...</option>
                       {birds
-                        .filter(b => b.gender === 'Male' && b.status !== 'Sold')
+                        .filter(b => b.gender === 'Male' && b.status !== 'Sold' && b.status !== 'Deceased')
                         .filter(b => !couples.some(c => c.status === 'Active' && (c.maleId === b.id || c.femaleId === b.id)))
                         .map(b => (
                           <option key={b.id} value={b.id}>{b.ring} ({b.species})</option>
@@ -5975,7 +5978,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                     >
                       <option value="">Choose a female...</option>
                       {birds
-                        .filter(b => b.gender === 'Female' && b.status !== 'Sold')
+                        .filter(b => b.gender === 'Female' && b.status !== 'Sold' && b.status !== 'Deceased')
                         .filter(b => !couples.some(c => c.status === 'Active' && (c.maleId === b.id || c.femaleId === b.id)))
                         .map(b => (
                           <option key={b.id} value={b.id}>{b.ring} ({b.species})</option>
