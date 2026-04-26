@@ -2119,6 +2119,8 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   const [isAddingParentManual, setIsAddingParentManual] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [selectedCoupleForStats, setSelectedCoupleForStats] = useState<CoupleData | null>(null);
+  const [aiBreedingReport, setAiBreedingReport] = useState<any | null>(null);
+  const [isGeneratingAIReport, setIsGeneratingAIReport] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
   const [isArticleModalOpen, setIsArticleModalOpen] = useState(false);
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
@@ -2320,6 +2322,95 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
     email: "flairstore2@gmail.com",
     avatar: "JT"
   });
+
+  const handleGenerateAIReport = async (couple: CoupleData, totalEggs: number, hatchedEggs: number, failedEggs: number, survivedChicks: number, rounds: number) => {
+    if (!user) return;
+    setIsGeneratingAIReport(true);
+    setAiBreedingReport(null);
+
+    const male = birds.find(b => b.id === couple.maleId);
+    const female = birds.find(b => b.id === couple.femaleId);
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      
+      if (!apiKey || apiKey === "MY_GEMINI_API_KEY") {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        setAiBreedingReport({
+          kpis: {
+            hatching_rate: Math.round((hatchedEggs / (totalEggs || 1)) * 100),
+            survival_rate: Math.round((survivedChicks / (hatchedEggs || 1)) * 100),
+            success_rate: Math.round((survivedChicks / (totalEggs || 1)) * 100),
+            productivity_score: 7.5
+          },
+          expert_insight: "Simulation Mode: This analysis is based on typical breeding patterns. For real-time expert insights, configure your Gemini API key.",
+          recommendations: [
+            "Check humidity levels during the final incubation stage.",
+            "Supplement the hen with calcium and Vitamin D3.",
+            "Minimize nest disturbances."
+          ]
+        });
+        return;
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `
+        You are a Senior Avian Data Analyst and Breeding Specialist.
+        Analyze the following breeding data for a specific bird pair:
+        
+        Pair: ${male?.name || 'Male'} (${male?.mutation || 'Unknown'}) x ${female?.name || 'Female'} (${female?.mutation || 'Unknown'})
+        Breeding Rounds: ${rounds}
+        Total Eggs Laid: ${totalEggs}
+        Hatched Successfully: ${hatchedEggs}
+        Failed Eggs: ${failedEggs}
+        Survived Chicks (Fledged): ${survivedChicks}
+        
+        Provide a comprehensive statistical report in a structured JSON format with:
+        - kpis: { hatching_rate: number, survival_rate: number, success_rate: number, productivity_score: number (1-10) }
+        - expert_insight: string (detailed analysis of fertility vs incubation efficiency)
+        - recommendations: string[] (technical improvements for next round)
+        
+        Respond ONLY with the JSON.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              kpis: {
+                type: Type.OBJECT,
+                properties: {
+                  hatching_rate: { type: Type.NUMBER },
+                  survival_rate: { type: Type.NUMBER },
+                  success_rate: { type: Type.NUMBER },
+                  productivity_score: { type: Type.NUMBER }
+                },
+                required: ["hatching_rate", "survival_rate", "success_rate", "productivity_score"]
+              },
+              expert_insight: { type: Type.STRING },
+              recommendations: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              }
+            },
+            required: ["kpis", "expert_insight", "recommendations"]
+          }
+        }
+      });
+
+      const result = JSON.parse(response.text.trim());
+      setAiBreedingReport(result);
+    } catch (error) {
+      console.error("AI Analysis Error:", error);
+      addNotification("AI Error", "Could not generate analysis. Please try again.", 'warning');
+    } finally {
+      setIsGeneratingAIReport(false);
+    }
+  };
 
   const [notifications, setNotifications] = useState<any[]>([]);
   
@@ -5097,6 +5188,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                           <button 
                             onClick={() => {
                               setSelectedCoupleForStats(couple);
+                              setAiBreedingReport(null);
                               setIsStatsModalOpen(true);
                             }}
                             className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-colors group/stat"
@@ -6273,6 +6365,68 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                              </div>
                              <span className="text-lg font-black text-blue-600">{survivedChicks}</span>
                           </div>
+
+                          {/* AI Breeding Analysis Button */}
+                          <div className="pt-4 border-t border-slate-100">
+                            <button 
+                              onClick={() => handleGenerateAIReport(selectedCoupleForStats, totalEggs, hatchedEggs, failedEggs, survivedChicks, rounds)}
+                              disabled={isGeneratingAIReport}
+                              className="w-full py-4 bg-gradient-to-r from-primary to-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                            >
+                              {isGeneratingAIReport ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <BrainCircuit className="w-4 h-4" />
+                              )}
+                              Generate AI Expert Analysis
+                            </button>
+                          </div>
+
+                          {/* AI Report Result */}
+                          <AnimatePresence>
+                            {aiBreedingReport && (
+                              <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-6 p-6 rounded-3xl bg-slate-900 text-white space-y-6"
+                              >
+                                <div className="flex items-center gap-2 text-primary">
+                                  <Sparkles className="w-5 h-5" />
+                                  <h4 className="text-xs font-black uppercase tracking-widest">Expert Report</h4>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                                    <p className="text-[10px] text-slate-400 capitalize mb-1">Productivity</p>
+                                    <p className="text-2xl font-black">{aiBreedingReport.kpis.productivity_score}/10</p>
+                                  </div>
+                                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                                    <p className="text-[10px] text-slate-400 capitalize mb-1">Hatch Rate</p>
+                                    <p className="text-2xl font-black">{aiBreedingReport.kpis.hatching_rate}%</p>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">Expert Insight</p>
+                                  <p className="text-sm text-slate-300 leading-relaxed italic">
+                                    "{aiBreedingReport.expert_insight}"
+                                  </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">Recommendations</p>
+                                  <ul className="space-y-2">
+                                    {aiBreedingReport.recommendations.map((rec: string, i: number) => (
+                                      <li key={i} className="flex items-start gap-3 text-xs text-slate-400">
+                                        <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 shrink-0" />
+                                        {rec}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </div>
 
