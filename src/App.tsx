@@ -1006,174 +1006,182 @@ const EggCard = ({
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -12, scale: 1.02 }}
-      className={`relative p-5 md:p-8 rounded-3xl md:rounded-[40px] border-2 transition-all duration-500 flex flex-col h-full ${
-        egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-500/10 border-green-500/30' :
-        isHatching ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_40px_rgba(249,115,22,0.2)] animate-pulse' :
-        isOverdue ? 'bg-red-500/10 border-red-500/50 shadow-[0_0_40px_rgba(239,68,68,0.2)]' :
-        egg.status === 'Failed' || egg.status === 'Broken' ? 'bg-slate-900/40 border-slate-700/50 grayscale' :
-        'bg-slate-900 border-white/5 hover:border-accent-gold/40 shadow-2xl'
-      }`}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -8 }}
+      className={`relative group h-[520px] md:h-[600px] w-full max-w-[340px] mx-auto perspective-1000 ${egg.status === 'Failed' || egg.status === 'Broken' ? 'grayscale opacity-60' : ''}`}
     >
-      {/* Premium Glow Effect */}
-      <div className="absolute -top-24 -right-24 w-48 h-48 bg-accent-gold/5 rounded-full blur-[100px] pointer-events-none" />
-      
-      {/* Top Actions */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-6 flex gap-2 z-30">
-        <button onClick={() => onEdit(undefined as any, egg)} className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-accent-gold transition-all rounded-xl border border-white/5">
-          <Edit2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
-        </button>
-        <button onClick={() => onDelete(egg.id)} className="p-2 md:p-2.5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-red-500 transition-all rounded-xl border border-white/5">
-          <X className="w-3 h-3 md:w-3.5 md:h-3.5" />
-        </button>
-      </div>
+      {/* Dynamic Ambient Glow based on status */}
+      <div className={`absolute inset-0 rounded-full blur-[80px] opacity-20 transition-all duration-700 ${
+        isHatching ? 'bg-orange-500 shadow-[0_0_100px_rgba(249,115,22,0.4)]' :
+        egg.isFertile === true ? 'bg-cyan-400' :
+        egg.isFertile === false ? 'bg-red-400' :
+        'bg-white'
+      }`} />
 
-      {/* Egg Header */}
-      <div className="mb-6 md:mb-8 relative">
-        <div className="flex items-center gap-2 md:gap-3 mb-2">
-          {egg.isFertile === true && <div className="px-2 md:px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-green-500/20">Fertile</div>}
-          {egg.isFertile === false && <div className="px-2 md:px-3 py-1 bg-red-500/10 text-red-500 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-red-500/20">Clear</div>}
-          {egg.isFertile === undefined && <div className="px-2 md:px-3 py-1 bg-white/5 text-slate-400 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border border-white/10">Unchecked</div>}
-          {isOverdue && <div className="px-2 md:px-3 py-1 bg-red-500 text-white rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest animate-bounce">Overdue</div>}
+      {/* Main Egg Structure (Faux layers) */}
+      <div className="relative h-full flex flex-col gap-2 pointer-events-none">
+        
+        {/* TOP LAYER (Header) */}
+        <div className="relative h-[22%] w-full pointer-events-auto">
+          <div className="absolute inset-x-0 top-0 bottom-0 bg-slate-900/80 backdrop-blur-xl border border-white/20 shadow-2xl rounded-t-[160px] rounded-b-[40px] flex flex-col items-center justify-center pt-8 px-6">
+             <div className="flex items-center gap-2 mb-2">
+                <Bird className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                <span className="text-[11px] font-black text-white/40 tracking-[0.3em] uppercase">PetsBird AI</span>
+             </div>
+             <h5 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter drop-shadow-sm">
+               ROUND #{egg.eggNumber || egg.id.slice(-3)}
+             </h5>
+             
+             <div className="absolute top-6 right-8 flex gap-2">
+                <button onClick={() => onEdit(undefined as any, egg)} className="p-2 bg-white/5 hover:bg-white/10 text-white/30 hover:text-cyan-400 transition-all rounded-xl border border-white/10">
+                  <Edit2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => onDelete(egg.id)} className="p-2 bg-white/5 hover:bg-white/10 text-white/30 hover:text-red-400 transition-all rounded-xl border border-white/10">
+                  <X className="w-4 h-4" />
+                </button>
+             </div>
+          </div>
         </div>
-        <h5 className="text-2xl md:text-4xl font-black text-white italic tracking-tighter">#{egg.eggNumber || egg.id.slice(-3)}</h5>
-        <div className="flex items-center gap-2 mt-1 md:mt-2">
-          <div className="w-4 h-1 bg-accent-gold rounded-full" />
-          <p className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest">{egg.status}</p>
-        </div>
-      </div>
 
-      {/* Progress & Countdown */}
-      <div className="flex-1 space-y-6 md:space-y-8 relative z-10">
-        <div className="space-y-3 md:space-y-4 text-xs md:text-sm">
-          <div className="flex justify-between items-end">
-            <div className="flex items-center gap-2 md:gap-3">
-               <div className="p-2 md:p-2.5 rounded-xl bg-white/5 border border-white/5">
-                  <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent-gold" />
+        {/* MIDDLE LAYER 1 (Success Rate / Progress) */}
+        <div className="relative h-[25%] w-full pointer-events-auto">
+          <div className="absolute inset-x-2 top-0 bottom-0 bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl rounded-[40px] p-6 flex flex-col justify-center">
+             <div className="grid grid-cols-2 gap-4">
+               <div className="text-center group/stat">
+                 <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Incubation</p>
+                 <div className="text-3xl font-black text-cyan-400 tabular-nums">{Math.round(progress)}%</div>
+                 <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[8px] font-black uppercase mt-1 ${
+                   progress < 100 ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-400'
+                 }`}>
+                   {progress < 100 ? 'In Progress' : 'Ready'}
+                 </div>
                </div>
-               <div>
-                  <p className="text-[7px] md:text-[8px] font-black text-slate-500 uppercase tracking-widest">Incubation Progress</p>
-                  <p className="text-xs md:text-sm font-bold text-white leading-none md:leading-normal">{Math.round(progress)}% Complete</p>
+               <div className="text-center border-l border-white/10">
+                 <p className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">Status</p>
+                 <div className="text-xl font-black text-white truncate max-w-full px-2">{egg.status}</div>
+                 <div className={`text-[8px] font-black uppercase tracking-widest mt-1 ${
+                   isHatching ? 'text-orange-400 animate-pulse' : 
+                   isOverdue ? 'text-red-400' : 
+                   'text-green-400'
+                 }`}>
+                   {isHatching ? '● Hatching' : isOverdue ? '● Overdue' : '● Stable'}
+                 </div>
                </div>
-            </div>
-            {diff !== null && diff > 0 && (
-              <div className="text-right">
-                <p className="text-[7px] md:text-[8px] font-black text-slate-500 uppercase tracking-widest">Est. Hatch</p>
-                <div className="flex items-center gap-2 text-accent-gold">
-                  <span className="text-lg md:text-xl font-black">{diff}</span>
-                  <span className="text-[9px] md:text-[10px] font-bold uppercase">Days</span>
+             </div>
+             
+             {/* Progress Bar with Internal Glow */}
+             <div className="mt-6 h-2 bg-black/40 rounded-full p-0.5 border border-white/10">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  className={`h-full rounded-full bg-gradient-to-r from-cyan-600 via-cyan-400 to-white shadow-[0_0_15px_rgba(34,211,238,0.6)]`}
+                />
+             </div>
+          </div>
+        </div>
+
+        {/* MIDDLE LAYER 2 (Counter/Icon Stats) */}
+        <div className="relative h-[20%] w-full pointer-events-auto">
+          <div className="absolute inset-x-4 top-0 bottom-0 bg-white/5 backdrop-blur-md border border-white/10 shadow-lg rounded-[35px] px-6 flex justify-around items-center">
+             <div className="flex flex-col items-center">
+               <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                 <EggIcon className="w-5 h-5 text-cyan-400" />
+               </div>
+               <span className="text-[10px] font-black text-white">{egg.laidDate.split('-').pop()}</span>
+               <span className="text-[7px] font-bold text-white/30 uppercase tracking-widest">Laid</span>
+             </div>
+
+             <div className="w-px h-10 bg-white/10" />
+
+             <div className="flex flex-col items-center">
+               <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                 <Calendar className="w-5 h-5 text-orange-400" />
+               </div>
+               <span className="text-[10px] font-black text-white">{egg.hatchDate ? egg.hatchDate.split('-').pop() : '--'}</span>
+               <span className="text-[7px] font-bold text-white/30 uppercase tracking-widest">Hatch</span>
+             </div>
+
+             <div className="w-px h-10 bg-white/10" />
+
+             <div className="flex flex-col items-center">
+               <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                 <Clock className="w-5 h-5 text-purple-400" />
+               </div>
+               <span className="text-[10px] font-black text-white">{diff || 0}</span>
+               <span className="text-[7px] font-bold text-white/30 uppercase tracking-widest">Days</span>
+             </div>
+          </div>
+        </div>
+
+        {/* BOTTOM LAYER (Actions) */}
+        <div className="relative h-[33%] w-full pointer-events-auto">
+          <div className="absolute inset-x-0 top-0 bottom-0 bg-slate-900/90 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-t-[40px] rounded-b-[160px] p-8 flex flex-col items-center">
+             
+             {/* Quality Indicators */}
+             <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-2">
+                   <div className={`w-2 h-2 rounded-full ${egg.isFertile === true ? 'bg-green-400 animate-pulse' : 'bg-slate-700'}`} />
+                   <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Viability</span>
                 </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="h-2 md:h-2.5 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5 shadow-inner">
-             <motion.div 
-               initial={{ width: 0 }}
-               animate={{ width: `${progress}%` }}
-               transition={{ duration: 1.5, ease: "easeOut" }}
-               className={`h-full rounded-full shadow-[0_0_15px_rgba(212,175,55,0.4)] ${
-                 isHatching ? 'bg-orange-500' :
-                 egg.status === 'Hatched' || egg.status === 'Completed' ? 'bg-green-500' :
-                 'bg-gradient-to-r from-accent-gold/40 to-accent-gold'
-               }`}
-             />
+                <div className="flex items-center gap-2">
+                   <div className={`w-2 h-2 rounded-full ${isHatching ? 'bg-orange-400 animate-pulse' : 'bg-slate-700'}`} />
+                   <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">System Ready</span>
+                </div>
+             </div>
+
+             <div className="grid grid-cols-2 gap-3 w-full">
+                <button 
+                  disabled={egg.status !== 'Intact' || !isFertCheckReady}
+                  onClick={() => onFertilityCheck(egg.id, true)}
+                  className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                    egg.isFertile === true 
+                      ? 'bg-cyan-500 border-cyan-300 text-white shadow-[0_0_25px_rgba(6,182,212,0.4)]' 
+                      : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white'
+                  } disabled:opacity-30`}
+                >
+                  Fertile
+                </button>
+                <button 
+                  disabled={egg.status !== 'Intact' || !isFertCheckReady}
+                  onClick={() => onFertilityCheck(egg.id, false)}
+                  className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                    egg.isFertile === false 
+                      ? 'bg-red-500 border-red-400 text-white shadow-[0_0_25px_rgba(239,68,68,0.3)]' 
+                      : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white'
+                  } disabled:opacity-30`}
+                >
+                  Clear
+                </button>
+             </div>
+
+             {/* Outcome Drawer */}
+             {egg.isFertile === true && egg.status === 'Intact' && (
+               <div className="w-full mt-4 space-y-2">
+                  <button 
+                    onClick={() => onHatchSuccess(egg)}
+                    className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-500 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                    Confirm Birth
+                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                     <button onClick={() => onHatchFailure(egg, "Did not hatch")} className="py-2.5 bg-white/5 hover:bg-red-500/10 rounded-xl text-[8px] font-black text-white/30 hover:text-red-400 transition-colors border border-white/5 uppercase">Failed</button>
+                     <button onClick={() => onHatchFailure(egg, "Dead in Shell")} className="py-2.5 bg-white/5 hover:bg-red-500/10 rounded-xl text-[8px] font-black text-white/30 hover:text-red-400 transition-colors border border-white/5 uppercase">DIS</button>
+                  </div>
+               </div>
+             )}
+
+             {isHatching && !egg.isFertile && (
+                <button 
+                  onClick={() => onHatchSuccess(egg)}
+                  className="w-full mt-4 py-4 bg-orange-500 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  Finalize Hatch
+                </button>
+             )}
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-3 md:gap-4">
-          <div className="bg-white/5 p-3 md:p-4 rounded-2xl md:rounded-3xl border border-white/5">
-             <p className="text-[7px] md:text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-none">Laid Date</p>
-             <p className="text-[10px] md:text-xs font-bold text-white">{egg.laidDate}</p>
-          </div>
-          <div className={`p-3 md:p-4 rounded-2xl md:rounded-3xl border transition-colors ${isHatching ? 'bg-orange-500/20 border-orange-500/30' : 'bg-white/5 border-white/5'}`}>
-             <p className="text-[7px] md:text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1 leading-none">Hatch Date</p>
-             <p className="text-[10px] md:text-xs font-bold text-white">{egg.hatchDate || 'N/A'}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Interactive Controls */}
-      <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-white/5 relative z-10">
-        <div className="flex flex-col items-center mb-4">
-          <div className="flex items-center gap-2 mb-1">
-             <Calendar className={`w-2.5 h-2.5 md:w-3 md:h-3 ${egg.isFertile === true ? 'text-accent-gold' : isFertCheckReady ? 'text-green-500' : 'text-slate-500'}`} />
-             <p className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest ${egg.isFertile === true ? 'text-accent-gold' : isFertCheckReady ? 'text-green-400' : 'text-slate-500'}`}>
-                {egg.isFertile === true ? 'Hatch Date (تاريخ الفقص)' : 'Fertility Check Date (تاريخ الفحص)'}
-             </p>
-          </div>
-          <p className={`text-[10px] md:text-xs font-bold ${egg.isFertile === true || isFertCheckReady ? 'text-white' : 'text-slate-400'}`}>
-            {egg.isFertile === true ? (egg.hatchDate || 'N/A') : fertDateStr}
-          </p>
-          {egg.isFertile === undefined && !isFertCheckReady && egg.status === 'Intact' && (
-            <p className="text-[7px] md:text-[8px] text-slate-500 mt-0.5 font-bold">Buttons disabled until this date</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 md:gap-3">
-          <button 
-            disabled={egg.status !== 'Intact' || !isFertCheckReady}
-            onClick={() => onFertilityCheck(egg.id, true)} 
-            className={`py-3 md:py-4 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
-              egg.isFertile === true 
-                ? 'bg-accent-gold text-slate-900 shadow-xl shadow-accent-gold/20' 
-                : isFertCheckReady && egg.status === 'Intact'
-                  ? 'bg-green-500/20 text-green-500 border-2 border-green-500/40 hover:bg-green-500 hover:text-white shadow-[0_0_20px_rgba(34,197,94,0.3)]'
-                  : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-            } disabled:opacity-30 disabled:cursor-not-allowed`}
-          >
-            Fertile
-          </button>
-          <button 
-            disabled={egg.status !== 'Intact' || !isFertCheckReady}
-            onClick={() => onFertilityCheck(egg.id, false)} 
-            className={`py-3 md:py-4 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${
-              egg.isFertile === false 
-                ? 'bg-red-500 text-white shadow-xl shadow-red-500/30' 
-                : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white border border-white/5'
-            } disabled:opacity-30 disabled:cursor-not-allowed`}
-          >
-            Clear
-          </button>
-        </div>
-
-        {/* New Hatch Outcome UI for Fertile Eggs */}
-        {egg.isFertile === true && egg.status === 'Intact' && (
-          <div className="col-span-2 space-y-2 md:space-y-3 mt-4 p-3 md:p-4 rounded-2xl md:rounded-3xl bg-white/5 border border-white/10">
-            <p className="text-[9px] md:text-[10px] font-black text-center text-slate-400 uppercase tracking-[0.2em] mb-1 md:mb-2">Hatch Outcome? (حالة التفقيص)</p>
-            <div className="grid grid-cols-2 gap-2 md:gap-3">
-              <button 
-                onClick={() => onHatchSuccess(egg)} 
-                className="py-3 md:py-4 bg-green-500 text-white rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-1 md:gap-2"
-              >
-                <Check className="w-3 h-3 md:w-3.5 md:h-3.5" /> Hatched
-              </button>
-              <button 
-                onClick={() => onHatchFailure(egg, "Did not hatch")} 
-                className="py-3 md:py-4 bg-slate-800 text-slate-400 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 hover:text-red-500 transition-all border border-white/5"
-              >
-                <X className="w-3 h-3 md:w-3.5 md:h-3.5" /> Failed
-              </button>
-              <button 
-                onClick={() => onHatchFailure(egg, "Dead in Shell")} 
-                className="col-span-2 py-3 md:py-4 bg-red-500/10 text-red-500 border border-red-500/20 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-1 md:gap-2"
-              >
-                <X className="w-3 h-3 md:w-3.5 md:h-3.5" /> Dead in Shell (جنين مات)
-              </button>
-            </div>
-          </div>
-        )}
-
-        {isHatching && !egg.isFertile && (
-          <button 
-            onClick={() => onHatchSuccess(egg)} 
-            className="col-span-2 mt-2 py-5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-500/40 active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-5 h-5" /> Finalize Hatching
-          </button>
-        )}
       </div>
     </motion.div>
   );
