@@ -1012,195 +1012,168 @@ const EggCard = ({
       className={`relative group h-[580px] md:h-[650px] w-full max-w-[360px] mx-auto perspective-2000 ${egg.status === 'Failed' || egg.status === 'Broken' ? 'grayscale opacity-60' : ''}`}
     >
       {/* Background Laboratory Glow (Simulated) */}
-      <div className="absolute inset-0 bg-slate-900 border border-white/5 shadow-2xl rounded-[180px_180px_150px_150px] overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(6,182,212,0.15),transparent_70%)]" />
-        <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,rgba(6,182,212,0.05),transparent_120deg)] animate-[spin_10s_linear_infinite]" />
+      <div className="absolute inset-0 bg-slate-900 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.5)] rounded-[50%_50%_50%_50%_/_65%_65%_35%_35%] overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(6,182,212,0.2),transparent_70%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-[conic-gradient(from_0deg_at_50%_50%,rgba(6,182,212,0.03),transparent_120deg)] animate-[spin_15s_linear_infinite]" />
       </div>
 
       {/* Dynamic Ambient Glow */}
-      <div className={`absolute inset-x-0 top-1/4 bottom-1/4 blur-[100px] opacity-30 transition-all duration-700 pointer-events-none ${
-        isHatching ? 'bg-orange-500 shadow-[0_0_120px_rgba(249,115,22,0.5)]' :
-        egg.isFertile === true ? 'bg-cyan-400 shadow-[0_0_120px_rgba(34,211,238,0.4)]' :
-        egg.isFertile === false ? 'bg-red-400' :
-        'bg-white/20'
+      <div className={`absolute inset-x-0 top-1/4 bottom-1/4 blur-[120px] opacity-25 transition-all duration-700 pointer-events-none ${
+        isHatching ? 'bg-orange-500 shadow-[0_0_150px_rgba(249,115,22,0.6)]' :
+        egg.isFertile === true ? 'bg-cyan-400 shadow-[0_0_150px_rgba(34,211,238,0.5)]' :
+        egg.isFertile === false ? 'bg-red-400 shadow-[0_0_150px_rgba(239,68,68,0.5)]' :
+        'bg-white/10'
       }`} />
 
       {/* Main Egg Structure with Winding Ribbons */}
-      <div className="relative h-full flex flex-col gap-1.5 p-2 pointer-events-none">
+      <div className="relative h-full flex flex-col gap-2 p-3 pointer-events-none">
         
         {/* RIBBON 1: Header (PetsBird Logo + Round) */}
-        <div className="relative h-[18%] w-full pointer-events-auto">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md border border-white/10 shadow-xl rounded-[160px_160px_40px_40px] flex flex-col items-center justify-center pt-10 pb-4 px-6 overflow-hidden">
-             {/* Digital Grid Pulse */}
-             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-20" />
-             
-             <div className="flex items-center gap-2 mb-2 relative z-10">
-                <Bird className="w-6 h-6 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
-                <span className="text-[12px] font-black text-white tracking-[0.4em] uppercase">PetsBird</span>
+        <div className="relative h-[16%] w-full pointer-events-auto">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl rounded-[120px_120px_30px_30px] flex flex-col items-center justify-center pt-8 pb-3 px-6 overflow-hidden">
+             <div className="flex items-center gap-2 mb-1 relative z-10">
+                <Bird className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+                <span className="text-[10px] font-black text-white tracking-[0.4em] uppercase">PetsBird</span>
              </div>
-             <h5 className="text-xl md:text-2xl font-black text-white/80 italic tracking-widest relative z-10">
-               ROUND #{egg.eggNumber || egg.id.slice(-3)} - SUMMARY
+             <h5 className="text-lg md:text-xl font-black text-white/90 italic tracking-widest relative z-10">
+               ROUND #{egg.eggNumber || egg.id.slice(-3)}
              </h5>
              
-             <div className="absolute top-8 right-10 flex gap-2 z-20">
-                <button onClick={() => onEdit(undefined as any, egg)} className="p-2 bg-white/5 hover:bg-cyan-500/20 text-white/40 hover:text-cyan-400 transition-all rounded-xl border border-white/10">
-                  <Edit2 className="w-4 h-4" />
+             <div className="absolute top-6 right-8 flex gap-1.5 z-20">
+                <button onClick={() => onEdit(undefined as any, egg)} className="p-1.5 bg-white/5 hover:bg-cyan-500/20 text-white/40 hover:text-cyan-400 transition-all rounded-lg border border-white/10">
+                  <Edit2 className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={() => onDelete(egg.id)} className="p-2 bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-all rounded-xl border border-white/10">
-                  <X className="w-4 h-4" />
+                <button onClick={() => onDelete(egg.id)} className="p-1.5 bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-all rounded-lg border border-white/10">
+                  <X className="w-3.5 h-3.5" />
                 </button>
              </div>
           </div>
         </div>
 
         {/* RIBBON 2: Primary KPIs (Dials) */}
-        <div className="relative h-[28%] w-full pointer-events-auto">
-          <div className="absolute inset-x-2 top-0 bottom-0 bg-white/5 backdrop-blur-xl border-y border-white/20 shadow-2xl rounded-[40px] flex flex-col items-center justify-center p-6 bg-gradient-to-b from-white/5 to-transparent">
-             <div className="grid grid-cols-2 gap-8 w-full max-w-xs">
-               {/* Incubation KPI */}
-               <div className="text-center group/stat relative">
-                 <p className="text-[10px] font-black text-cyan-400/60 uppercase tracking-widest mb-1">Incubation</p>
-                 <div className="text-4xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] tabular-nums">
-                   {Math.round(progress)}%
-                 </div>
-                 <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[9px] font-black uppercase mt-2 border ${
-                   progress < 100 ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'
-                 }`}>
-                   {progress < 100 ? '⚠️ In Phase' : '✅ Phase Ready'}
-                 </div>
+        <div className="relative h-[25%] w-full pointer-events-auto">
+          <div className="absolute inset-x-2 top-0 bottom-0 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[35px] flex flex-col items-center justify-center p-5 bg-gradient-to-b from-white/10 to-transparent">
+             <div className="flex flex-col items-center justify-center w-full">
+               <p className="text-[9px] font-black text-cyan-400/80 uppercase tracking-widest mb-1">Incubation Progress</p>
+               <div className="text-5xl font-black text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.4)] tabular-nums">
+                 {Math.round(progress)}%
                </div>
-
-               {/* Status KPI */}
-               <div className="text-center relative pl-8 border-l border-white/10">
-                 <p className="text-[10px] font-black text-cyan-400/60 uppercase tracking-widest mb-1">Vitality</p>
-                 <div className={`text-4xl font-black tabular-nums drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] ${
-                   egg.isFertile === true ? 'text-green-400' : egg.isFertile === false ? 'text-red-400' : 'text-white'
-                 }`}>
-                   {egg.isFertile === true ? '100' : egg.isFertile === false ? '0' : '??'}%
-                 </div>
-                 <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[9px] font-black uppercase mt-2 border ${
-                   egg.isFertile === true ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
-                   egg.isFertile === false ? 'bg-red-500/20 text-red-500 border-red-500/30' : 
-                   'bg-white/10 text-white/50 border-white/20'
-                 }`}>
-                   {egg.isFertile === true ? '✅ Excellent' : egg.isFertile === false ? '⚠️ Failure' : '⏳ Pending'}
-                 </div>
+               <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase mt-3 border ${
+                 progress < 100 ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'
+               }`}>
+                 {progress < 100 ? `⏳ ${100 - Math.round(progress)}% Remaining` : '🥚 Ready to Hatch'}
                </div>
              </div>
              
-             {/* Glowing Progress Pulse Base */}
-             <div className="absolute bottom-0 inset-x-12 h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50" />
+             <div className="absolute bottom-0 inset-x-12 h-px bg-cyan-400/30" />
           </div>
         </div>
 
-        {/* RIBBON 3: Horizontal Icons (Count Icons) */}
-        <div className="relative h-[22%] w-full pointer-events-auto">
-          <div className="absolute inset-x-4 top-0 bottom-0 bg-white/5 backdrop-blur-md border border-white/15 shadow-[0_0_50px_rgba(0,0,0,0.2)] rounded-[50px] px-8 flex justify-between items-center bg-gradient-to-r from-transparent via-white/5 to-transparent">
-             <div className="flex flex-col items-center group/icon">
-               <div className="w-12 h-12 rounded-full bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center mb-2 group-hover/icon:scale-110 transition-transform">
-                 <EggIcon className="w-6 h-6 text-cyan-300" />
+        {/* RIBBON 3: Full Date Indicators - Focus on clarity */}
+        <div className="relative h-[24%] w-full pointer-events-auto">
+          <div className="absolute inset-x-4 top-0 bottom-0 bg-white/5 backdrop-blur-md border border-white/15 shadow-xl rounded-[40px] px-4 flex justify-between items-center bg-gradient-to-r from-transparent via-white/5 to-transparent">
+             <div className="flex flex-col items-center flex-1">
+               <div className="w-9 h-9 rounded-full bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center mb-1.5">
+                 <EggIcon className="w-4.5 h-4.5 text-cyan-400" />
                </div>
-               <span className="text-[11px] font-black text-white tracking-widest">{egg.laidDate.split('-').pop()}</span>
-               <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mt-0.5">Laid</span>
+               <span className="text-[10px] font-black text-white tracking-widest leading-none mb-1">{egg.laidDate}</span>
+               <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Laid Date</span>
              </div>
 
-             <div className="w-px h-8 bg-white/10" />
+             <div className="w-px h-10 bg-white/10 mx-1" />
 
-             <div className="flex flex-col items-center group/icon">
-               <div className="w-12 h-12 rounded-full bg-orange-950/40 border border-orange-500/30 flex items-center justify-center mb-2 group-hover/icon:scale-110 transition-transform">
-                 <Calendar className="w-6 h-6 text-orange-400" />
+             <div className="flex flex-col items-center flex-1">
+               <div className="w-9 h-9 rounded-full bg-orange-950/40 border border-orange-500/30 flex items-center justify-center mb-1.5">
+                 <Calendar className="w-4.5 h-4.5 text-orange-400" />
                </div>
-               <span className="text-[11px] font-black text-white tracking-widest">{egg.hatchDate ? egg.hatchDate.split('-').pop() : '--'}</span>
-               <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mt-0.5">EST. HATCH</span>
+               <span className="text-[10px] font-black text-white tracking-widest leading-none mb-1">{egg.hatchDate || 'N/A'}</span>
+               <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Est. Hatch</span>
              </div>
 
-             <div className="w-px h-8 bg-white/10" />
+             <div className="w-px h-10 bg-white/10 mx-1" />
 
-             <div className="flex flex-col items-center group/icon">
-               <div className="w-12 h-12 rounded-full bg-purple-950/40 border border-purple-500/30 flex items-center justify-center mb-2 group-hover/icon:scale-110 transition-transform">
-                 <Clock className="w-6 h-6 text-purple-400" />
+             <div className="flex flex-col items-center flex-1">
+               <div className="w-9 h-9 rounded-full bg-purple-950/40 border border-purple-500/30 flex items-center justify-center mb-1.5">
+                 <Clock className="w-4.5 h-4.5 text-purple-400" />
                </div>
-               <span className="text-[11px] font-black text-white tracking-widest">{diff || 0}</span>
-               <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em] mt-0.5">DAYS LEFT</span>
+               <span className="text-[12px] font-black text-white tracking-widest leading-none mb-1">{diff || 0}</span>
+               <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Days</span>
              </div>
           </div>
         </div>
 
-        {/* RIBBON 4: Advanced Metrics & Actions (Base) */}
+        {/* RIBBON 4: Outcome Controls (Base) */}
         <div className="relative h-[32%] w-full pointer-events-auto">
-          <div className="absolute inset-x-0 top-0 bottom-0 bg-slate-900/80 backdrop-blur-xl border border-white/20 shadow-inner rounded-[50px_50px_150px_150px] p-8 flex flex-col items-center justify-center overflow-hidden">
-             {/* Subtle Inner Glow */}
-             <div className="absolute -bottom-20 w-64 h-64 bg-cyan-400/10 rounded-full blur-[80px]" />
+          <div className="absolute inset-x-0 top-0 bottom-0 bg-slate-900/90 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-[40px_40px_150px_150px] p-6 flex flex-col items-center justify-center">
              
-             {/* Metric Footer Row */}
-             <div className="grid grid-cols-2 gap-6 w-full mb-8 relative z-10">
-               <div>
-                 <div className="flex justify-between items-center mb-1.5">
-                   <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Progress</span>
-                   <span className="text-[10px] font-black text-cyan-400">{Math.round(progress)}%</span>
-                 </div>
-                 <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/10">
-                   <motion.div 
-                     initial={{ width: 0 }}
-                     animate={{ width: `${progress}%` }}
-                     className="h-full bg-cyan-400"
-                   />
-                 </div>
-               </div>
-               <div className="flex items-center gap-3 pl-4 border-l border-white/10">
-                 <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
-                    <Bird className="w-5 h-5 text-white/40" />
-                 </div>
-                 <div>
-                   <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Genetics</p>
-                   <p className="text-[10px] font-black text-white uppercase">{female?.mutation || 'Standard'}</p>
-                 </div>
-               </div>
+             {/* Fertility Check Group */}
+             <div className="grid grid-cols-2 gap-3 w-full mb-3 relative z-10">
+                <button 
+                  disabled={egg.status !== 'Intact' || !isFertCheckReady}
+                  onClick={() => onFertilityCheck(egg.id, true)}
+                  className={`py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${
+                    egg.isFertile === true 
+                      ? 'bg-cyan-500 border-cyan-300 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' 
+                      : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-cyan-500/40 hover:text-white'
+                  } disabled:opacity-20`}
+                >
+                  Fertile
+                </button>
+                <button 
+                  disabled={egg.status !== 'Intact' || !isFertCheckReady}
+                  onClick={() => onFertilityCheck(egg.id, false)}
+                  className={`py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${
+                    egg.isFertile === false 
+                      ? 'bg-amber-600 border-amber-400 text-white shadow-[0_0_20px_rgba(217,119,6,0.3)]' 
+                      : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-red-500/40 hover:text-white'
+                  } disabled:opacity-20`}
+                >
+                  Clear
+                </button>
              </div>
 
-             {/* Action Control Group */}
-             <div className="w-full space-y-3 relative z-10">
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    disabled={egg.status !== 'Intact' || !isFertCheckReady}
-                    onClick={() => onFertilityCheck(egg.id, true)}
-                    className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all border-2 ${
-                      egg.isFertile === true 
-                        ? 'bg-cyan-500 border-cyan-300 text-white shadow-[0_0_30px_rgba(6,182,212,0.5)]' 
-                        : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-cyan-500/40 hover:text-white'
-                    } disabled:opacity-20`}
-                  >
-                    Fertile
-                  </button>
-                  <button 
-                    disabled={egg.status !== 'Intact' || !isFertCheckReady}
-                    onClick={() => onFertilityCheck(egg.id, false)}
-                    className={`py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] transition-all border-2 ${
-                      egg.isFertile === false 
-                        ? 'bg-amber-600 border-amber-400 text-white shadow-[0_0_30px_rgba(217,119,6,0.4)]' 
-                        : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-red-500/40 hover:text-white'
-                    } disabled:opacity-20`}
-                  >
-                    Clear
-                  </button>
-                </div>
+             {/* Outcome Management Group - Explicit buttons for Hatched, failed, DIS */}
+             <div className="w-full space-y-2 relative z-10">
+                {egg.isFertile === true && egg.status === 'Intact' && (
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => onHatchSuccess(egg)}
+                      className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:scale-[1.02] active:scale-95 transition-all border border-green-400/30 flex items-center justify-center gap-2"
+                    >
+                      <Check className="w-4 h-4" /> فقص (HATCHED)
+                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => onHatchFailure(egg, "Did not hatch")}
+                        className="py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-white/40 hover:text-red-400 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-white/5"
+                      >
+                        لم يفقص (FAILED)
+                      </button>
+                      <button 
+                        onClick={() => onHatchFailure(egg, "Dead in Shell")}
+                        className="py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-white/40 hover:text-red-400 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-white/5"
+                      >
+                        مات في البيضة (DIS)
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                {egg.isFertile === true && egg.status === 'Intact' ? (
-                  <button 
-                    onClick={() => onHatchSuccess(egg)}
-                    className="w-full py-4 bg-gradient-to-r from-cyan-600 to-cyan-400 text-white rounded-3xl text-[12px] font-black uppercase tracking-[0.4em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 border border-white/20"
-                  >
-                    <Sparkles className="w-5 h-5 animate-pulse" />
-                    CONFIRM BIRTH
-                  </button>
-                ) : isHatching && !egg.isFertile ? (
+                {egg.isFertile === false && egg.status === 'Intact' && (
                    <button 
-                    onClick={() => onHatchSuccess(egg)}
-                    className="w-full py-4 bg-amber-500 text-white rounded-3xl text-[12px] font-black uppercase tracking-[0.4em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all text-center"
+                    onClick={() => onHatchFailure(egg, "Clear/Failed")}
+                    className="w-full py-3 bg-red-600/10 text-red-500 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] border border-red-500/20 hover:bg-red-600 hover:text-white transition-all shadow-lg"
                   >
-                    FINALIZE HATCH
+                    CLOSE ENTRY (فشل)
                   </button>
-                ) : null}
+                )}
+
+                {egg.status !== 'Intact' && (
+                  <div className="w-full py-3 text-center text-white/30 text-[9px] uppercase font-black tracking-widest border border-white/5 rounded-2xl bg-white/5">
+                    Process Complete
+                  </div>
+                )}
              </div>
           </div>
         </div>
