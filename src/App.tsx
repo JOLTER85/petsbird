@@ -246,6 +246,7 @@ const TRANSLATIONS = {
     predictOffspring: "Predict Offspring",
     inventory: "Inventory Management",
     breedingPairs: "Breeding Pairs",
+    pairs: "Pairs",
     eggMonitoring: "Egg Monitoring",
     statistics: "Statistics",
     totalEggs: "Total Eggs",
@@ -281,6 +282,7 @@ const TRANSLATIONS = {
     predictOffspring: "توقع النسل",
     inventory: "إدارة المخزون",
     breedingPairs: "أزواج التربية",
+    pairs: "الأزواج",
     eggMonitoring: "مراقبة البيض",
     statistics: "الإحصائيات",
     totalEggs: "إجمالي البيض",
@@ -335,23 +337,24 @@ const BottomNav = ({ activeTab, setActiveTab, t }: { activeTab: string, setActiv
     <motion.div 
     initial={{ y: 100 }}
     animate={{ y: 0 }}
-    className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-slate-100 px-6 py-4 flex items-center justify-between z-[100] md:hidden shadow-[0_-8px_30px_rgb(0,0,0,0.04)]"
+    className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-slate-100 px-4 py-2 flex items-center justify-between z-[100] md:hidden shadow-[0_-8px_30px_rgb(0,0,0,0.04)]"
   >
     {[
       { id: "Dashboard", icon: LayoutDashboard, label: t.home },
       { id: "My Birds", icon: Bird, label: t.birds },
+      { id: "Couples", icon: Heart, label: t.pairs || "Pairs" },
       { id: "Eggs", icon: EggIcon, label: t.eggs },
       { id: "Settings", icon: Settings, label: t.profile }
     ].map((item) => (
       <button
         key={item.id}
         onClick={() => setActiveTab(item.id)}
-        className={`flex flex-col items-center gap-1.5 transition-all relative ${activeTab === item.id ? 'text-primary' : 'text-slate-400'}`}
+        className={`flex flex-col items-center gap-1 transition-all relative ${activeTab === item.id ? 'text-primary' : 'text-slate-400'}`}
       >
-        <div className={`p-2 rounded-xl transition-all ${activeTab === item.id ? 'bg-primary/10' : ''}`}>
-          <item.icon className={`w-6 h-6 ${activeTab === item.id ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
+        <div className={`p-1.5 rounded-xl transition-all ${activeTab === item.id ? 'bg-primary/10' : ''}`}>
+          <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'stroke-[2.5px]' : 'stroke-[1.5px]'}`} />
         </div>
-        <span className={`text-[9px] font-black uppercase tracking-tighter transition-all ${activeTab === item.id ? 'opacity-100 translate-y-0' : 'opacity-80'}`}>
+        <span className={`text-[8px] font-black uppercase tracking-tighter transition-all ${activeTab === item.id ? 'opacity-100 translate-y-0' : 'opacity-80'}`}>
           {item.label}
         </span>
         {activeTab === item.id && (
@@ -471,15 +474,18 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
   };
 
   const statusConfig = getStatusConfig(status || '');
+  const isChick = status?.toLowerCase() === 'chick';
 
   return (
     <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
       onClick={onSelect}
-      className={`bg-white p-3 md:p-5 rounded-3xl md:rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
+      className={`bg-white rounded-3xl md:rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${
+        isChick ? 'p-2 md:p-3 max-w-[280px] mx-auto' : 'p-3 md:p-5'
+      } ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
     >
       {/* Top Actions */}
-      <div className="absolute top-2.5 left-2.5 md:top-4 md:left-4 flex gap-1.5 md:gap-2 z-10">
+      <div className={`absolute top-2.5 left-2.5 md:top-4 md:left-4 flex gap-1.5 md:gap-2 z-10 ${isChick ? 'scale-90' : ''}`}>
         {onShare && (
           <button 
             onClick={(e) => {
@@ -503,7 +509,7 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
             <Edit2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </button>
         )}
-        {onExportCertificate && (
+        {onExportCertificate && !isChick && (
           <button 
             onClick={(e) => {
               e.stopPropagation();
@@ -518,7 +524,7 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
       </div>
 
       {/* Top Right Badges */}
-      <div className="absolute top-2.5 right-2.5 md:top-4 md:right-4 flex flex-col items-end gap-1.5 md:gap-2 z-10">
+      <div className={`absolute top-2.5 right-2.5 md:top-4 md:right-4 flex flex-col items-end gap-1.5 md:gap-2 z-10 ${isChick ? 'scale-90' : ''}`}>
         <div className={`px-2 py-0.5 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-bold uppercase tracking-wider shadow-sm ${
           gender === 'Female' ? 'bg-female text-female-text' : 
           gender === 'Male' ? 'bg-male text-male-text' : 
@@ -535,7 +541,9 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
       </div>
 
       {/* Image Area */}
-      <div className="relative aspect-square rounded-[20px] md:rounded-[24px] bg-slate-50 flex items-center justify-center mb-3 md:mb-5 overflow-hidden">
+      <div className={`relative aspect-square rounded-[20px] md:rounded-[24px] bg-slate-50 flex items-center justify-center overflow-hidden transition-all ${
+        isChick ? 'mb-2 md:mb-3 max-h-[160px] md:max-h-[200px]' : 'mb-3 md:mb-5'
+      }`}>
         {cleanImageUrl ? (
           <img 
             src={cleanImageUrl} 
@@ -578,24 +586,24 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
       </div>
       
       {/* Content Area */}
-      <div className="p-1 md:p-4 md:p-8 space-y-3 md:space-y-4">
+      <div className={`${isChick ? 'p-1 md:p-2' : 'p-1 md:p-4 md:p-8'} space-y-2 md:space-y-4 transition-all`}>
         <div>
-          <h3 className="text-sm md:text-xl font-bold font-display text-slate-800 truncate">{name}</h3>
+          <h3 className={`${isChick ? 'text-xs md:text-lg' : 'text-sm md:text-xl'} font-bold font-display text-slate-800 truncate`}>{name}</h3>
           <div className="flex flex-col">
-            <p className="text-[10px] md:text-sm text-slate-500 font-bold">{species}</p>
+            <p className={`${isChick ? 'text-[9px] md:text-xs' : 'text-[10px] md:text-sm'} text-slate-500 font-bold`}>{species}</p>
             {mutation && (
-              <p className="text-[8px] md:text-[11px] text-primary/60 font-medium italic truncate">{mutation}</p>
+              <p className={`${isChick ? 'text-[7px] md:text-[9px]' : 'text-[8px] md:text-[11px]'} text-primary/60 font-medium italic truncate`}>{mutation}</p>
             )}
           </div>
         </div>
 
         {/* Info Grid (2 Columns) */}
-        <div className="grid grid-cols-2 gap-y-4 gap-x-2 pt-4 border-t border-slate-50">
+        <div className={`grid grid-cols-2 gap-y-2 gap-x-2 border-t border-slate-50 ${isChick ? 'pt-2' : 'pt-4'}`}>
           {/* Left: Ring */}
           <div className="flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs">🏷️</span>
-              <span className="text-[10px] md:text-[11px] font-black text-accent-gold uppercase tracking-tight">
+              <span className="text-[10px]">🏷️</span>
+              <span className={`${isChick ? 'text-[9px] md:text-[10px]' : 'text-[10px] md:text-[11px]'} font-black text-accent-gold uppercase tracking-tight`}>
                 Ring: {ring || 'N/A'}
               </span>
             </div>
@@ -603,7 +611,7 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
 
           {/* Right: Status */}
           <div className="flex flex-col gap-0.5">
-            <div className={`flex items-center gap-1.5 text-[10px] md:text-[11px] font-bold ${statusConfig.color.replace('bg-', 'text-')}`}>
+            <div className={`flex items-center gap-1.5 ${isChick ? 'text-[9px] md:text-[10px]' : 'text-[10px] md:text-[11px]'} font-bold ${statusConfig.color.replace('bg-', 'text-')}`}>
               {statusConfig.icon}
               <span>{statusConfig.text}</span>
             </div>
@@ -611,49 +619,49 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
 
           {/* Left: Age & DOB */}
           <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-1.5 text-slate-500">
-              <Calendar className="w-3.5 h-3.5" />
-              <span className="text-[10px] md:text-[11px] font-bold">{ageDisplay}</span>
+            <div className={`flex items-center gap-1.5 text-slate-500`}>
+              <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5" />
+              <span className={`${isChick ? 'text-[9px] md:text-[10px]' : 'text-[10px] md:text-[11px]'} font-bold`}>{ageDisplay}</span>
             </div>
-            <span className="text-[8px] md:text-[9px] text-slate-400 ml-5">DOB: {date}</span>
+            {!isChick && <span className="text-[8px] md:text-[9px] text-slate-400 ml-5">DOB: {date}</span>}
           </div>
 
-      {/* Right: Cage or Sale Price */}
-      <div className="flex flex-col gap-0.5">
-        {status === 'Sold' ? (
-          <div className="flex items-center gap-1.5 text-green-600 min-h-[32px]">
-            <span className="text-xs">💰</span>
-            <span className="text-[10px] md:text-[11px] font-black uppercase tracking-tight">Price: {salePrice || 'Sold'}</span>
+          {/* Right: Cage or Sale Price */}
+          <div className="flex flex-col gap-0.5">
+            {status === 'Sold' ? (
+              <div className="flex items-center gap-1.5 text-green-600 min-h-[24px]">
+                <span className="text-[10px]">💰</span>
+                <span className={`${isChick ? 'text-[9px] md:text-[10px]' : 'text-[10px] md:text-[11px]'} font-black uppercase tracking-tight`}>Price: {salePrice || 'Sold'}</span>
+              </div>
+            ) : (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCageClick?.(cage);
+                }}
+                className="flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors group/cage min-h-[24px]"
+              >
+                <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 group-hover/cage:scale-110 transition-transform" />
+                <span className={`${isChick ? 'text-[9px] md:text-[10px]' : 'text-[10px] md:text-[11px]'} font-bold underline decoration-dotted underline-offset-4`}>Cage {cage}</span>
+              </button>
+            )}
           </div>
-        ) : (
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onCageClick?.(cage);
-            }}
-            className="flex items-center gap-1.5 text-slate-500 hover:text-primary transition-colors group/cage min-h-[32px]"
-          >
-            <MapPin className="w-3.5 h-3.5 group-hover/cage:scale-110 transition-transform" />
-            <span className="text-[10px] md:text-[11px] font-bold underline decoration-dotted underline-offset-4">Cage {cage}</span>
-          </button>
-        )}
-      </div>
         </div>
 
         {/* Footer Action */}
-        <div className="pt-4 mt-2 border-t border-slate-50">
+        <div className={`${isChick ? 'pt-2 mt-1' : 'pt-4 mt-2'} border-t border-slate-50`}>
           <button 
             onClick={(e) => {
               e.stopPropagation();
               onViewPedigree?.(id);
             }}
-            className="w-full py-3 bg-accent-gold/10 text-accent-gold rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent-gold hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm"
+            className={`w-full ${isChick ? 'py-1.5' : 'py-3'} bg-accent-gold/10 text-accent-gold rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-accent-gold hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm`}
           >
-            <GitBranch className="w-4 h-4" />
-            View Pedigree (3 Generations)
+            <GitBranch className="w-3 h-3 md:w-4 md:h-4" />
+            <span className={isChick ? 'text-[8px] md:text-[10px]' : ''}>View Pedigree</span>
           </button>
 
-          {(father || mother) && (
+          {(father || mother) && !isChick && (
             <div className="mt-3 flex flex-col gap-2 p-3 bg-slate-50/50 rounded-xl border border-slate-100/50">
               <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Parent Info (معلومات الأبوين)</div>
               <div className="flex flex-col gap-1.5 text-[10px] md:text-[11px]">
@@ -4947,23 +4955,23 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-br from-primary to-blue-700 p-10 rounded-[40px] shadow-2xl shadow-primary/20 text-white flex flex-col md:flex-row items-center justify-between group overflow-hidden relative"
+              className="bg-gradient-to-br from-primary to-blue-700 p-6 md:p-10 rounded-3xl md:rounded-[40px] shadow-2xl shadow-primary/20 text-white flex flex-col md:flex-row items-center justify-between group overflow-hidden relative"
             >
               <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                <Download className="w-64 h-64" />
+                <Download className="w-48 h-48 md:w-64 md:h-64" />
               </div>
               <div className="relative z-10 max-w-2xl text-center md:text-left">
-                <h3 className="text-3xl font-black mb-3">PetsBird Mobile Experience</h3>
-                <p className="text-blue-100 font-bold leading-relaxed mb-8">احصل على تجربة أفضل واسرع من خلال تثبيت التطبيق على هاتفك. تتبع طيورك وانتاجك في أي وقت وفي أي مكان.</p>
-                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
+                <h3 className="text-2xl md:text-3xl font-black mb-3">PetsBird Mobile Experience</h3>
+                <p className="text-blue-100 font-bold leading-relaxed mb-6 md:mb-8 text-sm md:text-base">احصل على تجربة أفضل واسرع من خلال تثبيت التطبيق على هاتفك. تتبع طيورك وانتاجك في أي وقت وفي أي مكان.</p>
+                <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
                   <button 
                     onClick={handleInstallClick}
-                    className="px-10 py-4 bg-white text-primary rounded-2xl font-black text-sm shadow-xl hover:bg-slate-50 hover:scale-105 transition-all flex items-center gap-3"
+                    className="w-full sm:w-auto px-8 md:px-10 py-3.5 md:py-4 bg-white text-primary rounded-2xl font-black text-sm shadow-xl hover:bg-slate-50 hover:scale-105 transition-all flex items-center justify-center gap-3"
                   >
                     <Download className="w-5 h-5" />
                     تثبيت التطبيق الآن
                   </button>
-                  <div className="px-6 py-4 bg-primary-dark/30 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-100 border border-white/10 flex items-center gap-2">
+                  <div className="w-full sm:w-auto px-6 py-3.5 md:py-4 bg-primary-dark/30 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-100 border border-white/10 flex items-center justify-center gap-2">
                     <Smartphone className="w-4 h-4" />
                     Works on iOS & Android
                   </div>
@@ -4975,7 +4983,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               <div className="flex items-center justify-between mb-6 md:mb-8">
                 <h3 className="text-xl md:text-2xl font-bold font-display text-white">Recent Birds</h3>
               </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className={`grid gap-4 md:gap-8 ${
+              statusFilter === "Chick" ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            }`}>
                 {birds.slice(-3).map((bird) => (
                   <BirdCard 
                     key={bird.id} 
@@ -5106,7 +5116,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className={`grid gap-4 md:gap-8 ${
+              statusFilter === "Chick" ? "grid-cols-2 lg:grid-cols-4 shadow-inner bg-slate-50/50 p-4 rounded-[40px]" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            }`}>
               {birds
                 .filter(b => {
                   const matchesCage = !cageFilter || b.cage === cageFilter;
