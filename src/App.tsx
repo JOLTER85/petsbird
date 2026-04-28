@@ -4608,7 +4608,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       </aside>
 
       {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 p-4 md:p-10 pb-24 md:pb-10 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-72'} bg-slate-900 min-h-screen`}>
+      <main className={`flex-1 transition-all duration-300 p-4 md:p-10 pb-40 md:pb-10 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-72'} bg-slate-900 min-h-screen`}>
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-12">
           <div className="flex items-center gap-4">
             <div className="md:hidden">
@@ -4985,10 +4985,16 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             <section>
               <div className="flex items-center justify-between mb-6 md:mb-8">
                 <h3 className="text-xl md:text-2xl font-bold font-display text-white">Recent Birds</h3>
+                <button 
+                  onClick={() => setActiveTab("My Birds")}
+                  className="text-primary text-[10px] font-black uppercase tracking-widest hover:underline"
+                >
+                  View All Birds
+                </button>
               </div>
             <div className={`grid gap-4 md:gap-8 ${
               statusFilter === "Chick" ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            }`}>
+            } pb-10`}>
                 {birds.slice(-3).map((bird) => (
                   <BirdCard 
                     key={bird.id} 
@@ -5012,7 +5018,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
                   <h3 className="text-3xl font-black font-display text-white">All Birds</h3>
-                  <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar no-scrollbar">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-4 custom-scrollbar">
                     {aviarySpecies.map(species => (
                       <button
                         key={species}
@@ -5030,7 +5036,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                  <div className="flex items-center gap-2 overflow-x-auto pb-4">
                     {["All", "Ready", "Resting", "Paired", "Chick", "Sold", "Deceased"].map(status => (
                       <button
                         key={status}
@@ -5050,7 +5056,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   </div>
 
                   {statusFilter === "Chick" && couples.length > 0 && (
-                    <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-4">
                       <button
                         onClick={() => setCoupleFilter("All")}
                         className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${
@@ -5119,9 +5125,9 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               </div>
             </div>
             
-            <div className={`grid gap-4 md:gap-8 ${
+            <div className={`grid gap-4 md:gap-8 min-h-[400px] ${
               statusFilter === "Chick" ? "grid-cols-2 lg:grid-cols-4 shadow-inner bg-slate-50/50 p-4 rounded-[40px]" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            }`}>
+            } pb-20`}>
               {birds
                 .filter(b => {
                   const matchesCage = !cageFilter || b.cage === cageFilter;
@@ -5387,7 +5393,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <select 
                   value={filterEggStatus}
                   onChange={(e) => setFilterEggStatus(e.target.value as any)}
-                  className="bg-slate-800/30 border border-white/5 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 text-white text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold"
+                  className="bg-slate-800/30 border border-white/5 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-4 text-white text-[10px] md:text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-bold appearance-none"
                 >
                   <option value="All">All Status (الكل)</option>
                   <option value="Unchecked">Unchecked (غير محدد)</option>
@@ -5493,7 +5499,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                         </button>
                      </div>
 
-                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-8">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-8 pb-40">
                         {sortedEggs.map(egg => (
                            <EggCard 
                               key={egg.id}
