@@ -2650,7 +2650,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   read: false
                 });
                 
-                addNotification(title, message, 'info');
+                // addNotification(title, message, 'info');
                 hasChanges = true;
               }
             }
@@ -2670,7 +2670,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   read: false
                 });
                 
-                addNotification(title, message, 'warning');
+                // addNotification(title, message, 'warning');
                 hasChanges = true;
               }
             }
@@ -5081,35 +5081,6 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
                   ))}
               </div>
             </div>
-
-            {/* PWA Download Banner */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="bg-gradient-to-br from-primary to-blue-700 p-6 md:p-10 rounded-3xl md:rounded-[40px] shadow-2xl shadow-primary/20 text-white flex flex-col md:flex-row items-center justify-between group overflow-hidden relative"
-            >
-              <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
-                <Download className="w-48 h-48 md:w-64 md:h-64" />
-              </div>
-              <div className="relative z-10 max-w-2xl text-center md:text-left">
-                <h3 className="text-2xl md:text-3xl font-black mb-3">PetsBird Mobile Experience</h3>
-                <p className="text-blue-100 font-bold leading-relaxed mb-6 md:mb-8 text-sm md:text-base">احصل على تجربة أفضل واسرع من خلال تثبيت التطبيق على هاتفك. تتبع طيورك وانتاجك في أي وقت وفي أي مكان.</p>
-                <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4">
-                  <button 
-                    onClick={handleInstallClick}
-                    className="w-full sm:w-auto px-8 md:px-10 py-3.5 md:py-4 bg-white text-primary rounded-2xl font-black text-sm shadow-xl hover:bg-slate-50 hover:scale-105 transition-all flex items-center justify-center gap-3"
-                  >
-                    <Download className="w-5 h-5" />
-                    تثبيت التطبيق الآن
-                  </button>
-                  <div className="w-full sm:w-auto px-6 py-3.5 md:py-4 bg-primary-dark/30 backdrop-blur-md rounded-2xl text-[10px] font-black uppercase tracking-widest text-blue-100 border border-white/10 flex items-center justify-center gap-2">
-                    <Smartphone className="w-4 h-4" />
-                    Works on iOS & Android
-                  </div>
-                </div>
-              </div>
-            </motion.div>
 
             <section>
               <div className="flex items-center justify-between mb-6 md:mb-8">
