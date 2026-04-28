@@ -53,6 +53,7 @@ import {
   MapPin, 
   Tag, 
   ChevronDown,
+  ChevronRight,
   Bell,
   Plus,
   X,
@@ -1622,6 +1623,56 @@ Proper hydration and mineral supplements are also discussed to prevent common is
 This article analyzes global market data to identify emerging trends in the Cockatiel and Lovebird markets. We also provide tips on how to build a reputable brand as a breeder.
 
 Networking with other professionals and maintaining detailed lineage records are key to increasing the value of your aviary.`
+    }
+  ];
+
+  const GENETICS_ARTICLES = [
+    {
+      id: "cockatiel-genetics",
+      title: "Cockatiel Genetics",
+      category: "Mutation",
+      img: "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=1000",
+      content: `The genetics of Cockatiels are among the most studied in aviculture. Understanding the difference between Sex-Linked, Recessive, and Dominant mutations is key to predicting your breeding outcomes.
+
+This guide provides a comprehensive breakdown of common mutations such as Lutino, Pearl, and Pied. We also explore more complex combinations like Whiteface and Albino.
+
+Using our AI-powered genetic calculator, you can simulate pairings and visualize the potential offspring before you even set up the nest box.`
+    },
+    {
+      id: "lovebird-mutations",
+      title: "Lovebird Mutations",
+      category: "Mutation",
+      img: "https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&q=80&w=1000",
+      content: `Lovebirds offer a fascinating array of mutations, particularly in the Agapornis personatus and Agapornis fischeri groups. Our research team has mapped hundreds of these traits to provide you with the most accurate breeding predictions.
+
+Learn about the inheritance patterns of Dilute, Violet, and Turquoise mutations. We also cover the ethics of breeding certain mutations and how to avoid lethal genes.
+
+With PetsBird, you can track the specific genetic makeup of every bird in your collection, ensuring that you maintain the highest standards of quality.`
+    }
+  ];
+
+  const FEATURES_ARTICLES = [
+    {
+      id: "inventory-management",
+      title: "Inventory Management",
+      category: "Core Feature",
+      img: "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=1000",
+      content: `Our Inventory Management system is designed to handle thousands of birds with ease. Every bird is assigned a unique digital profile where you can store its ring number, species, mutation, and birth date.
+
+Lineage tracking is automated, allowing you to view an interactive pedigree tree for any bird in your collection. This is essential for maintaining genetic diversity and proving the value of your stock to potential buyers.
+
+The system also includes a comprehensive health log. You can record vaccinations, treatments, and general health observations, ensuring that every bird in your aviary receives the care it needs.`
+    },
+    {
+      id: "breeding-pairs",
+      title: "Breeding Pairs",
+      category: "Breeding",
+      img: "https://images.unsplash.com/photo-1555008889-51830030f4ba?auto=format&fit=crop&q=80&w=1000",
+      content: `Managing breeding pairs has never been simpler. PetsBird allows you to create digital 'couples' and track their performance over multiple seasons.
+
+You can record the status of every egg (Fertile, Clear, Broken) and monitor the growth of each chick from hatching to weaning. The system automatically calculates success rates for each pair, helping you identify your most productive breeders.
+
+Notifications will alert you when it's time to check for eggs, band chicks, or move birds to weaning cages, so you never miss a critical milestone in the breeding cycle.`
     }
   ];
 
@@ -3629,53 +3680,6 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
   if (!showApp) {
     return (
       <div className="min-h-screen bg-[#fcfcf9] selection:bg-primary/10 overflow-x-hidden">
-        {/* Article Detail Modal */}
-        <AnimatePresence>
-          {isArticleModalOpen && selectedArticle && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsArticleModalOpen(false)}
-                className="absolute inset-0 bg-slate-900/90 backdrop-blur-xl"
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="relative w-full max-w-4xl bg-white rounded-[48px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
-              >
-                <div className="relative h-80 shrink-0">
-                  <img src={selectedArticle.img} alt={selectedArticle.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <button 
-                    onClick={() => setIsArticleModalOpen(false)}
-                    className="absolute top-6 right-6 w-12 h-12 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                  <div className="absolute bottom-8 left-8 right-8">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="px-4 py-1.5 bg-primary text-white rounded-full text-[10px] font-black uppercase tracking-widest">
-                        {selectedArticle.category || selectedArticle.date}
-                      </span>
-                    </div>
-                    <h2 className="text-4xl font-black text-white font-display leading-tight">{selectedArticle.title}</h2>
-                  </div>
-                </div>
-                <div className="p-12 overflow-y-auto custom-scrollbar">
-                  <div className="prose prose-slate max-w-none">
-                    {selectedArticle.content.split('\n\n').map((paragraph: string, i: number) => (
-                      <p key={i} className="text-lg text-slate-600 leading-relaxed mb-6">{paragraph}</p>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
         {/* Navigation */}
         <nav className="fixed top-0 w-full z-[100] px-8 py-6 flex items-center justify-between backdrop-blur-md bg-white/30">
           <div 
@@ -4118,6 +4122,11 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       alt={g.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = "https://images.unsplash.com/photo-1522926126624-397114120a77?auto=format&fit=crop&q=80&w=600";
+                      }}
                     />
                     <div className="absolute top-6 left-6 px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-slate-800">
                       {g.category}
@@ -4159,6 +4168,11 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                       alt={r.title} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=600";
+                      }}
                     />
                     <div className="absolute top-6 left-6 px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-slate-800">
                       {r.category}
@@ -4195,7 +4209,17 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   onClick={() => navigateToTab(`News/${n.id}`, false)}
                 >
                   <div className="aspect-video rounded-3xl overflow-hidden mb-6">
-                    <img src={n.img} alt={n.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
+                    <img 
+                      src={n.img} 
+                      alt={n.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=600";
+                      }}
+                    />
                   </div>
                   <span className="text-[10px] font-black text-primary uppercase tracking-widest">{n.date}</span>
                   <h4 className="text-xl font-bold text-slate-800 mt-2 mb-4 group-hover:text-primary transition-colors">{n.title}</h4>
@@ -5769,16 +5793,34 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <p className="text-xs text-slate-400 font-black uppercase tracking-widest">Expert tips for a successful aviary</p>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {ADVICE_ARTICLES.map((item, i) => (
                 <div 
                   key={i} 
-                  onClick={() => navigateToTab(`Advice/${item.id}`)}
-                  className="bg-white p-8 rounded-[32px] shadow-2xl hover:shadow-xl transition-all cursor-pointer group"
+                  onClick={() => {
+                    setSelectedArticle(item);
+                    setIsArticleModalOpen(true);
+                  }}
+                  className="bg-white rounded-[40px] shadow-2xl hover:shadow-xl transition-all cursor-pointer group overflow-hidden border border-slate-100/50"
                 >
-                  <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">{item.icon}</div>
-                  <h4 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{item.title}</h4>
-                  <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                  <div className="aspect-video relative overflow-hidden">
+                    <img 
+                      src={item.img} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-800">
+                      {item.category}
+                    </div>
+                  </div>
+                  <div className="p-8">
+                    <h4 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors line-clamp-2">{item.title}</h4>
+                    <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-6">{item.desc}</p>
+                    <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest group-hover:gap-4 transition-all">
+                      Read Article <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -5797,17 +5839,32 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
               </div>
             </div>
             <div className="space-y-6">
-              {[
-                { date: "April 25, 2026", title: "New Pink Cockatoo Population", desc: "Researchers discover a healthy breeding population of rare Major Mitchell's Cockatoos." },
-                { date: "April 5, 2026", title: "New Mutation Discovered", desc: "A rare blue-winged mutation has been reported in the local canary community." },
-                { date: "March 28, 2026", title: "Spring Breeding Expo", desc: "Join us next month for the annual expo showcasing the best breeding pairs." },
-                { date: "March 15, 2026", title: "App Update v2.1", desc: "We've launched the AI Genetics predictor to help you plan your nests better." }
-              ].map((news, i) => (
-                <div key={i} className="bg-white p-8 rounded-[32px] shadow-2xl flex gap-6 items-start">
-                  <div className="bg-primary/10 text-primary px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap">{news.date}</div>
-                  <div>
-                    <h4 className="text-xl font-bold mb-2">{news.title}</h4>
-                    <p className="text-slate-500 text-sm">{news.desc}</p>
+              {NEWS_ARTICLES.map((news, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => {
+                    setSelectedArticle(news);
+                    setIsArticleModalOpen(true);
+                  }}
+                  className="bg-white p-6 rounded-[32px] shadow-2xl flex flex-col md:flex-row gap-6 items-center hover:scale-[1.01] transition-transform cursor-pointer group"
+                >
+                  <div className="w-full md:w-48 aspect-video rounded-2xl overflow-hidden shrink-0">
+                    <img 
+                      src={news.img} 
+                      alt={news.title} 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="bg-primary/10 text-primary px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-widest">{news.date}</span>
+                    </div>
+                    <h4 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">{news.title}</h4>
+                    <p className="text-slate-500 text-sm line-clamp-2">{news.desc}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-2">
+                    <ChevronRight className="w-5 h-5" />
                   </div>
                 </div>
               ))}
@@ -6991,6 +7048,66 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} t={t} />
 
       {/* Confirmation Modal */}
+      {/* Article Detail Modal */}
+      <AnimatePresence>
+        {isArticleModalOpen && selectedArticle && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsArticleModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/90 backdrop-blur-xl"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-4xl bg-white rounded-[32px] md:rounded-[48px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            >
+              <div className="relative h-64 md:h-80 shrink-0">
+                <img 
+                  src={selectedArticle.img} 
+                  alt={selectedArticle.title} 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=800";
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <button 
+                  onClick={() => setIsArticleModalOpen(false)}
+                  className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all z-10"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+                <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
+                  <div className="flex items-center gap-3 mb-2 md:mb-4">
+                    <span className="px-3 md:px-4 py-1 md:py-1.5 bg-primary text-white rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest">
+                      {selectedArticle.category || selectedArticle.date}
+                    </span>
+                  </div>
+                  <h2 className="text-2xl md:text-4xl font-black text-white font-display leading-tight">{selectedArticle.title}</h2>
+                </div>
+              </div>
+              <div className="p-6 md:p-12 overflow-y-auto custom-scrollbar bg-white">
+                <div className="prose prose-slate max-w-none prose-lg md:prose-xl prose-p:text-slate-600 prose-p:leading-relaxed prose-headings:font-display prose-headings:font-black prose-headings:text-slate-900">
+                  {selectedArticle.content.split('\n\n').map((paragraph: string, i: number) => {
+                    if (paragraph.startsWith('###')) {
+                      return <h3 key={i} className="text-xl md:text-2xl mt-8 mb-4">{paragraph.replace('###', '').trim()}</h3>;
+                    }
+                    return <p key={i} className="text-base md:text-lg mb-6 leading-relaxed">{paragraph}</p>;
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {confirmModal.isOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
