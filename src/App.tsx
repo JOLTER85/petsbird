@@ -1457,6 +1457,20 @@ function AppContent() {
 
   const NEWS_ARTICLES = [
     { 
+      id: "pink-cockatoo-discovery",
+      title: "Breakthrough Discovery: New Population of Rare Pink Cockatoos Found", 
+      date: "April 25, 2026", 
+      desc: "Conservationists have discovered a previously unknown population of the rare Major Mitchell's Cockatoo in remote Australia.",
+      img: "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=600",
+      content: `In a major victory for avian conservation, a hidden population of Major Mitchell's Cockatoos (Lophochroa leadbeateri) has been discovered in a remote region of the Australian Outback. 
+
+The find, made by a team of university researchers and local indigenous rangers, includes approximately 120 breeding pairs. This discovery is significant because it provides a genetic lifeline for the species, which has seen its numbers dwindle due to habitat loss and climate change.
+
+Dr. Sarah Miller, the lead researcher, stated: 'We were stunned to find such a robust and healthy population in an area where we thought they had been extinct for decades. This gives us immense hope for the future of these iconic birds.'
+
+Strategies are now being put in place to protect the area and ensure the continued survival of this new population. PetsBird will be working with researchers to include data from this discovery in our species migration models.`
+    },
+    { 
       id: "new-mutation-canary",
       title: "New Mutation Discovered in Canary Species", 
       date: "April 5, 2026", 
@@ -5784,6 +5798,7 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             </div>
             <div className="space-y-6">
               {[
+                { date: "April 25, 2026", title: "New Pink Cockatoo Population", desc: "Researchers discover a healthy breeding population of rare Major Mitchell's Cockatoos." },
                 { date: "April 5, 2026", title: "New Mutation Discovered", desc: "A rare blue-winged mutation has been reported in the local canary community." },
                 { date: "March 28, 2026", title: "Spring Breeding Expo", desc: "Join us next month for the annual expo showcasing the best breeding pairs." },
                 { date: "March 15, 2026", title: "App Update v2.1", desc: "We've launched the AI Genetics predictor to help you plan your nests better." }
