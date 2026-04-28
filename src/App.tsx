@@ -4160,7 +4160,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <div 
                   key={i} 
                   className="group cursor-pointer"
-                  onClick={() => navigateToTab(`Advice/${r.id}`, false)}
+                  onClick={() => {
+                    const advicePath = `/Advice/${r.id}`;
+                    window.history.pushState({}, '', advicePath);
+                    setSelectedArticle(r);
+                    setIsArticleModalOpen(true);
+                  }}
                 >
                   <div className="aspect-[4/3] rounded-[40px] overflow-hidden mb-6 relative">
                     <img 
@@ -4206,7 +4211,12 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                 <div 
                   key={i} 
                   className="glass p-8 rounded-[40px] border-white/20 hover:shadow-2xl transition-all group cursor-pointer"
-                  onClick={() => navigateToTab(`News/${n.id}`, false)}
+                  onClick={() => {
+                    const newsPath = `/News/${n.id}`;
+                    window.history.pushState({}, '', newsPath);
+                    setSelectedArticle(n);
+                    setIsArticleModalOpen(true);
+                  }}
                 >
                   <div className="aspect-video rounded-3xl overflow-hidden mb-6">
                     <img 
@@ -4366,7 +4376,28 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
                   <h4 className="text-xl font-bold text-slate-800 mb-2">{item.title}</h4>
                   <div className="flex items-center justify-between">
                     <span className="text-primary font-black">{item.price}</span>
-                    <button className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-colors">View Details</button>
+                    <button 
+                      onClick={() => {
+                        setSelectedArticle({
+                          id: `marketplace-${i}`,
+                          title: item.title,
+                          desc: `Price: ${item.price}. This rare specimen is available for purchase in our global marketplace. Register or Login to contact the breeder and finalize the acquisition.`,
+                          img: item.img,
+                          category: "Marketplace Item",
+                          content: `This rare and high-quality ${item.title} is currently listed by a verified breeder in our marketplace. 
+
+Price: ${item.price}
+
+PetsBird Marketplace ensures that all breeders are verified and all birds come with digital lineage tracking where available. To view more details, contact the breeder, or browse our full catalog of thousands of birds, please launch the application.
+
+If you don't have an account, start managing your aviary today with PetsBird Elite.`
+                        });
+                        setIsArticleModalOpen(true);
+                      }}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-colors"
+                    >
+                      View Details
+                    </button>
                   </div>
                 </div>
               ))}
@@ -4532,6 +4563,66 @@ Learn how to introduce new bloodlines effectively and how to maintain a diverse 
             </div>
           </div>
         </footer>
+
+        {/* Article Detail Modal */}
+        <AnimatePresence>
+          {isArticleModalOpen && selectedArticle && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-6">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsArticleModalOpen(false)}
+                className="absolute inset-0 bg-slate-900/90 backdrop-blur-xl"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative w-full max-w-4xl bg-white rounded-[32px] md:rounded-[48px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              >
+                <div className="relative h-64 md:h-80 shrink-0">
+                  <img 
+                    src={selectedArticle.img} 
+                    alt={selectedArticle.title} 
+                    className="w-full h-full object-cover" 
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = "https://images.unsplash.com/photo-1552728089-57bdde30eba3?auto=format&fit=crop&q=80&w=800";
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <button 
+                    onClick={() => setIsArticleModalOpen(false)}
+                    className="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 bg-white/20 hover:bg-white/40 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-all z-10"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                  <div className="absolute bottom-4 left-4 right-4 md:bottom-8 md:left-8 md:right-8">
+                    <div className="flex items-center gap-3 mb-2 md:mb-4">
+                      <span className="px-3 md:px-4 py-1 md:py-1.5 bg-primary text-white rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest">
+                        {selectedArticle.category || selectedArticle.date}
+                      </span>
+                    </div>
+                    <h2 className="text-2xl md:text-4xl font-black text-white font-display leading-tight">{selectedArticle.title}</h2>
+                  </div>
+                </div>
+                <div className="p-6 md:p-12 overflow-y-auto custom-scrollbar bg-white">
+                  <div className="prose prose-slate max-w-none prose-lg md:prose-xl prose-p:text-slate-600 prose-p:leading-relaxed prose-headings:font-display prose-headings:font-black prose-headings:text-slate-900">
+                    {selectedArticle.content.split('\n\n').map((paragraph: string, i: number) => {
+                      if (paragraph.startsWith('###')) {
+                        return <h3 key={i} className="text-xl md:text-2xl mt-8 mb-4">{paragraph.replace('###', '').trim()}</h3>;
+                      }
+                      return <p key={i} className="text-base md:text-lg mb-6 leading-relaxed">{paragraph}</p>;
+                    })}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }
