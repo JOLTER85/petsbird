@@ -482,11 +482,11 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
       whileHover={{ y: -8, scale: 1.02 }}
       onClick={onSelect}
       className={`bg-white rounded-2xl md:rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${
-        isChick ? 'p-1.5 md:p-3' : 'p-2 md:p-5'
+        isChick ? 'p-1 md:p-3' : 'p-1.5 md:p-5'
       } ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
     >
       {/* Top Actions */}
-      <div className={`absolute top-2.5 left-2.5 md:top-4 md:left-4 flex gap-1.5 md:gap-2 z-10 ${isChick ? 'scale-90' : ''}`}>
+      <div className={`absolute top-1.5 left-1.5 md:top-4 md:left-4 flex gap-1 z-10 ${isChick ? 'scale-[0.7] origin-top-left' : 'scale-[0.85] md:scale-100 origin-top-left'}`}>
         {onShare && (
           <button 
             onClick={(e) => {
@@ -1028,20 +1028,20 @@ const EggCard = ({
       }`} />
 
       {/* Main Egg Structure with Winding Ribbons */}
-      <div className="relative h-full flex flex-col gap-2 p-3 pointer-events-none">
+      <div className="relative h-full flex flex-col gap-1.5 md:gap-2 p-2 md:p-3 pointer-events-none">
         
         {/* RIBBON 1: Header (PetsBird Logo + Round) */}
-        <div className="relative h-[16%] w-full pointer-events-auto">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl rounded-[120px_120px_30px_30px] flex flex-col items-center justify-center pt-8 pb-3 px-6 overflow-hidden">
-             <div className="flex items-center gap-2 mb-1 relative z-10">
-                <Bird className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
-                <span className="text-[10px] font-black text-white tracking-[0.4em] uppercase">PetsBird</span>
+        <div className="relative h-[18%] md:h-[16%] w-full pointer-events-auto">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl rounded-[60px_60px_20px_20px] md:rounded-[120px_120px_30px_30px] flex flex-col items-center justify-center pt-4 md:pt-8 pb-3 px-4 md:px-6 overflow-hidden">
+             <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1 relative z-10">
+                <Bird className="w-3.5 h-3.5 md:w-5 md:h-5 text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+                <span className="text-[8px] md:text-[10px] font-black text-white tracking-[0.2em] md:tracking-[0.4em] uppercase">PetsBird</span>
              </div>
-             <h5 className="text-lg md:text-xl font-black text-white/90 italic tracking-widest relative z-10">
+             <h5 className="text-xs md:text-xl font-black text-white/90 italic tracking-widest relative z-10">
                ROUND #{egg.eggNumber || egg.id.slice(-3)}
              </h5>
              
-             <div className="absolute top-6 right-8 flex gap-1.5 z-20">
+             <div className="absolute top-2 right-2 md:top-6 md:right-8 flex gap-1 z-20 scale-[0.8] md:scale-100">
                 <button onClick={() => onEdit(undefined as any, egg)} className="p-1.5 bg-white/5 hover:bg-cyan-500/20 text-white/40 hover:text-cyan-400 transition-all rounded-lg border border-white/10">
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
@@ -1053,67 +1053,67 @@ const EggCard = ({
         </div>
 
         {/* RIBBON 2: Primary KPIs (Dials) */}
-        <div className="relative h-[25%] w-full pointer-events-auto">
-          <div className="absolute inset-x-2 top-0 bottom-0 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[35px] flex flex-col items-center justify-center p-5 bg-gradient-to-b from-white/10 to-transparent">
+        <div className="relative h-[22%] md:h-[25%] w-full pointer-events-auto">
+          <div className="absolute inset-x-1 md:inset-x-2 top-0 bottom-0 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[25px] md:rounded-[35px] flex flex-col items-center justify-center p-3 md:p-5 bg-gradient-to-b from-white/10 to-transparent">
              <div className="flex flex-col items-center justify-center w-full">
-               <p className="text-[9px] font-black text-cyan-400/80 uppercase tracking-widest mb-1">Incubation Progress</p>
-               <div className="text-5xl font-black text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.4)] tabular-nums">
+               <p className="text-[7px] md:text-[9px] font-black text-cyan-400/80 uppercase tracking-widest mb-0.5 md:mb-1">Incubation Progress</p>
+               <div className="text-3xl md:text-5xl font-black text-white drop-shadow-[0_0_25px_rgba(255,255,255,0.4)] tabular-nums">
                  {Math.round(progress)}%
                </div>
-               <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase mt-3 border ${
+               <div className={`inline-flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[8px] md:text-[10px] font-bold uppercase mt-2 md:mt-3 border ${
                  progress < 100 ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-green-500/20 text-green-400 border-green-500/30'
                }`}>
-                 {progress < 100 ? `⏳ ${100 - Math.round(progress)}% Remaining` : '🥚 Ready to Hatch'}
+                 {progress < 100 ? `⏳ ${100 - Math.round(progress)}%` : '🥚 Ready'}
                </div>
              </div>
              
-             <div className="absolute bottom-0 inset-x-12 h-px bg-cyan-400/30" />
+             <div className="absolute bottom-0 inset-x-8 md:inset-x-12 h-px bg-cyan-400/30" />
           </div>
         </div>
 
         {/* RIBBON 3: Full Date Indicators - Focus on clarity */}
         <div className="relative h-[24%] w-full pointer-events-auto">
-          <div className="absolute inset-x-4 top-0 bottom-0 bg-white/5 backdrop-blur-md border border-white/15 shadow-xl rounded-[40px] px-4 flex justify-between items-center bg-gradient-to-r from-transparent via-white/5 to-transparent">
+          <div className="absolute inset-x-2 md:inset-x-4 top-0 bottom-0 bg-white/5 backdrop-blur-md border border-white/15 shadow-xl rounded-[25px] md:rounded-[40px] px-2 md:px-4 flex justify-between items-center bg-gradient-to-r from-transparent via-white/5 to-transparent">
              <div className="flex flex-col items-center flex-1">
-               <div className="w-9 h-9 rounded-full bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center mb-1.5">
-                 <EggIcon className="w-4.5 h-4.5 text-cyan-400" />
+               <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-center mb-1 md:mb-1.5">
+                 <EggIcon className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-cyan-400" />
                </div>
-               <span className="text-[10px] font-black text-white tracking-widest leading-none mb-1">{egg.laidDate}</span>
-               <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Laid Date</span>
+               <span className="text-[8px] md:text-[10px] font-black text-white tracking-widest leading-none mb-0.5 md:mb-1">{egg.laidDate}</span>
+               <span className="text-[7px] md:text-[8px] font-black text-white/40 uppercase tracking-widest">Laid</span>
              </div>
 
-             <div className="w-px h-10 bg-white/10 mx-1" />
+             <div className="w-px h-6 md:h-10 bg-white/10 mx-0.5 md:mx-1" />
 
              <div className="flex flex-col items-center flex-1">
-               <div className="w-9 h-9 rounded-full bg-orange-950/40 border border-orange-500/30 flex items-center justify-center mb-1.5">
-                 <Calendar className="w-4.5 h-4.5 text-orange-400" />
+               <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-orange-950/40 border border-orange-500/30 flex items-center justify-center mb-1 md:mb-1.5">
+                 <Calendar className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-orange-400" />
                </div>
-               <span className="text-[10px] font-black text-white tracking-widest leading-none mb-1">{egg.hatchDate || 'N/A'}</span>
-               <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Est. Hatch</span>
+               <span className="text-[8px] md:text-[10px] font-black text-white tracking-widest leading-none mb-0.5 md:mb-1">{egg.hatchDate || 'N/A'}</span>
+               <span className="text-[7px] md:text-[8px] font-black text-white/40 uppercase tracking-widest">Est. Hatch</span>
              </div>
 
-             <div className="w-px h-10 bg-white/10 mx-1" />
+             <div className="w-px h-6 md:h-10 bg-white/10 mx-0.5 md:mx-1" />
 
              <div className="flex flex-col items-center flex-1">
-               <div className="w-9 h-9 rounded-full bg-purple-950/40 border border-purple-500/30 flex items-center justify-center mb-1.5">
-                 <Clock className="w-4.5 h-4.5 text-purple-400" />
+               <div className="w-7 h-7 md:w-9 md:h-9 rounded-full bg-purple-950/40 border border-purple-500/30 flex items-center justify-center mb-1 md:mb-1.5">
+                 <Clock className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-purple-400" />
                </div>
-               <span className="text-[12px] font-black text-white tracking-widest leading-none mb-1">{diff || 0}</span>
-               <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">Days</span>
+               <span className="text-[10px] md:text-[12px] font-black text-white tracking-widest leading-none mb-0.5 md:mb-1">{diff || 0}</span>
+               <span className="text-[7px] md:text-[8px] font-black text-white/40 uppercase tracking-widest">Days</span>
              </div>
           </div>
         </div>
 
         {/* RIBBON 4: Outcome Controls (Base) */}
-        <div className="relative h-[32%] w-full pointer-events-auto">
-          <div className="absolute inset-x-0 top-0 bottom-0 bg-slate-900/90 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-[40px_40px_150px_150px] p-6 flex flex-col items-center justify-center">
+        <div className="relative h-[36%] md:h-[32%] w-full pointer-events-auto">
+          <div className="absolute inset-x-0 top-0 bottom-0 bg-slate-900/90 backdrop-blur-2xl border border-white/20 shadow-2xl rounded-[30px_30px_80px_80px] md:rounded-[40px_40px_150px_150px] p-4 md:p-6 flex flex-col items-center justify-center">
              
              {/* Fertility Check Group */}
-             <div className="grid grid-cols-2 gap-3 w-full mb-3 relative z-10">
+             <div className="grid grid-cols-2 gap-2 md:gap-3 w-full mb-2 md:mb-3 relative z-10">
                 <button 
                   disabled={egg.status !== 'Intact' || !isFertCheckReady}
                   onClick={() => onFertilityCheck(egg.id, true)}
-                  className={`py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${
+                  className={`py-1.5 md:py-2.5 rounded-lg md:rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all border ${
                     egg.isFertile === true 
                       ? 'bg-cyan-500 border-cyan-300 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]' 
                       : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-cyan-500/40 hover:text-white'
@@ -1124,7 +1124,7 @@ const EggCard = ({
                 <button 
                   disabled={egg.status !== 'Intact' || !isFertCheckReady}
                   onClick={() => onFertilityCheck(egg.id, false)}
-                  className={`py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border ${
+                  className={`py-1.5 md:py-2.5 rounded-lg md:rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all border ${
                     egg.isFertile === false 
                       ? 'bg-amber-600 border-amber-400 text-white shadow-[0_0_20px_rgba(217,119,6,0.3)]' 
                       : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:border-red-500/40 hover:text-white'
@@ -1135,27 +1135,27 @@ const EggCard = ({
              </div>
 
              {/* Outcome Management Group - Explicit buttons for Hatched, failed, DIS */}
-             <div className="w-full space-y-2 relative z-10">
+             <div className="w-full space-y-1.5 md:space-y-2 relative z-10">
                 {egg.isFertile === true && egg.status === 'Intact' && (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-1.5 md:gap-2">
                     <button 
                       onClick={() => onHatchSuccess(egg)}
-                      className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg hover:scale-[1.02] active:scale-95 transition-all border border-green-400/30 flex items-center justify-center gap-2"
+                      className="w-full py-2 md:py-3 bg-gradient-to-r from-green-600 to-emerald-500 text-white rounded-lg md:rounded-xl text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] shadow-lg hover:scale-[1.02] active:scale-95 transition-all border border-green-400/30 flex items-center justify-center gap-1.5 md:gap-2"
                     >
-                      <Check className="w-4 h-4" /> فقص (HATCHED)
+                      <Check className="w-3.5 h-3.5 md:w-4 h-4" /> فقص (HATCH)
                     </button>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-1.5 md:gap-2">
                       <button 
                         onClick={() => onHatchFailure(egg, "Did not hatch")}
-                        className="py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-white/40 hover:text-red-400 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-white/5"
+                        className="py-1.5 md:py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-white/40 hover:text-red-400 rounded-lg text-[7px] md:text-[8px] font-black uppercase tracking-widest transition-all border border-white/5"
                       >
-                        لم يفقص (FAILED)
+                        فشل (FAIL)
                       </button>
                       <button 
                         onClick={() => onHatchFailure(egg, "Dead in Shell")}
-                        className="py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-white/40 hover:text-red-400 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border border-white/5"
+                        className="py-1.5 md:py-2.5 bg-slate-800/80 hover:bg-red-500/20 text-white/40 hover:text-red-400 rounded-lg text-[7px] md:text-[8px] font-black uppercase tracking-widest transition-all border border-white/5"
                       >
-                        مات في البيضة (DIS)
+                        مات (DIS)
                       </button>
                     </div>
                   </div>
@@ -4928,18 +4928,28 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
                     <span className="text-xs font-black uppercase text-slate-400">Activity Level</span>
                   </div>
                 </div>
-                <div className="h-[400px]">
+                <div className="h-[240px] md:h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={(() => {
                       const monthlyData: { [key: string]: number } = {};
                       eggs.forEach(egg => {
                         if (!egg.laidDate) return;
-                        const date = new Date(egg.laidDate);
+                        // Manual robust parsing for DD/MM/YYYY or YYYY-MM-DD
+                        const parts = egg.laidDate.split(/[-/]/);
+                        let date;
+                        if (parts[0].length === 4) { // YYYY-MM-DD
+                          date = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+                        } else { // DD/MM/YYYY
+                          date = new Date(parseInt(parts[2]), parseInt(parts[1])-1, parseInt(parts[0]));
+                        }
                         if (isNaN(date.getTime())) return;
                         const month = date.toLocaleString('default', { month: 'short' });
                         monthlyData[month] = (monthlyData[month] || 0) + 1;
                       });
-                      return Object.entries(monthlyData).map(([name, count]) => ({ name, count }));
+                      const allMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      return allMonths
+                        .filter(m => monthlyData[m])
+                        .map(name => ({ name, count: monthlyData[name] }));
                     })()}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 700 }} />
@@ -4959,7 +4969,7 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
                    <h3 className="text-2xl font-black text-slate-900">Aviary Status</h3>
                    <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Detailed Metrics Distribution</p>
                 </div>
-                <div className="h-[300px] relative">
+                <div className="h-[200px] md:h-[300px] relative">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
@@ -5225,8 +5235,8 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
               </div>
             </div>
             
-            <div className={`grid gap-3 md:gap-8 min-h-[400px] ${
-              statusFilter === "Chick" ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 shadow-inner bg-slate-50/50 p-4 rounded-[40px]" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"
+            <div className={`grid gap-2.5 md:gap-8 min-h-[400px] ${
+              statusFilter === "Chick" ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 shadow-inner bg-slate-50/50 p-3 md:p-4 rounded-[32px] md:rounded-[40px]" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"
             } pb-20`}>
               {birds
                 .filter(b => {
