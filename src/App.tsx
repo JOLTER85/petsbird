@@ -481,8 +481,8 @@ const BirdCard = ({ id, name, ring, species, mutation, gender, age, birthYear, d
     <motion.div
       whileHover={{ y: -8, scale: 1.02 }}
       onClick={onSelect}
-      className={`bg-white rounded-3xl md:rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${
-        isChick ? 'p-2 md:p-3 max-w-[280px] mx-auto' : 'p-3 md:p-5'
+      className={`bg-white rounded-2xl md:rounded-[32px] shadow-sm hover:shadow-xl transition-all border group cursor-pointer relative ${
+        isChick ? 'p-1.5 md:p-3' : 'p-2 md:p-5'
       } ${isSelected ? 'border-primary ring-4 ring-primary/10' : 'border-slate-100'}`}
     >
       {/* Top Actions */}
@@ -1010,7 +1010,7 @@ const EggCard = ({
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -8 }}
-      className={`relative group h-[580px] md:h-[650px] w-full max-w-[360px] mx-auto perspective-2000 ${egg.status === 'Failed' || egg.status === 'Broken' ? 'grayscale opacity-60' : ''}`}
+      className={`relative group h-[480px] md:h-[650px] w-full perspective-2000 ${egg.status === 'Failed' || egg.status === 'Broken' ? 'grayscale opacity-60' : ''}`}
     >
       {/* Background Laboratory Glow (Simulated) */}
       <div className="absolute inset-0 bg-slate-900 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.5)] rounded-[50%_50%_50%_50%_/_65%_65%_35%_35%] overflow-hidden">
@@ -5225,8 +5225,8 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
               </div>
             </div>
             
-            <div className={`grid gap-4 md:gap-8 min-h-[400px] ${
-              statusFilter === "Chick" ? "grid-cols-2 lg:grid-cols-4 shadow-inner bg-slate-50/50 p-4 rounded-[40px]" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            <div className={`grid gap-3 md:gap-8 min-h-[400px] ${
+              statusFilter === "Chick" ? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 shadow-inner bg-slate-50/50 p-4 rounded-[40px]" : "grid-cols-2 sm:grid-cols-2 lg:grid-cols-3"
             } pb-20`}>
               {birds
                 .filter(b => {
@@ -5278,7 +5278,7 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-2xl font-black font-display text-white">Breeding Couples</h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
               {couples.map((couple) => {
                 const male = birds.find(b => b.id === couple.maleId);
                 const female = birds.find(b => b.id === couple.femaleId);
@@ -5599,7 +5599,7 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
                         </button>
                      </div>
 
-                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 md:gap-8 pb-40">
+                     <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-8 pb-40">
                         {sortedEggs.map(egg => (
                            <EggCard 
                               key={egg.id}
@@ -7223,44 +7223,6 @@ If you don't have an account, start managing your aviary today with PetsBird Eli
           </div>
         )}
       </AnimatePresence>
-      {/* Toast Notifications */}
-      <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none w-full max-w-xs px-4">
-        <AnimatePresence>
-          {notifications.map(n => (
-            <motion.div
-              key={n.id}
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-              className={`pointer-events-auto w-full p-4 rounded-2xl shadow-xl backdrop-blur-xl border ${
-                n.type === 'success' ? 'bg-green-500/90 border-green-400 text-white' :
-                n.type === 'error' ? 'bg-red-500/90 border-red-400 text-white' :
-                'bg-blue-500/90 border-blue-400 text-white'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-white/20 rounded-lg shrink-0">
-                    {n.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : 
-                     n.type === 'error' ? <AlertTriangle className="w-4 h-4" /> : 
-                     <Bell className="w-4 h-4" />}
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="font-bold text-xs uppercase tracking-wider truncate">{n.title}</h4>
-                    <p className="text-xs font-medium opacity-90 truncate">{n.message}</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setNotifications(prev => prev.filter(item => item.id !== n.id))}
-                  className="p-1 hover:bg-white/20 rounded-lg transition-colors shrink-0"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
     </div>
   );
 }
